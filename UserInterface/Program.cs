@@ -11,12 +11,20 @@ using Service.Mapping;
 using Service.Service;
 using Service.Services;
 using System.Reflection;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using UserInterface.Extensions;
+using UserInterface.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+// FluentValidation
+builder.Services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddFluentValidationClientsideAdapters();
 
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 

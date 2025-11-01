@@ -1,9 +1,9 @@
-﻿using Core.Entity;
+using Core.Entity;
 using Microsoft.AspNetCore.Http;
 
-namespace Core.ViewModels
+namespace Core.Requests
 {
-    public class UserEditViewModel
+    public class UserEditRequest
     {
         public string? UserName { get; set; }
         public string? Email { get; set; }
@@ -14,3 +14,4 @@ namespace Core.ViewModels
         public Gender? Gender { get; set; }
     }
 }
+

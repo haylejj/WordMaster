@@ -1,6 +1,6 @@
 ﻿using Core.Entity;
 using Core.Service;
-using Core.ViewModels;
+using Core.Requests;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using UserInterface.Extensions;
@@ -14,9 +14,9 @@ namespace UserInterface.Controllers
         private readonly IEmailService _emailService;
         public LoginController(ILoginService loginService, UserManager<AppUser> userManager, IEmailService emailService)
         {
-            _loginService=loginService;
-            _userManager=userManager;
-            _emailService=emailService;
+            _loginService = loginService;
+            _userManager = userManager;
+            _emailService = emailService;
         }
 
         public IActionResult LogIn()
@@ -24,13 +24,13 @@ namespace UserInterface.Controllers
             return View();
         }
         [HttpPost]
-        public async Task<IActionResult> LogIn(LoginViewModel request, string? returnUrl = null)
+        public async Task<IActionResult> LogIn(LoginRequest request, string? returnUrl = null)
         {
             if (!ModelState.IsValid) // bir hata var ise validate de
             {
                 return View();
             }
-            returnUrl=returnUrl ?? Url.Action("Index", "Word");
+            returnUrl = returnUrl ?? Url.Action("Index", "Word");
 
             var user = await _loginService.FindByEmailAsync(request.Email!);
             if (user == null)
@@ -44,23 +44,23 @@ namespace UserInterface.Controllers
             {
                 return Redirect(returnUrl!);
             }
-            
-            ModelState.AddModelErrorList(new List<string> { "Email veya şifre yanlış"});
+
+            ModelState.AddModelErrorList(new List<string> { "Email veya şifre yanlış" });
             return View();
         }
-        public IActionResult ForgetPassword() 
+        public IActionResult ForgetPassword()
         {
             return View();
         }
         [HttpPost]
-        public async Task< IActionResult> ForgetPassword(ForgetPasswordViewModel request)
+        public async Task<IActionResult> ForgetPassword(ForgetPasswordRequest request)
         {
             if (!ModelState.IsValid)
             {
                 return View();
             }
-            var user=await _loginService.FindByEmailAsync(request.Email!);
-            if(user == null)
+            var user = await _loginService.FindByEmailAsync(request.Email!);
+            if (user == null)
             {
                 ModelState.AddModelError(string.Empty, "Bu email adresine sahip kullanıcı bulunamamıştır.");
                 return View();
@@ -68,25 +68,25 @@ namespace UserInterface.Controllers
 
             var passwordResetToken = await _loginService.GeneratePasswordResetTokenAsync(user.Id);// şimdi biz özel token ürettik. şifre değiştirmede kullanılacak 
 
-            var passwordResetLink = Url.Action("ResetPassword", "Login", new {userId=user.Id, token=passwordResetToken},HttpContext.Request.Scheme); // bu linkin ömrünü program.cs de belirliycez.
+            var passwordResetLink = Url.Action("ResetPassword", "Login", new { userId = user.Id, token = passwordResetToken }, HttpContext.Request.Scheme); // bu linkin ömrünü program.cs de belirliycez.
             //örnek link
             // https://localhost:7289?userId=12213&token=aasdfasdfsdf
 
             // email e link gönderme metodu.
             await _emailService.SendResetPasswordLinkToEmailAsync(passwordResetLink!, user.Email);
             //
-            TempData["success"]="Şifre yenileme linki e-posta adresinize gönderilmiştir.";
+            TempData["success"] = "Şifre yenileme linki e-posta adresinize gönderilmiştir.";
 
             return RedirectToAction(nameof(ForgetPassword));
         }
-        public IActionResult ResetPassword(string userId,string token)
+        public IActionResult ResetPassword(string userId, string token)
         {
-            TempData["userId"]=userId;
-            TempData["token"]=token;
+            TempData["userId"] = userId;
+            TempData["token"] = token;
             return View();
         }
         [HttpPost]
-        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel request)
+        public async Task<IActionResult> ResetPassword(ResetPasswordRequest request)
         {
             if (!ModelState.IsValid)
             {
@@ -99,7 +99,7 @@ namespace UserInterface.Controllers
                 throw new Exception("Bir hata meydana geldi");
             }
             var hasUser = await _userManager.FindByIdAsync(userId.ToString()!);
-            if (hasUser==null)
+            if (hasUser == null)
             {
                 ModelState.AddModelErrorList(new List<string>() { "Kullanıcı bulunamamıştır." });
                 return View();
@@ -107,7 +107,7 @@ namespace UserInterface.Controllers
             var result = await _userManager.ResetPasswordAsync(hasUser, token!.ToString()!, request.Password!);
             if (result.Succeeded)
             {
-                TempData["SuccessMessage"]="Şifreniz başarıyla yenilenmiştir.";
+                TempData["SuccessMessage"] = "Şifreniz başarıyla yenilenmiştir.";
             }
             else
             {
