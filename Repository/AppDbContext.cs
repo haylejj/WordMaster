@@ -22,7 +22,6 @@ namespace Repository
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.EnableSensitiveDataLogging();
-            // Diğer yapılandırma ayarları
         }
     }
 }
