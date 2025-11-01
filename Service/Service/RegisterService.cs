@@ -27,7 +27,7 @@ public class RegisterService : IRegisterService
         else
         {
             var user = await _userManager.FindByNameAsync(request.UserName);
-            await _userManager.AddToRoleAsync(user, "member");
+            await _userManager.AddToRoleAsync(user, "user");
             return (true, null);
         }
     }

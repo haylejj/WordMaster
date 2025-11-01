@@ -28,11 +28,11 @@ public class WordConfigurations : IEntityTypeConfiguration<Word>
         builder.HasOne(x => x.Favorite)
             .WithOne(x => x.Word)
             .HasForeignKey<Favorite>(x => x.WordId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.NoAction);
 
         builder.HasOne(x => x.Unknows)
             .WithOne(x => x.Word)
             .HasForeignKey<Unknows>(x => x.WordId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.NoAction);
     }
 }
