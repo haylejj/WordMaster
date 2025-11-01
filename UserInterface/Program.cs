@@ -56,18 +56,17 @@ builder.Services.ConfigureApplicationCookie(options =>
 {
     var cookieBuilder = new CookieBuilder();
 
-    cookieBuilder.Name="Cookie";
+    cookieBuilder.Name = "Cookie";
 
     options.LoginPath = new PathString("/Login/LogIn");
-    options.AccessDeniedPath=new PathString("/Member/AccessDenied");
+    options.AccessDeniedPath = new PathString("/Member/AccessDenied");
     options.Cookie = cookieBuilder;
     options.ExpireTimeSpan = TimeSpan.FromDays(10);
-    options.SlidingExpiration=true;
+    options.SlidingExpiration = true;
 });
 
 
 var app = builder.Build();
-
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

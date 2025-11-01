@@ -36,15 +36,14 @@
 </table>
 @{
     var renderOptions = new PagedListRenderOptions
-            {
-                DisplayLinkToFirstPage = PagedListDisplayMode.IfNeeded,
-                DisplayLinkToLastPage = PagedListDisplayMode.IfNeeded,
-                DisplayLinkToPreviousPage = PagedListDisplayMode.IfNeeded,
-                DisplayLinkToNextPage = PagedListDisplayMode.IfNeeded,
-                DisplayLinkToIndividualPages = true
-            };
+    {
+        DisplayLinkToFirstPage = X.PagedList.Mvc.Core.PagedListDisplayMode.IfNeeded,
+        DisplayLinkToLastPage = X.PagedList.Mvc.Core.PagedListDisplayMode.IfNeeded,
+        DisplayLinkToPreviousPage = X.PagedList.Mvc.Core.PagedListDisplayMode.IfNeeded,
+        DisplayLinkToNextPage = X.PagedList.Mvc.Core.PagedListDisplayMode.IfNeeded,
+        DisplayLinkToIndividualPages = true
+    };
 }
 <div class="pagedList">
-    @Html.PagedListPager((IPagedList)Model,page=> Url.Action("Index",new {page}),renderOptions)
+    @Html.PagedListPager((IPagedList)Model, page => Url.Action("Index", new { page }), renderOptions)
 </div>
-

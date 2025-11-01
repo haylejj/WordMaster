@@ -11,7 +11,7 @@ namespace UserInterface.Extensions
         {
             services.Configure<DataProtectionTokenProviderOptions>(options =>
             {
-                options.TokenLifespan=TimeSpan.FromHours(1);
+                options.TokenLifespan = TimeSpan.FromHours(1);
             });
             services.AddIdentity<AppUser, AppRole>(options =>
             {
@@ -19,8 +19,8 @@ namespace UserInterface.Extensions
                 options.Password.RequireDigit = true;
                 options.Password.RequireLowercase = true;
                 options.Password.RequireUppercase = false;
-                options.Password.RequiredLength=6;
-                options.Password.RequireNonAlphanumeric=false;
+                options.Password.RequiredLength = 6;
+                options.Password.RequireNonAlphanumeric = false;
                 options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(3);
                 options.Lockout.MaxFailedAccessAttempts = 5;
             })

@@ -12,7 +12,7 @@
 
 <h1 class="text-center animated-heading" style="margin-top:50px; font-style:italic;">Your Dictionary</h1>
 <br />
-<table  class="table table-bordered table-striped table-warning">
+<table class="table table-bordered table-striped table-warning">
     <thead class="bg-secondary">
         <tr>
             <th>#</th>
@@ -25,7 +25,7 @@
         </tr>
     </thead>
     <tbody>
-        @foreach(var item in Model)
+        @foreach (var item in Model)
         {
             <tr>
                 <td>@item.Id</td>
@@ -45,16 +45,16 @@
 </table>
 @{
     var renderOptions = new PagedListRenderOptions
-            {
-                DisplayLinkToFirstPage = PagedListDisplayMode.Always,
-                DisplayLinkToLastPage = PagedListDisplayMode.Always,
-                DisplayLinkToPreviousPage = PagedListDisplayMode.Always,
-                DisplayLinkToNextPage = PagedListDisplayMode.Always,
-                DisplayLinkToIndividualPages = true
-            };
+    {
+        DisplayLinkToFirstPage = X.PagedList.Mvc.Core.PagedListDisplayMode.Always,
+        DisplayLinkToLastPage = X.PagedList.Mvc.Core.PagedListDisplayMode.Always,
+        DisplayLinkToPreviousPage = X.PagedList.Mvc.Core.PagedListDisplayMode.Always,
+        DisplayLinkToNextPage = X.PagedList.Mvc.Core.PagedListDisplayMode.Always,
+        DisplayLinkToIndividualPages = true
+    };
 }
 <div class="pagedList">
-    @Html.PagedListPager((IPagedList)Model,page=> Url.Action("Index",new {page}),renderOptions)
+    @Html.PagedListPager((IPagedList)Model, page => Url.Action("Index", new { page }), renderOptions)
 </div>
 
 <script>

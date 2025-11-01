@@ -17,6 +17,13 @@ namespace Repository
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+
+            // Seed Roles
+            modelBuilder.Entity<AppRole>().HasData(
+                new AppRole { Id = Guid.NewGuid().ToString(), Name = "admin", NormalizedName = "ADMIN", ConcurrencyStamp = Guid.NewGuid().ToString() },
+                new AppRole { Id = Guid.NewGuid().ToString(), Name = "user", NormalizedName = "USER", ConcurrencyStamp = Guid.NewGuid().ToString() }
+            );
+
             base.OnModelCreating(modelBuilder);
         }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
