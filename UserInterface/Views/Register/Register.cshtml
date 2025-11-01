@@ -6,92 +6,180 @@
 <link href="\lib\bootstrap\dist\css\bootstrap.css" rel="stylesheet" />
 
 <style>
-    .gradient-custom-3 {
-        /* fallback for old browsers */
-        background: #84fab0;
-        /* Chrome 10-25, Safari 5.1-6 */
-        background: -webkit-linear-gradient(to right, rgba(132, 250, 176, 0.5), rgba(143, 211, 244, 0.5));
-        /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
-        background: linear-gradient(to right, rgba(132, 250, 176, 0.5), rgba(143, 211, 244, 0.5))
-    }
-
-    .gradient-custom-4 {
-        /* fallback for old browsers */
-        background: #84fab0;
-        /* Chrome 10-25, Safari 5.1-6 */
-        background: -webkit-linear-gradient(to right, rgba(132, 250, 176, 1), rgba(143, 211, 244, 1));
-        /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
-        background: linear-gradient(to right, rgba(132, 250, 176, 1), rgba(143, 211, 244, 1))
-    }
-
     html,
     body {
         height: 100%;
         margin: 0;
         padding: 0;
+        background-color: #f8f9fa;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
 
-    .mask {
+    .auth-container {
         min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .auth-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+        border: none;
+        max-width: 500px;
+        width: 100%;
+    }
+
+    .auth-card .card-body {
+        padding: 2.5rem;
+    }
+
+    .auth-card h2 {
+        color: #2c3e50;
+        font-weight: 600;
+        margin-bottom: 2rem;
+        font-size: 1.75rem;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .form-control {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+    }
+
+    .form-control:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15);
+        outline: none;
+    }
+
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .btn {
+        border-radius: 8px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border-width: 1.5px;
+    }
+
+    .btn-outline-secondary {
+        color: #6c757d;
+        border-color: #6c757d;
+        background-color: transparent;
+    }
+
+    .btn-outline-secondary:hover {
+        background-color: #6c757d;
+        border-color: #6c757d;
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-outline-secondary:active {
+        transform: translateY(0);
+    }
+
+    .text-danger {
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    .alert {
+        border-radius: 8px;
+        border: none;
+        margin-bottom: 1.5rem;
+    }
+
+    a {
+        color: #007bff;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    a:hover {
+        color: #0056b3;
+        text-decoration: underline;
+    }
+
+    .registration-link {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+
+    .w-100 {
+        width: 100%;
+    }
+
+    .mt-3 {
+        margin-top: 1rem;
     }
 </style>
 
 
-<div class="mask d-flex align-items-center h-100 gradient-custom-3">
-    <div class="container h-100">
-        <div class="row d-flex justify-content-center align-items-center h-100">
-            <div class="col-12 col-md-9 col-lg-7 col-xl-6">
-                <div class="card auth-card">
-                    <div class="card-body p-5">
-                        @if (TempData["SuccessMessage"] != null)
-                        {
-                            <div class="alert alert-info" role="alert">@TempData["SuccessMessage"]</div>
-                        }
-                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
-                        <h2 class="text-uppercase text-center mb-5">Create an account</h2>
+<div class="auth-container">
+    <div class="card auth-card">
+        <div class="card-body">
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-info" role="alert">@TempData["SuccessMessage"]</div>
+            }
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            <h2 class="text-uppercase text-center">Create an account</h2>
 
-                        <form asp-controller="Register" asp-action="Register" method="post">
-
-                            <div class="form-group">
-                                <label class="form-label" for="UserName" asp-for="UserName"></label>
-                                <input asp-for="UserName" class="form-control" />
-                                <span asp-validation-for="UserName" class="text-danger"></span>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label" for="Email" asp-for="Email"></label>
-                                <input asp-for="Email" class="form-control" />
-                                <span asp-validation-for="Email" class="text-danger"></span>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label" for="Phone" asp-for="Phone"></label>
-                                <input asp-for="Phone" class="form-control" />
-                                <span asp-validation-for="Phone" class="text-danger"></span>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label" for="Password" asp-for="Password"></label>
-                                <input asp-for="Password" class="form-control" />
-                                <span asp-validation-for="Password" class="text-danger"></span>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="PasswordConfirm" asp-for="PasswordConfirm"></label>
-                                <input asp-for="PasswordConfirm" class="form-control" />
-                                <span asp-validation-for="PasswordConfirm" class="text-danger"></span>
-                            </div>
-                            <div class="form-group">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <button class="btn btn-outline-secondary mt-2" type="submit">Register</button>
-                                    <p class="registration-link mb-0">Already Have a Account ? <a
-                                            href="/Login/LogIn">Log in</a></p>
-                                </div>
-                            </div>
-
-                        </form>
-                    </div>
+            <form asp-controller="Register" asp-action="Register" method="post">
+                <div class="form-group">
+                    <label class="form-label" for="UserName" asp-for="UserName"></label>
+                    <input asp-for="UserName" class="form-control" />
+                    <span asp-validation-for="UserName" class="text-danger"></span>
                 </div>
-            </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="Email" asp-for="Email"></label>
+                    <input asp-for="Email" class="form-control" type="email" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="Phone" asp-for="Phone"></label>
+                    <input asp-for="Phone" class="form-control" type="tel" />
+                    <span asp-validation-for="Phone" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="Password" asp-for="Password"></label>
+                    <input asp-for="Password" class="form-control" type="password" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="PasswordConfirm" asp-for="PasswordConfirm"></label>
+                    <input asp-for="PasswordConfirm" class="form-control" type="password" />
+                    <span asp-validation-for="PasswordConfirm" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <button class="btn btn-outline-secondary w-100" type="submit">Register</button>
+                </div>
+
+                <div class="text-center mt-3">
+                    <p class="registration-link mb-0">Already have an account? <a href="/Login/LogIn">Log in</a></p>
+                </div>
+            </form>
         </div>
     </div>
 </div>
