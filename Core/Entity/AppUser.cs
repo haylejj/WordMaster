@@ -1,12 +1,11 @@
 ﻿using Microsoft.AspNetCore.Identity;
 
-namespace Core.Entity
+namespace Core.Entity;
+
+public class AppUser : IdentityUser
 {
-    public class AppUser : IdentityUser
-    {
-        public string? City { get; set; }
-        public string? Picture { get; set; }
-        public DateTime? BirthDate { get; set; }
-        public Gender? Gender { get; set; }
-    }
+    public string? City { get; set; }
+    public string? Picture { get; set; }
+    public DateTime? BirthDate { get; set; }
+    public Gender? Gender { get; set; }
 }

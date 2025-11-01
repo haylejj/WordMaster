@@ -1,16 +1,15 @@
-using FluentValidation;
 using Core.Requests;
+using FluentValidation;
 
-namespace UserInterface.Validators
+namespace Service.Validators;
+
+public class ForgetPasswordRequestValidator : AbstractValidator<ForgetPasswordRequest>
 {
-    public class ForgetPasswordRequestValidator : AbstractValidator<ForgetPasswordRequest>
+    public ForgetPasswordRequestValidator()
     {
-        public ForgetPasswordRequestValidator()
-        {
-            RuleFor(x => x.Email)
-                .NotEmpty().WithMessage("Email alanı boş bırakılamaz")
-                .EmailAddress().WithMessage("Lütfen geçerli bir email giriniz.");
-        }
+        RuleFor(x => x.Email)
+            .NotEmpty().WithMessage("Email alanı boş bırakılamaz")
+            .EmailAddress().WithMessage("Lütfen geçerli bir email giriniz.");
     }
 }
 

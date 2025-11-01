@@ -1,14 +1,11 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿namespace Core.Entity;
 
-namespace Core.Entity
+public class Unknows
 {
-    public class Unknows
-    {
-        public int Id { get; set; }
-        public DateTime CreatedTime { get; set; }
-        public int WordId { get; set; }
-        public Word? Word { get; set; }
-        public string? UserId { get; set; }
-        public AppUser? User { get; set; }
-    }
+    public int Id { get; set; }
+    public DateTime CreatedTime { get; set; }
+    public int WordId { get; set; }
+    public Word? Word { get; set; }
+    public string? UserId { get; set; }
+    public AppUser? User { get; set; }
 }

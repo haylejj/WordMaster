@@ -1,9 +1,8 @@
 ﻿using Core.Entity;
 
-namespace Core.Repositories
+namespace Core.Repositories;
+
+public interface IFavoriteRepository : IGenericRepository<Favorite>
 {
-    public interface IFavoriteRepository : IGenericRepository<Favorite>
-    {
-        Task<Favorite> GetLastFavorite();
-    }
+    Task<Favorite> GetLastFavorite();
 }

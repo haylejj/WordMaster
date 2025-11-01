@@ -1,11 +1,10 @@
 ﻿using Core.ViewModels;
 
 
-namespace Core.Service
-{
-    public interface IAdminService
-    {
+namespace Core.Service;
 
-        Task<List<UserViewModel>> GetUsersAsync();
-    }
+public interface IAdminService
+{
+
+    Task<List<UserViewModel>> GetUsersAsync();
 }

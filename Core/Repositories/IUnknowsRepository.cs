@@ -1,9 +1,8 @@
 ﻿using Core.Entity;
 
-namespace Core.Repositories
+namespace Core.Repositories;
+
+public interface IUnknowsRepository : IGenericRepository<Unknows>
 {
-    public interface IUnknowsRepository : IGenericRepository<Unknows>
-    {
-        Task<Unknows> GetLastUnknows();
-    }
+    Task<Unknows> GetLastUnknows();
 }

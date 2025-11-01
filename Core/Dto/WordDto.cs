@@ -1,9 +1,8 @@
-﻿namespace Core.Dto
+﻿namespace Core.Dto;
+
+public class WordDto
 {
-    public class WordDto
-    {
-        public int Id { get; set; }
-        public string? EnglishWord { get; set; }
-        public string? TurkishWord { get; set; }
-    }
+    public int Id { get; set; }
+    public string? EnglishWord { get; set; }
+    public string? TurkishWord { get; set; }
 }

@@ -1,60 +1,48 @@
 ﻿using Core.Entity;
 using Core.Repositories;
 using Core.Service;
-using Core.UnitOfWorks;
+using Core.UnitOfWork;
 using System.Linq.Expressions;
 
-namespace Service.Services
+namespace Service.Service;
+
+public class UnknowsService(IGenericRepository<Unknows> repository, IUnitOfWork unitOfWork, IUnknowsRepository unknowsRepository) : IUnknowsService
 {
-    public class UnknowsService : IUnknowsService
+    public IQueryable<Unknows> Where(Expression<Func<Unknows, bool>> predicate)
     {
-        private readonly IGenericRepository<Unknows> _repository;
-        private readonly IUnknowsRepository _unknowsRepository;
-        private readonly IUnitOfWork _unitOfWork;
+        return repository.Where(predicate);
+    }
 
-        public UnknowsService(IGenericRepository<Unknows> repository, IUnitOfWork unitOfWork, IUnknowsRepository unknowsRepository)
-        {
-            _repository = repository;
-            _unitOfWork = unitOfWork;
-            _unknowsRepository = unknowsRepository;
-        }
+    public async Task<Unknows?> GetByIdAsync(int id)
+    {
+        return await repository.GetByIdAsync(id);
+    }
 
-        public IQueryable<Unknows> Where(Expression<Func<Unknows, bool>> predicate)
-        {
-            return _repository.Where(predicate);
-        }
+    public async Task<bool> AnyAsync(Expression<Func<Unknows, bool>> predicate)
+    {
+        return await repository.AnyAsync(predicate);
+    }
 
-        public async Task<Unknows?> GetByIdAsync(int id)
-        {
-            return await _repository.GetByIdAsync(id);
-        }
+    public async Task AddAsync(Unknows entity)
+    {
+        await repository.AddAsync(entity);
+        await unitOfWork.CommitAsync();
+    }
 
-        public async Task<bool> AnyAsync(Expression<Func<Unknows, bool>> predicate)
-        {
-            return await _repository.AnyAsync(predicate);
-        }
+    public async Task UpdateAsync(Unknows entity)
+    {
+        repository.Update(entity);
+        await unitOfWork.CommitAsync();
+    }
 
-        public async Task AddAsync(Unknows entity)
-        {
-            await _repository.AddAsync(entity);
-            await _unitOfWork.CommitAsync();
-        }
+    public async Task RemoveAsync(Unknows entity)
+    {
+        repository.Remove(entity);
+        await unitOfWork.CommitAsync();
+    }
 
-        public async Task UpdateAsync(Unknows entity)
-        {
-            _repository.Update(entity);
-            await _unitOfWork.CommitAsync();
-        }
-
-        public async Task RemoveAsync(Unknows entity)
-        {
-            _repository.Remove(entity);
-            await _unitOfWork.CommitAsync();
-        }
-
-        public async Task<Unknows> GetLastUnknows()
-        {
-            return await _unknowsRepository.GetLastUnknows();
-        }
+    public async Task<Unknows> GetLastUnknows()
+    {
+        return await unknowsRepository.GetLastUnknows();
     }
 }

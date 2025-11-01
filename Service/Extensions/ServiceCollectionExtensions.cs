@@ -1,41 +1,39 @@
 using Core.Repositories;
 using Core.Service;
-using Core.UnitOfWorks;
+using Core.UnitOfWork;
 using Microsoft.Extensions.DependencyInjection;
 using Repository.Repositories;
-using Repository.UnitOfWorks;
+using Repository.UnitOfWork;
 using Service.Service;
-using Service.Services;
 
-namespace Service.Extensions
+namespace Service.Extensions;
+
+public static class ServiceCollectionExtensions
 {
-    public static class ServiceCollectionExtensions
+    public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
-        public static IServiceCollection AddApplicationServices(this IServiceCollection services)
-        {
-            // UnitOfWork
-            services.AddScoped<IUnitOfWork, UnitOfWork>();
+        // UnitOfWork
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-            // Generic Repository
-            services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+        // Generic Repository
+        services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
-            // Repositories
-            services.AddScoped<IWordRepository, WordRepository>();
-            services.AddScoped<IFavoriteRepository, FavoriteRepository>();
-            services.AddScoped<IUnknowsRepository, UnknowsRepository>();
+        // Repositories
+        services.AddScoped<IWordRepository, WordRepository>();
+        services.AddScoped<IFavoriteRepository, FavoriteRepository>();
+        services.AddScoped<IUnknowsRepository, UnknowsRepository>();
 
-            // Services
-            services.AddScoped<IWordService, WordService>();
-            services.AddScoped<IFavoriteService, FavoriteService>();
-            services.AddScoped<IUnknowsService, UnknowsService>();
-            services.AddScoped<IMemberService, MemberService>();
-            services.AddScoped<IRegisterService, RegisterService>();
-            services.AddScoped<ILoginService, LoginService>();
-            services.AddScoped<IAdminService, AdminService>();
-            services.AddScoped<IRoleService, RoleService>();
-            services.AddScoped<IEmailService, EmailService>();
+        // Services
+        services.AddScoped<IWordService, WordService>();
+        services.AddScoped<IFavoriteService, FavoriteService>();
+        services.AddScoped<IUnknowsService, UnknowsService>();
+        services.AddScoped<IMemberService, MemberService>();
+        services.AddScoped<IRegisterService, RegisterService>();
+        services.AddScoped<ILoginService, LoginService>();
+        services.AddScoped<IAdminService, AdminService>();
+        services.AddScoped<IRoleService, RoleService>();
+        services.AddScoped<IEmailService, EmailService>();
 
-            return services;
-        }
+        return services;
     }
 }

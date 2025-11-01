@@ -1,9 +1,8 @@
-namespace Core.Requests
+namespace Core.Requests;
+
+public class ResetPasswordRequest
 {
-    public class ResetPasswordRequest
-    {
-        public string? Password { get; set; }
-        public string? PasswordConfirm { get; set; }
-    }
+    public string? Password { get; set; }
+    public string? PasswordConfirm { get; set; }
 }
 

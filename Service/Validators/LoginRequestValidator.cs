@@ -1,19 +1,18 @@
-using FluentValidation;
 using Core.Requests;
+using FluentValidation;
 
-namespace UserInterface.Validators
+namespace Service.Validators;
+
+public class LoginRequestValidator : AbstractValidator<LoginRequest>
 {
-    public class LoginRequestValidator : AbstractValidator<LoginRequest>
+    public LoginRequestValidator()
     {
-        public LoginRequestValidator()
-        {
-            RuleFor(x => x.Email)
-                .NotEmpty().WithMessage("Email alanı boş bırakılamaz")
-                .EmailAddress().WithMessage("Lütfen geçerli bir email giriniz.");
+        RuleFor(x => x.Email)
+            .NotEmpty().WithMessage("Email alanı boş bırakılamaz")
+            .EmailAddress().WithMessage("Lütfen geçerli bir email giriniz.");
 
-            RuleFor(x => x.Password)
-                .NotEmpty().WithMessage("Şifre alanı boş bırakılamaz");
-        }
+        RuleFor(x => x.Password)
+            .NotEmpty().WithMessage("Şifre alanı boş bırakılamaz");
     }
 }
 

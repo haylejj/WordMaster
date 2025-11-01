@@ -1,8 +1,7 @@
-﻿namespace Core.ViewModels
+﻿namespace Core.ViewModels;
+
+public class RoleUpdateViewModel
 {
-    public class RoleUpdateViewModel
-    {
-        public string Id { get; set; } = null!;
-        public string Name { get; set; } = null!;
-    }
+    public string Id { get; set; } = null!;
+    public string Name { get; set; } = null!;
 }

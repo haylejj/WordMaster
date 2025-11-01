@@ -1,7 +1,6 @@
-﻿namespace Core.Entity
+﻿namespace Core.Entity;
+
+public enum Gender : byte
 {
-    public enum Gender : byte
-    {
-        Kadın = 1, Erkek = 2
-    }
+    Kadın = 1, Erkek = 2
 }

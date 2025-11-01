@@ -1,24 +1,16 @@
-﻿using Core.UnitOfWorks;
+﻿using Core.UnitOfWork;
 
-namespace Repository.UnitOfWorks
+namespace Repository.UnitOfWork;
+
+public class UnitOfWork(AppDbContext context) : IUnitOfWork
 {
-    public class UnitOfWork : IUnitOfWork
+    public void Commit()
     {
-        private readonly AppDbContext _appDbContext;
+        context.SaveChanges();
+    }
 
-        public UnitOfWork(AppDbContext context)
-        {
-            _appDbContext = context;
-        }
-
-        public void Commit()
-        {
-            _appDbContext.SaveChanges();
-        }
-
-        public async Task CommitAsync()
-        {
-            await _appDbContext.SaveChangesAsync();
-        }
+    public async Task CommitAsync()
+    {
+        await context.SaveChangesAsync();
     }
 }

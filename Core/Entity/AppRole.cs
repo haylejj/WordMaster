@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 
-namespace Core.Entity
+namespace Core.Entity;
+
+public class AppRole : IdentityRole
 {
-    public class AppRole : IdentityRole
-    {
-    }
 }

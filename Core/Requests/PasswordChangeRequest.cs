@@ -1,10 +1,9 @@
-namespace Core.Requests
+namespace Core.Requests;
+
+public class PasswordChangeRequest
 {
-    public class PasswordChangeRequest
-    {
-        public string? PasswordOld { get; set; }
-        public string? PasswordNew { get; set; }
-        public string? PasswordConfirm { get; set; }
-    }
+    public string? PasswordOld { get; set; }
+    public string? PasswordNew { get; set; }
+    public string? PasswordConfirm { get; set; }
 }
 

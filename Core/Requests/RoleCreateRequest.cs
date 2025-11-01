@@ -1,8 +1,7 @@
-namespace Core.Requests
+namespace Core.Requests;
+
+public class RoleCreateRequest
 {
-    public class RoleCreateRequest
-    {
-        public string Name { get; set; } = null!;
-    }
+    public string Name { get; set; } = null!;
 }
 

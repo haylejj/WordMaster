@@ -2,87 +2,85 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Core.Entity;
 using UserInterface.Extensions;
 
-namespace UserInterface.Controllers
+namespace UserInterface.Controllers;
+
+[Authorize]
+public class PracticeFavoriteController : Controller
 {
-    [Authorize]
-    public class PracticeFavoriteController : Controller
+    private readonly IFavoriteService _favoriteService;
+    private readonly IWordService _wordService;
+    private static Random random = new();
+
+    public PracticeFavoriteController(IFavoriteService favoriteService, IWordService wordService)
     {
-        private readonly IFavoriteService _favoriteService;
-        private readonly IWordService _wordService;
-        private static Random random = new Random();
+        _favoriteService = favoriteService;
+        _wordService = wordService;
+    }
 
-        public PracticeFavoriteController(IFavoriteService favoriteService, IWordService wordService)
+    public async Task<IActionResult> Index()
+    {
+        string newEnglishWord = await getNewWord();
+        return View((object)newEnglishWord);
+    }
+    private bool IsCorrect(string turkish, string english)
+    {
+        var userId = User.GetUserId();
+        var favorite = _favoriteService.Where(x => x.Word.EnglishWord == english && x.UserId == userId).Include(x => x.Word).FirstOrDefault();
+        return favorite != null && favorite.Word?.TurkishWord?.ToLower().Trim() == turkish?.ToLower().Trim();
+    }
+    private async Task<string> getNewWord()
+    {
+        var userId = User.GetUserId();
+        var favorites = await _favoriteService.Where(x => x.UserId == userId).Include(x => x.Word).ToListAsync();
+        if (favorites == null || favorites.Count == 0)
         {
-            _favoriteService = favoriteService;
-            _wordService = wordService;
+            return string.Empty;
         }
 
-        public async Task<IActionResult> Index()
+        int index = random.Next(0, favorites.Count);
+        return favorites[index].Word?.EnglishWord ?? string.Empty;
+    }
+    public async Task<IActionResult> CheckTranslation(string turkishWord, string englishWord)
+    {
+        var userId = User.GetUserId();
+        var favorite = await _favoriteService.Where(x => x.Word.EnglishWord == englishWord && x.UserId == userId)
+            .Include(x => x.Word)
+            .FirstOrDefaultAsync();
+
+        if (favorite?.Word == null)
         {
-            string newEnglishWord = await getNewWord();
-            return View((object)newEnglishWord);
+            return Json(new { isCorrect = false });
         }
-        private bool IsCorrect(string turkish, string english)
+
+        var word = favorite.Word;
+        bool isCorrect = word.TurkishWord?.ToLower().Trim() == turkishWord?.ToLower().Trim();
+
+        // Öğrenme takibini güncelle
+        word.IsLastAnswerCorrect = isCorrect;
+        word.LastPracticeDate = DateTime.Now;
+
+        if (isCorrect)
         {
-            var userId = User.GetUserId();
-            var favorite = _favoriteService.Where(x => x.Word.EnglishWord == english && x.UserId == userId).Include(x => x.Word).FirstOrDefault();
-            return favorite != null && favorite.Word?.TurkishWord?.ToLower().Trim() == turkish?.ToLower().Trim();
+            word.ConsecutiveCorrectCount++;
+            word.ConsecutiveWrongCount = 0;
+            word.TotalCorrectCount++;
         }
-        private async Task<string> getNewWord()
+        else
         {
-            var userId = User.GetUserId();
-            var favorites = await _favoriteService.Where(x => x.UserId == userId).Include(x => x.Word).ToListAsync();
-            if (favorites == null || favorites.Count == 0)
-            {
-                return string.Empty;
-            }
-
-            int index = random.Next(0, favorites.Count);
-            return favorites[index].Word?.EnglishWord ?? string.Empty;
+            word.ConsecutiveWrongCount++;
+            word.ConsecutiveCorrectCount = 0;
+            word.TotalWrongCount++;
         }
-        public async Task<IActionResult> CheckTranslation(string turkishWord, string englishWord)
-        {
-            var userId = User.GetUserId();
-            var favorite = await _favoriteService.Where(x => x.Word.EnglishWord == englishWord && x.UserId == userId)
-                .Include(x => x.Word)
-                .FirstOrDefaultAsync();
 
-            if (favorite?.Word == null)
-            {
-                return Json(new { isCorrect = false });
-            }
+        await _wordService.UpdateAsync(word);
 
-            var word = favorite.Word;
-            bool isCorrect = word.TurkishWord?.ToLower().Trim() == turkishWord?.ToLower().Trim();
-
-            // Öğrenme takibini güncelle
-            word.IsLastAnswerCorrect = isCorrect;
-            word.LastPracticeDate = DateTime.Now;
-
-            if (isCorrect)
-            {
-                word.ConsecutiveCorrectCount++;
-                word.ConsecutiveWrongCount = 0;
-                word.TotalCorrectCount++;
-            }
-            else
-            {
-                word.ConsecutiveWrongCount++;
-                word.ConsecutiveCorrectCount = 0;
-                word.TotalWrongCount++;
-            }
-
-            await _wordService.UpdateAsync(word);
-
-            return Json(new { isCorrect });
-        }
-        public async Task<IActionResult> GetNewEnglishWord()
-        {
-            string newEnglishWord = await getNewWord();
-            return Content(newEnglishWord);
-        }
+        return Json(new { isCorrect });
+    }
+    public async Task<IActionResult> GetNewEnglishWord()
+    {
+        string newEnglishWord = await getNewWord();
+        return Content(newEnglishWord);
     }
 }

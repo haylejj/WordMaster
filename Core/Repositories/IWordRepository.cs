@@ -1,9 +1,8 @@
 ﻿using Core.Entity;
 
-namespace Core.Repositories
+namespace Core.Repositories;
+
+public interface IWordRepository : IGenericRepository<Word>
 {
-    public interface IWordRepository : IGenericRepository<Word>
-    {
-        Task<Word> getLastWord();
-    }
+    Task<Word> getLastWord();
 }

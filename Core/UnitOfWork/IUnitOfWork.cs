@@ -1,8 +1,7 @@
-﻿namespace Core.UnitOfWorks
+﻿namespace Core.UnitOfWork;
+
+public interface IUnitOfWork
 {
-    public interface IUnitOfWork
-    {
-        Task CommitAsync();
-        void Commit();
-    }
+    Task CommitAsync();
+    void Commit();
 }

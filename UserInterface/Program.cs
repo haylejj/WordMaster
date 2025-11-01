@@ -1,14 +1,14 @@
 using Core.OptionsModel;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Repository;
 using Service.Extensions;
 using Service.Mapping;
+using Service.Validators;
 using System.Reflection;
-using FluentValidation;
-using FluentValidation.AspNetCore;
 using UserInterface.Extensions;
-using UserInterface.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,12 +46,12 @@ builder.Services.ConfigureApplicationCookie(options =>
     var cookieBuilder = new CookieBuilder
     {
         Name = "SecureCookie",
-        HttpOnly = true,       
-        SecurePolicy = CookieSecurePolicy.Always, 
-        IsEssential = true 
+        HttpOnly = true,
+        SecurePolicy = CookieSecurePolicy.Always,
+        IsEssential = true
     };
 
-    options.LoginPath = new PathString("/Login/LogIn");
+    options.LoginPath = new PathString("/Login");
     options.AccessDeniedPath = new PathString("/Member/AccessDenied");
     options.Cookie = cookieBuilder;
 
@@ -66,7 +66,7 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
+    app.UseExceptionHandler("/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
@@ -80,11 +80,13 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "areas",
-      pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}"
-    );
+    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
+
+app.MapControllers();
+
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Register}/{action=Register}/{id?}");
+    pattern: "{controller=Word}/{action=Index}/{id?}");
 //app.Use(async (context, next) =>
 //{
 //    if (!context.User.Identity.IsAuthenticated)
