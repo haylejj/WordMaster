@@ -12,8 +12,28 @@ namespace Repository.Configurations
             builder.Property(x => x.Id).UseIdentityColumn();
             builder.Property(x => x.EnglishWord).IsRequired().HasMaxLength(30);
             builder.Property(x => x.TurkishWord).IsRequired().HasMaxLength(30);
-            builder.HasOne(x => x.Favorite).WithOne(x => x.Word).HasForeignKey<Favorite>(x => x.WordId);
-            builder.HasOne(x => x.Unknows).WithOne(x => x.Word).HasForeignKey<Unknows>(x => x.WordId);
+            builder.Property(x => x.CreatedTime).IsRequired();
+
+            // Öğrenme Takibi - Varsayılan değerler
+            builder.Property(x => x.ConsecutiveCorrectCount).HasDefaultValue(0);
+            builder.Property(x => x.ConsecutiveWrongCount).HasDefaultValue(0);
+            builder.Property(x => x.TotalCorrectCount).HasDefaultValue(0);
+            builder.Property(x => x.TotalWrongCount).HasDefaultValue(0);
+
+            builder.HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasOne(x => x.Favorite)
+                .WithOne(x => x.Word)
+                .HasForeignKey<Favorite>(x => x.WordId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasOne(x => x.Unknows)
+                .WithOne(x => x.Word)
+                .HasForeignKey<Unknows>(x => x.WordId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

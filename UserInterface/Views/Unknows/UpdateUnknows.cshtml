@@ -1,5 +1,5 @@
 ﻿@using Core.Entity
-@model Unknows
+@model Word
 @{
     ViewData["Title"] = "UpdateUnknows";
     Layout = "~/Views/Shared/Main_Layout.cshtml";
@@ -23,16 +23,16 @@
         margin-bottom: 20px;
     }
 
-        .form-group label {
-            font-weight: bold;
-        }
+    .form-group label {
+        font-weight: bold;
+    }
 
-        .form-group input {
-            width: 300px;
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-        }
+    .form-group input {
+        width: 300px;
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+    }
 
     .btn-save {
         background-color: orange;
@@ -53,15 +53,14 @@
     <div class="container">
         <div class="form-group">
             <label style="color:blue; font-weight:bold;">English :</label>
-            @Html.TextBoxFor(x=>x.EnglishWord,new {@class="custom-input"})
+            @Html.TextBoxFor(x => x.EnglishWord, new { @class = "custom-input" })
         </div>
         <div class="form-group" style="margin-left: 100px; margin-right: 100px;">
             <label style="color:red; font-weight:bold;">Turkish :</label>
-            @Html.TextBoxFor(x=>x.TurkishWord,new {@class= "custom-input"})
+            @Html.TextBoxFor(x => x.TurkishWord, new { @class = "custom-input" })
         </div>
         <div class="form-group" style="margin-left: 100px; margin-right: 100px; display: none;">
-            <label style="color:red; font-weight:bold;">Word Id :</label>
-            @Html.TextBoxFor(x=>x.WordId,new {@class= "custom-input"})
+            @Html.HiddenFor(x => x.Id)
         </div>
 
         <button class="btn-save" id="btn1" style="background-color:orange; color:white;">Save</button>

@@ -4,6 +4,7 @@ using Core.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using UserInterface.Extensions;
 using X.PagedList;
 
 namespace UserInterface.Controllers
@@ -15,31 +16,39 @@ namespace UserInterface.Controllers
         private readonly IFavoriteService _favoriteService;
         private readonly IWordService _wordService;
         private readonly IUnknowsService _unknowsService;
+
         public FavoriteController(IMapper mapper, IFavoriteService favoriteService, IWordService wordService, IUnknowsService unknowsService)
         {
-            _mapper=mapper;
-            _favoriteService=favoriteService;
-            _wordService=wordService;
-            _unknowsService=unknowsService;
+            _mapper = mapper;
+            _favoriteService = favoriteService;
+            _wordService = wordService;
+            _unknowsService = unknowsService;
         }
 
         public async Task<IActionResult> Index(int page = 1)
         {
-            var favorities = await _favoriteService.GetAllAsync();
+            var userId = User.GetUserId();
+            var favorities = await _favoriteService.Where(x => x.UserId == userId).Include(x => x.Word).ToListAsync();
             return View(favorities.ToPagedList(page, 5));
         }
         public async Task<IActionResult> AddFavorite(int id)
         {
-            var word = await _wordService.GetByIdAsync(id);
+            var userId = User.GetUserId();
+            var word = await _wordService.Where(x => x.Id == id && x.UserId == userId).FirstOrDefaultAsync();
             if (word != null)
             {
-                var favorite = new Favorite
+                // Aynı kelime zaten favorite'da mı kontrol et
+                var existingFavorite = await _favoriteService.Where(x => x.WordId == word.Id && x.UserId == userId).FirstOrDefaultAsync();
+                if (existingFavorite == null)
                 {
-                    WordId=word.Id,
-                    EnglishWord=word.EnglishWord,
-                    TurkishWord=word.TurkishWord,
-                };
-                await _favoriteService.AddAsync(favorite);
+                    var favorite = new Favorite
+                    {
+                        WordId = word.Id,
+                        UserId = userId,
+                        CreatedTime = DateTime.Now
+                    };
+                    await _favoriteService.AddAsync(favorite);
+                }
             }
 
             return RedirectToAction("Index", "Word");
@@ -47,34 +56,38 @@ namespace UserInterface.Controllers
         [HttpGet]
         public async Task<IActionResult> UpdateFavorite(int id)
         {
-            var favorite = await _favoriteService.GetByIdAsync(id);
-            return View(favorite);
+            var userId = User.GetUserId();
+            var favorite = await _favoriteService.Where(x => x.Id == id && x.UserId == userId).Include(x => x.Word).FirstOrDefaultAsync();
+            if (favorite == null)
+            {
+                return NotFound();
+            }
+            return View(favorite.Word);
         }
         [HttpPost]
-        public async Task<IActionResult> UpdateFavorite(Favorite favorite)
+        public async Task<IActionResult> UpdateFavorite(Word word)
         {
-            var word = await _wordService.GetByIdAsync(favorite.WordId);
-            var unknow = await _unknowsService.Where(x => x.WordId==word.Id).SingleOrDefaultAsync();
-            if (unknow!=null)
+            var userId = User.GetUserId();
+            var existingWord = await _wordService.Where(x => x.Id == word.Id && x.UserId == userId).FirstOrDefaultAsync();
+            if (existingWord == null)
             {
-                unknow.TurkishWord= favorite.TurkishWord;
-                unknow.EnglishWord = favorite.EnglishWord;
-                await _unknowsService.UpdateAsync(unknow);
+                return NotFound();
             }
-            word.TurkishWord = favorite.TurkishWord;
-            word.EnglishWord = favorite.EnglishWord;
 
+            existingWord.EnglishWord = word.EnglishWord;
+            existingWord.TurkishWord = word.TurkishWord;
 
-            await _favoriteService.UpdateAsync(favorite);
-            await _wordService.UpdateAsync(word);
-
-
+            await _wordService.UpdateAsync(existingWord);
             return RedirectToAction("Index");
         }
         public async Task<IActionResult> DeleteFavorite(int id)
         {
-            var favorite = await _favoriteService.GetByIdAsync(id);
-            await _favoriteService.RemoveAsync(favorite);
+            var userId = User.GetUserId();
+            var favorite = await _favoriteService.Where(x => x.Id == id && x.UserId == userId).FirstOrDefaultAsync();
+            if (favorite != null)
+            {
+                await _favoriteService.RemoveAsync(favorite);
+            }
             return RedirectToAction("Index");
         }
     }

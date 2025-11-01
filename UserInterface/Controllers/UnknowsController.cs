@@ -4,6 +4,7 @@ using Core.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using UserInterface.Extensions;
 using X.PagedList;
 
 namespace UserInterface.Controllers
@@ -18,62 +19,74 @@ namespace UserInterface.Controllers
 
         public UnknowsController(IMapper mapper, IUnknowsService unknowsService, IWordService wordService, IFavoriteService favoriteService)
         {
-            _mapper=mapper;
-            _unknowsService=unknowsService;
-            _wordService=wordService;
-            _favoriteService=favoriteService;
+            _mapper = mapper;
+            _unknowsService = unknowsService;
+            _wordService = wordService;
+            _favoriteService = favoriteService;
         }
 
         public async Task<IActionResult> Index(int page = 1)
         {
-            var unknows = await _unknowsService.GetAllAsync();
+            var userId = User.GetUserId();
+            var unknows = await _unknowsService.Where(x => x.UserId == userId).Include(x => x.Word).ToListAsync();
             return View(unknows.ToPagedList(page, 5));
         }
         public async Task<IActionResult> AddUnknows(int id)
         {
-            var product = await _wordService.GetByIdAsync(id);
-            if (product!=null)
+            var userId = User.GetUserId();
+            var word = await _wordService.Where(x => x.Id == id && x.UserId == userId).FirstOrDefaultAsync();
+            if (word != null)
             {
-                var unknow = new Unknows
+                // Aynı kelime zaten unknown'da mı kontrol et
+                var existingUnknow = await _unknowsService.Where(x => x.WordId == word.Id && x.UserId == userId).FirstOrDefaultAsync();
+                if (existingUnknow == null)
                 {
-                    WordId=product.Id,
-                    EnglishWord=product.EnglishWord,
-                    TurkishWord=product.TurkishWord
-                };
-                await _unknowsService.AddAsync(unknow);
+                    var unknow = new Unknows
+                    {
+                        WordId = word.Id,
+                        UserId = userId,
+                        CreatedTime = DateTime.Now
+                    };
+                    await _unknowsService.AddAsync(unknow);
+                }
             }
             return RedirectToAction("Index", "Word");
         }
         [HttpGet]
         public async Task<IActionResult> UpdateUnknows(int id)
         {
-            var product = await _unknowsService.GetByIdAsync(id);
-            return View(product);
+            var userId = User.GetUserId();
+            var unknow = await _unknowsService.Where(x => x.Id == id && x.UserId == userId).Include(x => x.Word).FirstOrDefaultAsync();
+            if (unknow == null)
+            {
+                return NotFound();
+            }
+            return View(unknow.Word);
         }
         [HttpPost]
-        public async Task<IActionResult> UpdateUnknows(Unknows unknows)
+        public async Task<IActionResult> UpdateUnknows(Word word)
         {
-            var word = await _wordService.GetByIdAsync(unknows.WordId);
-            var favorite = await _favoriteService.Where(x => x.WordId==word.Id).SingleOrDefaultAsync();
-            if (favorite!=null)
+            var userId = User.GetUserId();
+            var existingWord = await _wordService.Where(x => x.Id == word.Id && x.UserId == userId).FirstOrDefaultAsync();
+            if (existingWord == null)
             {
-                favorite.TurkishWord= favorite.TurkishWord;
-                favorite.EnglishWord = favorite.EnglishWord;
-                await _favoriteService.UpdateAsync(favorite);
+                return NotFound();
             }
-            word.TurkishWord = unknows.TurkishWord;
-            word.EnglishWord= unknows.EnglishWord;
 
+            existingWord.EnglishWord = word.EnglishWord;
+            existingWord.TurkishWord = word.TurkishWord;
 
-            await _unknowsService.UpdateAsync(unknows);
-            await _wordService.UpdateAsync(word);
-
+            await _wordService.UpdateAsync(existingWord);
             return RedirectToAction("Index", "Word");
         }
         public async Task<IActionResult> DeleteUnknows(int id)
         {
-            var unknow = await _unknowsService.GetByIdAsync(id);
-            await _unknowsService.RemoveAsync(unknow);
+            var userId = User.GetUserId();
+            var unknow = await _unknowsService.Where(x => x.Id == id && x.UserId == userId).FirstOrDefaultAsync();
+            if (unknow != null)
+            {
+                await _unknowsService.RemoveAsync(unknow);
+            }
             return RedirectToAction("Index");
         }
     }

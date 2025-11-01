@@ -25,8 +25,8 @@
         {
             <tr>
                 <td>@item.Id</td>
-                <td>@item.EnglishWord</td>
-                <td>@item.TurkishWord</td>
+                <td>@item.Word?.EnglishWord</td>
+                <td>@item.Word?.TurkishWord</td>
                 <td>@item.WordId</td>
                 <td><a href="/Unknows/UpdateUnknows/@item.Id" class="btn btn-outline-danger">Update</a></td>
                 <td><a href="/Unknows/DeleteUnknows/@item.Id" class="btn btn-outline-primary">Delete</a></td>

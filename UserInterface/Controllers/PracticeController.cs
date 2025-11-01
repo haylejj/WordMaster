@@ -1,6 +1,9 @@
 ﻿using Core.Service;
+using Core.Entity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using UserInterface.Extensions;
 
 namespace UserInterface.Controllers
 {
@@ -9,9 +12,10 @@ namespace UserInterface.Controllers
     {
         private readonly IWordService _wordService;
         private static Random random = new Random();
+
         public PracticeController(IWordService wordService)
         {
-            _wordService=wordService;
+            _wordService = wordService;
         }
 
         public async Task<IActionResult> Index()
@@ -19,36 +23,61 @@ namespace UserInterface.Controllers
             string newEnglishWord = await getNewWord();
             return View((object)newEnglishWord);
         }
+
         private bool IsCorrect(string turkish, string english)
         {
-            var word = _wordService.Where(x => x.EnglishWord==english).FirstOrDefault();
-            if (word != null && word.TurkishWord==turkish)
-            {
-                return true;
-            }
-            return false;
+            var userId = User.GetUserId();
+            var word = _wordService.Where(x => x.EnglishWord == english && x.UserId == userId).FirstOrDefault();
+            return word != null && word.TurkishWord == turkish;
         }
+
         private async Task<string> getNewWord()
         {
-            var lastWord = await _wordService.getLastWord();
-            int index = random.Next(1, lastWord.Id+1);
-            var newWord = await _wordService.GetByIdAsync(index);
-            if (newWord != null)
+            var userId = User.GetUserId();
+            var words = await _wordService.Where(x => x.UserId == userId).ToListAsync();
+            if (words == null || words.Count == 0)
             {
-                return newWord.EnglishWord;
+                return string.Empty;
             }
-            while (newWord == null)
-            {
-                index = random.Next(1, lastWord.Id+1);
-                newWord = await _wordService.GetByIdAsync(index);
-            }
-            return newWord.EnglishWord;
+
+            int index = random.Next(0, words.Count);
+            return words[index].EnglishWord ?? string.Empty;
         }
-        public IActionResult CheckTranslation(string turkishWord, string englishWord)
+
+        public async Task<IActionResult> CheckTranslation(string turkishWord, string englishWord)
         {
-            bool isCorrect = IsCorrect(turkishWord, englishWord);
+            var userId = User.GetUserId();
+            var word = await _wordService.Where(x => x.EnglishWord == englishWord && x.UserId == userId).FirstOrDefaultAsync();
+
+            if (word == null)
+            {
+                return Json(new { isCorrect = false });
+            }
+
+            bool isCorrect = word.TurkishWord?.ToLower().Trim() == turkishWord?.ToLower().Trim();
+
+            // Öğrenme takibini güncelle
+            word.IsLastAnswerCorrect = isCorrect;
+            word.LastPracticeDate = DateTime.Now;
+
+            if (isCorrect)
+            {
+                word.ConsecutiveCorrectCount++;
+                word.ConsecutiveWrongCount = 0; // Ard arda doğru bildiyse yanlış sayacını sıfırla
+                word.TotalCorrectCount++;
+            }
+            else
+            {
+                word.ConsecutiveWrongCount++;
+                word.ConsecutiveCorrectCount = 0; // Yanlış bildiyse doğru sayacını sıfırla
+                word.TotalWrongCount++;
+            }
+
+            await _wordService.UpdateAsync(word);
+
             return Json(new { isCorrect });
         }
+
         public async Task<IActionResult> GetNewEnglishWord()
         {
             string newEnglishWord = await getNewWord();

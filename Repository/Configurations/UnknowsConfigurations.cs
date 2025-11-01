@@ -10,8 +10,13 @@ namespace Repository.Configurations
         {
             builder.HasKey(x => x.Id);
             builder.Property(x => x.Id).UseIdentityColumn();
-            builder.Property(x => x.EnglishWord).IsRequired().HasMaxLength(30);
-            builder.Property(x => x.TurkishWord).IsRequired().HasMaxLength(30);
+            builder.Property(x => x.CreatedTime).IsRequired();
+            builder.Property(x => x.WordId).IsRequired();
+
+            builder.HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
