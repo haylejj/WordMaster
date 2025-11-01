@@ -7,8 +7,7 @@
     ViewData["Title"] = "Index";
     Layout = "~/Views/Shared/Main_Layout.cshtml";
 }
-<h1 class="text-center animated-heading" style="margin-top:50px; font-style:italic;">Favorite List</h1>
-<br />
+<h1 class="text-center page-title">Favorite List</h1>
 
 <table class="table table-bordered table-striped table-warning">
     <thead class="bg-secondary">
@@ -45,6 +44,6 @@
         DisplayLinkToIndividualPages = true
     };
 }
-<div class="pagedList" style="margin-top: 20px;">
+<div class="pagedList">
     @Html.PagedListPager((IPagedList)Model, page => Url.Action("Index", new { page }), renderOptions)
 </div>

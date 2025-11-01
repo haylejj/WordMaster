@@ -7,6 +7,7 @@ using UserInterface.Extensions;
 namespace UserInterface.Controllers;
 
 [Authorize]
+[Route("/PracticeFavorite")]
 public class PracticeFavoriteController : Controller
 {
     private readonly IFavoriteService _favoriteService;
@@ -19,6 +20,8 @@ public class PracticeFavoriteController : Controller
         _wordService = wordService;
     }
 
+    [HttpGet("")]
+    [HttpGet("Index")]
     public async Task<IActionResult> Index()
     {
         string newEnglishWord = await getNewWord();

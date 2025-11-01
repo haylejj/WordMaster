@@ -84,9 +84,15 @@ app.MapControllerRoute(
 
 app.MapControllers();
 
+// Root path için Login'e yönlendir
+app.MapGet("/", async (HttpContext context) =>
+{
+    context.Response.Redirect("/Login");
+});
+
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Word}/{action=Index}/{id?}");
+    pattern: "{controller=Login}/{action=LogIn}/{id?}");
 //app.Use(async (context, next) =>
 //{
 //    if (!context.User.Identity.IsAuthenticated)

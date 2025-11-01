@@ -11,6 +11,7 @@ using X.PagedList;
 namespace UserInterface.Controllers;
 
 [Authorize]
+[Route("/Word")]
 public class WordController : Controller
 {
     private readonly IWordService _wordService;
@@ -26,13 +27,15 @@ public class WordController : Controller
         _unknowsService = unknowsService;
     }
 
+    [HttpGet("")]
+    [HttpGet("Index")]
     public async Task<IActionResult> Index(int page = 1)
     {
         var userId = User.GetUserId();
         var words = await _wordService.Where(x => x.UserId == userId).ToListAsync();
         return View(words.ToPagedList(page, 10));
     }
-    [HttpGet]
+    [HttpGet("AddWord")]
     public IActionResult AddWord()
     {
         return View();
@@ -58,7 +61,7 @@ public class WordController : Controller
         }
         return RedirectToAction(nameof(Index));
     }
-    [HttpGet]
+    [HttpGet("UpdateWord")]
     public async Task<IActionResult> UpdateWord(int id)
     {
         var userId = User.GetUserId();

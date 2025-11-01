@@ -8,22 +8,17 @@ using UserInterface.Extensions;
 namespace UserInterface.Controllers;
 
 [Route("/Login")]
-public class LoginController : Controller
+public class LoginController(ILoginService loginService, UserManager<AppUser> userManager, IEmailService emailService) : Controller
 {
-    private readonly ILoginService _loginService;
-    private readonly UserManager<AppUser> _userManager;
-    private readonly IEmailService _emailService;
-    public LoginController(ILoginService loginService, UserManager<AppUser> userManager, IEmailService emailService)
-    {
-        _loginService = loginService;
-        _userManager = userManager;
-        _emailService = emailService;
-    }
-
     [HttpGet("")]
     [HttpGet("LogIn")]
     public IActionResult LogIn()
     {
+        // Eğer kullanıcı zaten login olmuşsa Word sayfasına yönlendir
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            return RedirectToAction("Index", "Word");
+        }
         return View();
     }
 
@@ -37,13 +32,13 @@ public class LoginController : Controller
         }
         returnUrl = returnUrl ?? Url.Action("Index", "Word");
 
-        var user = await _loginService.FindByEmailAsync(request.Email!);
+        var user = await loginService.FindByEmailAsync(request.Email!);
         if (user == null)
         {
             ModelState.AddModelErrorList(new List<string>() { "Email veya şifre yanlış" });
         }
 
-        var result = await _loginService.LoginAsync(request, user!);
+        var result = await loginService.LoginAsync(request, user!);
 
         if (result)
         {
@@ -66,21 +61,21 @@ public class LoginController : Controller
         {
             return View();
         }
-        var user = await _loginService.FindByEmailAsync(request.Email!);
+        var user = await loginService.FindByEmailAsync(request.Email!);
         if (user == null)
         {
             ModelState.AddModelError(string.Empty, "Bu email adresine sahip kullanıcı bulunamamıştır.");
             return View();
         }
 
-        var passwordResetToken = await _loginService.GeneratePasswordResetTokenAsync(user.Id);// şimdi biz özel token ürettik. şifre değiştirmede kullanılacak 
+        var passwordResetToken = await loginService.GeneratePasswordResetTokenAsync(user.Id);// şimdi biz özel token ürettik. şifre değiştirmede kullanılacak 
 
         var passwordResetLink = Url.Action("ResetPassword", null, new { userId = user.Id, token = passwordResetToken }, HttpContext.Request.Scheme); // bu linkin ömrünü program.cs de belirliycez.
         //örnek link
         // https://localhost:7289?userId=12213&token=aasdfasdfsdf
 
         // email e link gönderme metodu.
-        await _emailService.SendResetPasswordLinkToEmailAsync(passwordResetLink!, user.Email);
+        await emailService.SendResetPasswordLinkToEmailAsync(passwordResetLink!, user.Email);
         //
         TempData["success"] = "Şifre yenileme linki e-posta adresinize gönderilmiştir.";
 
@@ -107,13 +102,13 @@ public class LoginController : Controller
         {
             throw new Exception("Bir hata meydana geldi");
         }
-        var hasUser = await _userManager.FindByIdAsync(userId.ToString()!);
+        var hasUser = await userManager.FindByIdAsync(userId.ToString()!);
         if (hasUser == null)
         {
             ModelState.AddModelErrorList(new List<string>() { "Kullanıcı bulunamamıştır." });
             return View();
         }
-        var result = await _userManager.ResetPasswordAsync(hasUser, token!.ToString()!, request.Password!);
+        var result = await userManager.ResetPasswordAsync(hasUser, token!.ToString()!, request.Password!);
         if (result.Succeeded)
         {
             TempData["SuccessMessage"] = "Şifreniz başarıyla yenilenmiştir.";

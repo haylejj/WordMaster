@@ -50,7 +50,7 @@
     <div class="container h-100">
         <div class="row d-flex justify-content-center align-items-center h-100">
             <div class="col-12 col-md-9 col-lg-7 col-xl-6">
-                <div class="card" style="border-radius: 15px;">
+                <div class="card auth-card">
                     <div class="card-body p-5">
 
                         <h2 class="text-uppercase text-center mb-5">Login</h2>
@@ -68,8 +68,7 @@
                                 <span asp-validation-for="Password" class="text-danger"></span>
                             </div>
                             <div class="form-group text-right">
-                                <input asp-for="RememberMe" style="margin-top:10px;" class="form-control-input"
-                                    type="checkbox" />
+                                <input asp-for="RememberMe" class="form-control-input mt-2" type="checkbox" />
                                 <label class="form-check-label" for="RememberMe" asp-for="RememberMe"></label>
                             </div>
                             <div class="form-group">
@@ -77,8 +76,7 @@
                                     asp-action="ForgetPassword">Şifremi Unuttum</a>
                             </div>
                             <div class="form-group ">
-                                <button class="btn btn-outline-secondary  " style="margin-top:10px;" asp"
-                                    type="submit">Login</button>
+                                <button class="btn btn-outline-secondary mt-2" type="submit">Login</button>
                             </div>
                         </form>
                     </div>

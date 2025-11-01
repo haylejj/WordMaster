@@ -4,66 +4,26 @@
     ViewData["Title"] = "UpdateUnknows";
     Layout = "~/Views/Shared/Main_Layout.cshtml";
 }
-<style>
-    body {
-        background-color: #f2f2f2;
-        background-image: url('image\\foto.jpg');
-        background-repeat: no-repeat;
-        background-size: cover;
-    }
-
-    .container {
-        margin-top: 50px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .form-group {
-        margin-bottom: 20px;
-    }
-
-    .form-group label {
-        font-weight: bold;
-    }
-
-    .form-group input {
-        width: 300px;
-        padding: 10px;
-        border-radius: 5px;
-        border: 1px solid #ccc;
-    }
-
-    .btn-save {
-        background-color: orange;
-        color: white;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-    }
-</style>
 <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 <script src="\lib\jquery\dist\jquery.js"></script>
 
-<h2 class="text-center" style="margin-top:50px;">Update Unknows </h2>
+<h2 class="text-center form-page-title">Update Unknows</h2>
 
 @using (Html.BeginForm("UpdateUnknows", "Unknows", FormMethod.Post))
 {
-    <div class="container">
-        <div class="form-group">
-            <label style="color:blue; font-weight:bold;">English :</label>
-            @Html.TextBoxFor(x => x.EnglishWord, new { @class = "custom-input" })
+    <div class="form-page-container">
+        <div class="form-page-form-group">
+            <label class="label-english">English:</label>
+            @Html.TextBoxFor(x => x.EnglishWord, new { @class = "form-control" })
         </div>
-        <div class="form-group" style="margin-left: 100px; margin-right: 100px;">
-            <label style="color:red; font-weight:bold;">Turkish :</label>
-            @Html.TextBoxFor(x => x.TurkishWord, new { @class = "custom-input" })
+        <div class="form-page-form-group">
+            <label class="label-turkish">Turkish:</label>
+            @Html.TextBoxFor(x => x.TurkishWord, new { @class = "form-control" })
         </div>
-        <div class="form-group" style="margin-left: 100px; margin-right: 100px; display: none;">
+        <div class="form-page-form-group hidden">
             @Html.HiddenFor(x => x.Id)
         </div>
-
-        <button class="btn-save" id="btn1" style="background-color:orange; color:white;">Save</button>
+        <button class="practice-btn" id="btn1">Save</button>
     </div>
 }
 @* <script>
