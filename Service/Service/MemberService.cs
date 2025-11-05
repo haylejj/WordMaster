@@ -8,20 +8,11 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace Service.Service;
 
-public class MemberService : IMemberService
+public class MemberService(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager) : IMemberService
 {
-    private readonly UserManager<AppUser> _userManager;
-    private readonly SignInManager<AppUser> _signInManager;
-
-    public MemberService(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager)
-    {
-        _userManager = userManager;
-        _signInManager = signInManager;
-    }
-
     public async Task LogOutAsync()
     {
-        await _signInManager.SignOutAsync();
+        await signInManager.SignOutAsync();
     }
     public SelectList GetGenderSelectList()
     {
@@ -29,7 +20,7 @@ public class MemberService : IMemberService
     }
     public async Task<UserEditViewModel> GetUserEditViewModelAsync(string username)
     {
-        var currentUser = await _userManager.FindByNameAsync(username);
+        var currentUser = await userManager.FindByNameAsync(username);
 
         return new UserEditViewModel()
         {
@@ -43,7 +34,7 @@ public class MemberService : IMemberService
     }
     public async Task<(bool, IEnumerable<IdentityError>?)> EditUserAsync(UserEditRequest request, string username)
     {
-        var currentUser = await _userManager.FindByNameAsync(username);
+        var currentUser = await userManager.FindByNameAsync(username);
 
         currentUser.UserName = request.UserName;
         currentUser.Email = request.Email;
@@ -52,35 +43,35 @@ public class MemberService : IMemberService
         currentUser.City = request.City;
         currentUser.Gender = request.Gender;
 
-        var updateResult = await _userManager.UpdateAsync(currentUser);
+        var updateResult = await userManager.UpdateAsync(currentUser);
         if (!updateResult.Succeeded)
         {
             return (false, updateResult.Errors);
         }
-        await _userManager.UpdateSecurityStampAsync(currentUser);
-        await _signInManager.SignOutAsync();
-        await _signInManager.SignInAsync(currentUser, true);
+        await userManager.UpdateSecurityStampAsync(currentUser);
+        await signInManager.SignOutAsync();
+        await signInManager.SignInAsync(currentUser, true);
 
         return (true, null);
     }
     public async Task<bool> CheckPasswordAsync(string userName, string passwordOld)
     {
-        var currentUser = await _userManager.FindByNameAsync(userName);
+        var currentUser = await userManager.FindByNameAsync(userName);
 
-        return await _userManager.CheckPasswordAsync(currentUser!, passwordOld);
+        return await userManager.CheckPasswordAsync(currentUser!, passwordOld);
     }
     public async Task<(bool, IEnumerable<IdentityError>?)> ChangePasswordAsync(PasswordChangeRequest request, string userName)
     {
-        var currentUser = await _userManager.FindByNameAsync(userName);
-        var resultChangePassword = await _userManager.ChangePasswordAsync(currentUser, request.PasswordOld!, request.PasswordNew!);
+        var currentUser = await userManager.FindByNameAsync(userName);
+        var resultChangePassword = await userManager.ChangePasswordAsync(currentUser, request.PasswordOld!, request.PasswordNew!);
 
         if (!resultChangePassword.Succeeded)
         {
             return (false, resultChangePassword.Errors);
         }
-        await _userManager.UpdateSecurityStampAsync(currentUser);
-        await _signInManager.SignOutAsync();
-        await _signInManager.PasswordSignInAsync(currentUser, request.PasswordNew!, true, true);
+        await userManager.UpdateSecurityStampAsync(currentUser);
+        await signInManager.SignOutAsync();
+        await signInManager.PasswordSignInAsync(currentUser, request.PasswordNew!, true, true);
         return (true, null);
     }
 }

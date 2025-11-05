@@ -7,26 +7,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Service.Service;
 
-public class RoleService : IRoleService
+public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> userManager) : IRoleService
 {
-    private readonly RoleManager<AppRole> _roleManager;
-    private readonly UserManager<AppUser> _userManager;
-
-    public RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> userManager)
-    {
-        _roleManager = roleManager;
-        _userManager = userManager;
-    }
-
     public async Task<List<RoleViewModel>> GetRoleListAsync()
     {
-        var roles = await _roleManager.Roles.AsNoTracking().ToListAsync();
+        var roles = await roleManager.Roles.AsNoTracking().ToListAsync();
         var roleViewModel = roles.Select(x => new RoleViewModel() { Id = x.Id, Name = x.Name }).ToList();
         return roleViewModel;
     }
     public async Task<(bool, IEnumerable<IdentityError>?)> CreateRoleAsync(RoleCreateRequest request)
     {
-        var result = await _roleManager.CreateAsync(new AppRole() { Name = request.Name });
+        var result = await roleManager.CreateAsync(new AppRole() { Name = request.Name });
 
         if (!result.Succeeded)
         {
@@ -36,7 +27,7 @@ public class RoleService : IRoleService
     }
     public async Task<(bool, RoleUpdateViewModel?)> FindByIdReturnRoleUpdateViewModelAsync(string id)
     {
-        var role = await _roleManager.FindByIdAsync(id);
+        var role = await roleManager.FindByIdAsync(id);
         if (role == null)
         {
             return (false, null);
@@ -47,22 +38,22 @@ public class RoleService : IRoleService
 
     public async Task<(bool, IEnumerable<IdentityError>?)> UpdateRoleAsync(RoleUpdateRequest request)
     {
-        var role = await _roleManager.FindByIdAsync(request.Id);
+        var role = await roleManager.FindByIdAsync(request.Id);
         if (role == null)
         {
             return (false, null);
         }
         role.Name = request.Name;
-        var result = await _roleManager.UpdateAsync(role);
+        var result = await roleManager.UpdateAsync(role);
         if (!result.Succeeded) { return (false, result.Errors); }
 
         else { return (true, null); }
     }
     public async Task<(bool, IEnumerable<IdentityError>?)> DeleteRoleAsync(string id)
     {
-        var role = await _roleManager.FindByIdAsync(id);
+        var role = await roleManager.FindByIdAsync(id);
 
-        var result = await _roleManager.DeleteAsync(role);
+        var result = await roleManager.DeleteAsync(role);
         if (!result.Succeeded)
         {
             return (false, result.Errors);
@@ -73,13 +64,13 @@ public class RoleService : IRoleService
 
     public async Task<List<AssignToRoleViewModel>> GetRoleByIdReturnAssignToRoleAsync(string id)
     {
-        var user = await _userManager.FindByIdAsync(id);
+        var user = await userManager.FindByIdAsync(id);
 
-        var roles = await _roleManager.Roles.ToListAsync();
+        var roles = await roleManager.Roles.ToListAsync();
 
         var roleViewModel = new List<AssignToRoleViewModel>();
 
-        var userRoles = await _userManager.GetRolesAsync(user);
+        var userRoles = await userManager.GetRolesAsync(user);
 
         foreach (var role in roles)
         {
@@ -95,15 +86,15 @@ public class RoleService : IRoleService
     }
     public async Task AssignRoleAsync(string id, List<AssignToRoleViewModel> request)
     {
-        var user = await _userManager.FindByIdAsync(id);
+        var user = await userManager.FindByIdAsync(id);
 
         foreach (var role in request)
         {
             if (role.Exist)
             {
-                await _userManager.AddToRoleAsync(user, role.Name);
+                await userManager.AddToRoleAsync(user, role.Name);
             }
-            else await _userManager.RemoveFromRoleAsync(user, role.Name);
+            else await userManager.RemoveFromRoleAsync(user, role.Name);
         }
     }
 }

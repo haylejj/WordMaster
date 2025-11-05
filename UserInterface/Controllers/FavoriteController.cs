@@ -1,26 +1,57 @@
-﻿using AutoMapper;
-using Core.Entity;
+﻿using Core.Entity;
 using Core.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UserInterface.Extensions;
-using X.PagedList;
 
 namespace UserInterface.Controllers;
 
 [Authorize]
 [Route("/Favorite")]
-public class FavoriteController(IMapper mapper, IFavoriteService favoriteService, IWordService wordService, IUnknowsService unknowsService) : Controller
+public class FavoriteController(IFavoriteService favoriteService, IWordService wordService) : Controller
 {
     [HttpGet("")]
     [HttpGet("Index")]
-    public async Task<IActionResult> Index(int page = 1)
+    public async Task<IActionResult> Index()
     {
         var userId = User.GetUserId();
         var favorities = await favoriteService.Where(x => x.UserId == userId).Include(x => x.Word).ToListAsync();
-        return View(favorities.ToPagedList(page, 5));
+        return View(favorities);
     }
+    [HttpPost("ToggleFavorite")]
+    public async Task<IActionResult> ToggleFavorite(int id)
+    {
+        var userId = User.GetUserId();
+        var word = await wordService.Where(x => x.Id == id && x.UserId == userId).FirstOrDefaultAsync();
+        if (word == null)
+        {
+            return Json(new { success = false, message = "Kelime bulunamadı." });
+        }
+
+        // Aynı kelime zaten favorite'da mı kontrol et
+        var existingFavorite = await favoriteService.Where(x => x.WordId == word.Id && x.UserId == userId).FirstOrDefaultAsync();
+
+        if (existingFavorite == null)
+        {
+            // Ekle
+            var favorite = new Favorite
+            {
+                WordId = word.Id,
+                UserId = userId,
+                CreatedTime = DateTime.Now
+            };
+            await favoriteService.AddAsync(favorite);
+            return Json(new { success = true, isFavorite = true, message = "Favorilere eklendi." });
+        }
+        else
+        {
+            // Çıkar
+            await favoriteService.RemoveAsync(existingFavorite);
+            return Json(new { success = true, isFavorite = false, message = "Favorilerden çıkarıldı." });
+        }
+    }
+
     [HttpGet("AddFavorite")]
     public async Task<IActionResult> AddFavorite(int id)
     {
@@ -51,30 +82,71 @@ public class FavoriteController(IMapper mapper, IFavoriteService favoriteService
         var favorite = await favoriteService.Where(x => x.Id == id && x.UserId == userId).Include(x => x.Word).FirstOrDefaultAsync();
         return favorite == null ? NotFound() : View(favorite.Word);
     }
-    [HttpPost]
-    public async Task<IActionResult> UpdateFavorite(Word word)
+    [HttpGet("GetWord")]
+    public async Task<IActionResult> GetWord(int favoriteId)
     {
         var userId = User.GetUserId();
-        var existingWord = await wordService.Where(x => x.Id == word.Id && x.UserId == userId).FirstOrDefaultAsync();
-        if (existingWord == null)
+        var favorite = await favoriteService.Where(x => x.Id == favoriteId && x.UserId == userId)
+            .Include(x => x.Word)
+            .FirstOrDefaultAsync();
+
+        if (favorite?.Word == null)
         {
-            return NotFound();
+            return Json(new { success = false, message = "Kelime bulunamadı." });
         }
 
-        existingWord.EnglishWord = word.EnglishWord;
-        existingWord.TurkishWord = word.TurkishWord;
-
-        await wordService.UpdateAsync(existingWord);
-        return RedirectToAction("Index");
+        return Json(new
+        {
+            success = true,
+            word = new
+            {
+                id = favorite.Word.Id,
+                englishWord = favorite.Word.EnglishWord,
+                turkishWord = favorite.Word.TurkishWord
+            }
+        });
     }
+
+    [HttpPost("UpdateWord")]
+    public async Task<IActionResult> UpdateWord(Core.Dto.WordDto wordDto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return Json(new { success = false, message = "Geçersiz veri." });
+        }
+
+        var userId = User.GetUserId();
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Json(new { success = false, message = "Kullanıcı bilgisi bulunamadı." });
+        }
+
+        var (success, errorMessage) = await wordService.UpdateWordAsync(wordDto.Id, wordDto, userId);
+
+        if (!success)
+        {
+            return Json(new { success = false, message = errorMessage ?? "Kelime güncellenirken bir hata oluştu." });
+        }
+
+        return Json(new { success = true, message = "Kelime başarıyla güncellendi." });
+    }
+
+    [HttpPost("DeleteFavorite")]
     public async Task<IActionResult> DeleteFavorite(int id)
     {
         var userId = User.GetUserId();
-        var favorite = await favoriteService.Where(x => x.Id == id && x.UserId == userId).FirstOrDefaultAsync();
-        if (favorite != null)
+        if (string.IsNullOrEmpty(userId))
         {
-            await favoriteService.RemoveAsync(favorite);
+            return Json(new { success = false, message = "Kullanıcı bilgisi bulunamadı." });
         }
-        return RedirectToAction("Index");
+
+        var (success, errorMessage) = await favoriteService.DeleteFavoriteAsync(id, userId);
+
+        if (!success)
+        {
+            return Json(new { success = false, message = errorMessage ?? "Favori silinirken bir hata oluştu." });
+        }
+
+        return Json(new { success = true, message = "Favori başarıyla silindi." });
     }
 }

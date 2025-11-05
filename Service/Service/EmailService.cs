@@ -6,29 +6,22 @@ using System.Net.Mail;
 
 namespace Service.Service;
 
-public class EmailService : IEmailService
+public class EmailService(IOptions<EmailSettings> settings) : IEmailService
 {
-    private readonly IOptions<EmailSettings> _settings;
-
-    public EmailService(IOptions<EmailSettings> settings)
-    {
-        _settings=settings;
-    }
-
     public async Task SendResetPasswordLinkToEmailAsync(string resetEmailLink, string toEmail)
     {
         var smtpClient = new SmtpClient();
 
-        smtpClient.Host=_settings.Value.Host!;
+        smtpClient.Host=settings.Value.Host!;
         smtpClient.DeliveryMethod = SmtpDeliveryMethod.Network;
         smtpClient.UseDefaultCredentials = false;
         smtpClient.Port=587;
-        smtpClient.Credentials=new NetworkCredential(_settings.Value.Email, _settings.Value.Password);
+        smtpClient.Credentials=new NetworkCredential(settings.Value.Email, settings.Value.Password);
         smtpClient.EnableSsl = true;
 
         var mailMessage = new MailMessage();
 
-        mailMessage.From=new MailAddress(_settings.Value.Email!);
+        mailMessage.From=new MailAddress(settings.Value.Email!);
         mailMessage.To.Add(toEmail);
 
         mailMessage.Subject="Localhost | Şifre sıfırlama linki:";

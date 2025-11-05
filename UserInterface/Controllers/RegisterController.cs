@@ -6,15 +6,8 @@ using UserInterface.Extensions;
 namespace UserInterface.Controllers;
 
 [Route("/Register")]
-public class RegisterController : Controller
+public class RegisterController(IRegisterService registerService) : Controller
 {
-    private readonly IRegisterService _registerService;
-
-    public RegisterController(IRegisterService registerService)
-    {
-        this._registerService = registerService;
-    }
-
     [HttpGet("")]
     public IActionResult Register()
     {
@@ -28,7 +21,7 @@ public class RegisterController : Controller
         {
             return View();
         }
-        var (isSuccess, errors) = await _registerService.RegisterAsync(request);
+        var (isSuccess, errors) = await registerService.RegisterAsync(request);
 
         if (!isSuccess)
         {

@@ -7,24 +7,17 @@ using UserInterface.Extensions;
 namespace UserInterface.Controllers;
 
 [Authorize]
-public class MemberController : Controller
+public class MemberController(IMemberService memberService) : Controller
 {
-    private readonly IMemberService _memberService;
-
-    public MemberController(IMemberService memberService)
-    {
-        _memberService = memberService;
-    }
-
     public async Task<IActionResult> LogOut()
     {
-        await _memberService.LogOutAsync();
-        return RedirectToAction("LogIn", "Login");
+        await memberService.LogOutAsync();
+        return RedirectToAction("", "Login");
     }
     public async Task<IActionResult> UserEdit()
     {
-        ViewBag.genderList = _memberService.GetGenderSelectList();
-        return View(await _memberService.GetUserEditViewModelAsync(User.Identity!.Name!));
+        ViewBag.genderList = memberService.GetGenderSelectList();
+        return View(await memberService.GetUserEditViewModelAsync(User.Identity!.Name!));
     }
     [HttpPost]
     public async Task<IActionResult> UserEdit(UserEditRequest request)
@@ -33,7 +26,7 @@ public class MemberController : Controller
         {
             return View();
         }
-        var (isSuccess, error) = await _memberService.EditUserAsync(request, User.Identity!.Name!);
+        var (isSuccess, error) = await memberService.EditUserAsync(request, User.Identity!.Name!);
         if (!isSuccess)
         {
             ModelState.AddModelErrorList(error!.Select(x => x.Description).ToList());
@@ -52,12 +45,12 @@ public class MemberController : Controller
         {
             return View();
         }
-        if (!await _memberService.CheckPasswordAsync(User.Identity!.Name!, request.PasswordOld!))
+        if (!await memberService.CheckPasswordAsync(User.Identity!.Name!, request.PasswordOld!))
         {
             ModelState.AddModelError(string.Empty, "Mevcut şifrenizi yanlış girdiniz.");
             return View();
         }
-        var (isSuccess, error) = await _memberService.ChangePasswordAsync(request, User.Identity!.Name!);
+        var (isSuccess, error) = await memberService.ChangePasswordAsync(request, User.Identity!.Name!);
         if (!isSuccess)
         {
             ModelState.AddModelErrorList(error!.Select(x => x.Description).ToList());

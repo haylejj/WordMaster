@@ -7,31 +7,25 @@
 <script src="\lib\jquery\dist\jquery.js"></script>
 
 <h2 class="text-center form-page-title">Add Word to Your Dictionary</h2>
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+    </div>
+}
 @using (Html.BeginForm("AddWord", "Word", FormMethod.Post))
 {
     <div class="form-page-container">
         <div class="form-page-form-group">
             <label class="label-english">English:</label>
-            @Html.TextBoxFor(x => x.EnglishWord, new { @class = "form-control" })
+            @Html.TextBoxFor(x => x.EnglishWord, new { @class = "form-control", required = "required", maxlength = "30" })
+            @Html.ValidationMessageFor(x => x.EnglishWord, "", new { @class = "text-danger" })
         </div>
         <div class="form-page-form-group">
             <label class="label-turkish">Turkish:</label>
-            @Html.TextBoxFor(x => x.TurkishWord, new { @class = "form-control" })
+            @Html.TextBoxFor(x => x.TurkishWord, new { @class = "form-control", required = "required", maxlength = "30" })
+            @Html.ValidationMessageFor(x => x.TurkishWord, "", new { @class = "text-danger" })
         </div>
-        <button class="practice-btn" id="btn1">Save</button>
+        <button class="practice-btn" type="submit">Save</button>
     </div>
 }
-<script>
-    $('#btn1').click(function (event) {
-        event.preventDefault(); // Formun otomatik submit olmasını engeller
-
-        swal({
-            title: "Başarılı",
-            text: "Kelime başarıyla eklendi!",
-            icon: "success",
-            button: "Tamam",
-        }).then(function () {
-            $('form').submit(); // Formun submit işlemini gerçekleştirir
-        });
-    });
-</script>

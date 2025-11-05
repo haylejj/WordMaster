@@ -1,8 +1,5 @@
-﻿@using X.PagedList
-@using X.PagedList.Mvc.Core
-@using X.PagedList.Web.Common
-@using Core.Entity
-@model PagedList<Word>
+﻿@using Core.Entity
+@model List<Word>
 @{
     ViewData["Title"] = "Index";
     Layout = "~/Views/Shared/Main_Layout.cshtml";
@@ -10,55 +7,100 @@
 <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 <script src="\lib\jquery\dist\jquery.js"></script>
 
-<h1 class="text-center page-title">Your Dictionary</h1>
-<table class="table table-bordered table-striped table-warning">
-    <thead class="bg-secondary">
+<h1 class="text-center page-title">Kelimelerim</h1>
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+<table class="table table-bordered table-striped table-hover">
+    <thead>
         <tr>
-            <th>#</th>
-            <th>English</th>
-            <th>Turkish</th>
-            <th>Add Favorites</th>
-            <th>Add Unknows</th>
-            <th>Delete</th>
-            <th>Update</th>
+            <th>İngilizce</th>
+            <th>Türkçe</th>
+            <th>İşlemler</th>
+            <th>Sil</th>
+            <th>Güncelle</th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var item in Model)
+        @if (Model == null || Model.Count == 0)
         {
             <tr>
-                <td>@item.Id</td>
-                <td>@item.EnglishWord</td>
-                <td>@item.TurkishWord</td>
-                <td><a href="/Favorite/AddFavorite/@item.Id" class="btn btn-success">Favorites</a></td>
-                <td><a href="/Unknows/AddUnknows/@item.Id" class="btn btn-success">Unknows</a></td>
-                <td>
-                    <form action="/Word/DeleteWord/@item.Id" method="POST" id="deleteForm">
-                        <a href="#" class="btn btn-warning" onclick="showConfirmation(event, @item.Id)">Delete</a>
-                    </form>
+                <td colspan="5" class="text-center">
+                    <p class="text-muted mt-3 mb-3">Veri bulunmamaktadır.</p>
                 </td>
-                <td><a href="/Word/UpdateWord/@item.Id" class="btn btn-outline-primary">Update</a></td>
             </tr>
+        }
+        else
+        {
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.EnglishWord</td>
+                    <td>@item.TurkishWord</td>
+                    <td class="text-center">
+                        <div class="d-flex flex-column gap-2 align-items-center">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input favorite-checkbox" type="checkbox" data-word-id="@item.Id"
+                                    @(item.Favorite != null ? "checked" : "") id="favorite-@item.Id">
+                                <label class="form-check-label" for="favorite-@item.Id">Favorites</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input unknows-checkbox" type="checkbox" data-word-id="@item.Id"
+                                    @(item.Unknows != null ? "checked" : "") id="unknows-@item.Id">
+                                <label class="form-check-label" for="unknows-@item.Id">Unknows</label>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <a href="#" class="btn btn-danger" onclick="deleteWord(@item.Id, event)">Delete</a>
+                    </td>
+                    <td>
+                        <a href="#" class="btn btn-warning" onclick="openUpdateModal(@item.Id, event)">Update</a>
+                    </td>
+                </tr>
+            }
         }
     </tbody>
 </table>
-@{
-    var renderOptions = new PagedListRenderOptions
-    {
-        DisplayLinkToFirstPage = X.PagedList.Mvc.Core.PagedListDisplayMode.Always,
-        DisplayLinkToLastPage = X.PagedList.Mvc.Core.PagedListDisplayMode.Always,
-        DisplayLinkToPreviousPage = X.PagedList.Mvc.Core.PagedListDisplayMode.Always,
-        DisplayLinkToNextPage = X.PagedList.Mvc.Core.PagedListDisplayMode.Always,
-        DisplayLinkToIndividualPages = true
-    };
-}
-<div class="pagedList">
-    @Html.PagedListPager((IPagedList)Model, page => Url.Action("Index", new { page }), renderOptions)
+
+<!-- Update Modal -->
+<div class="modal fade" id="updateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Kelime Güncelle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="updateWordForm">
+                    <input type="hidden" id="updateWordId" name="Id" />
+                    <div class="mb-3">
+                        <label for="updateEnglishWord" class="form-label">English:</label>
+                        <input type="text" class="form-control" id="updateEnglishWord" name="EnglishWord" required
+                            maxlength="30" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="updateTurkishWord" class="form-label">Turkish:</label>
+                        <input type="text" class="form-control" id="updateTurkishWord" name="TurkishWord" required
+                            maxlength="30" />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-primary" onclick="updateWord()">Güncelle</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
-    function showConfirmation(event, id) {
-        event.preventDefault(); // Linkin varsayılan davranışını engelle
+    function deleteWord(id, event) {
+        event.preventDefault();
 
         swal({
             title: "Emin misiniz?",
@@ -69,11 +111,134 @@
         })
             .then((willDelete) => {
                 if (willDelete) {
-                    document.getElementById("deleteForm").action = "/Word/DeleteWord/" + id; // Formun action'ını güncelle
-                    document.getElementById("deleteForm").submit(); // Formu submit et
-                } else {
-                    swal("Kelime Silinmedi !!!", "warning")
+                    $.ajax({
+                        url: '/Word/DeleteWord',
+                        type: 'POST',
+                        data: { id: id },
+                        success: function (response) {
+                            if (response.success) {
+                                swal("Başarılı!", response.message, "success")
+                                    .then(() => {
+                                        location.reload(); // Sayfayı yenile
+                                    });
+                            } else {
+                                swal("Hata!", response.message, "error");
+                            }
+                        },
+                        error: function () {
+                            swal("Hata!", "Bir hata oluştu. Lütfen tekrar deneyin.", "error");
+                        }
+                    });
                 }
             });
     }
+
+    function openUpdateModal(id, event) {
+        event.preventDefault();
+
+        // Kelimeyi getir
+        $.ajax({
+            url: '/Word/GetWord',
+            type: 'GET',
+            data: { id: id },
+            success: function (response) {
+                if (response.success) {
+                    $('#updateWordId').val(response.word.id);
+                    $('#updateEnglishWord').val(response.word.englishWord);
+                    $('#updateTurkishWord').val(response.word.turkishWord);
+                    $('#updateModal').modal('show');
+                } else {
+                    swal("Hata!", response.message, "error");
+                }
+            },
+            error: function () {
+                swal("Hata!", "Kelime bilgisi alınamadı.", "error");
+            }
+        });
+    }
+
+    function updateWord() {
+        var wordDto = {
+            Id: parseInt($('#updateWordId').val()),
+            EnglishWord: $('#updateEnglishWord').val(),
+            TurkishWord: $('#updateTurkishWord').val()
+        };
+
+        if (!wordDto.EnglishWord || !wordDto.TurkishWord) {
+            swal("Hata!", "Lütfen tüm alanları doldurun.", "error");
+            return;
+        }
+
+        $.ajax({
+            url: '/Word/UpdateWord',
+            type: 'POST',
+            data: wordDto,
+            success: function (response) {
+                if (response.success) {
+                    $('#updateModal').modal('hide');
+                    swal("Başarılı!", response.message, "success")
+                        .then(() => {
+                            location.reload(); // Sayfayı yenile
+                        });
+                } else {
+                    swal("Hata!", response.message, "error");
+                }
+            },
+            error: function () {
+                swal("Hata!", "Bir hata oluştu. Lütfen tekrar deneyin.", "error");
+            }
+        });
+    }
+
+    // Favorite checkbox toggle
+    $(document).on('change', '.favorite-checkbox', function () {
+        var wordId = $(this).data('word-id');
+        var isChecked = $(this).is(':checked');
+        var checkbox = $(this);
+
+        $.ajax({
+            url: '/Favorite/ToggleFavorite',
+            type: 'POST',
+            data: { id: wordId },
+            success: function (response) {
+                if (response.success) {
+                    checkbox.prop('checked', response.isFavorite);
+                    // İsteğe bağlı: başarı mesajı göster
+                } else {
+                    checkbox.prop('checked', !isChecked); // Geri al
+                    alert(response.message || 'Bir hata oluştu.');
+                }
+            },
+            error: function () {
+                checkbox.prop('checked', !isChecked); // Geri al
+                alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+            }
+        });
+    });
+
+    // Unknows checkbox toggle
+    $(document).on('change', '.unknows-checkbox', function () {
+        var wordId = $(this).data('word-id');
+        var isChecked = $(this).is(':checked');
+        var checkbox = $(this);
+
+        $.ajax({
+            url: '/Unknows/ToggleUnknows',
+            type: 'POST',
+            data: { id: wordId },
+            success: function (response) {
+                if (response.success) {
+                    checkbox.prop('checked', response.isUnknows);
+                    // İsteğe bağlı: başarı mesajı göster
+                } else {
+                    checkbox.prop('checked', !isChecked); // Geri al
+                    alert(response.message || 'Bir hata oluştu.');
+                }
+            },
+            error: function () {
+                checkbox.prop('checked', !isChecked); // Geri al
+                alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+            }
+        });
+    });
 </script>

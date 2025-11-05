@@ -1,88 +1,124 @@
-﻿using AutoMapper;
-using Core.Dto;
+﻿using Core.Dto;
 using Core.Entity;
+using Core.Extensions;
 using Core.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UserInterface.Extensions;
-using X.PagedList;
 
 namespace UserInterface.Controllers;
 
 [Authorize]
 [Route("/Word")]
-public class WordController : Controller
+public class WordController(IWordService wordService) : Controller
 {
-    private readonly IWordService _wordService;
-    private readonly IMapper _mapper;
-    private readonly IUnknowsService _unknowsService;
-    private readonly IFavoriteService _favoriteService;
-
-    public WordController(IWordService wordService, IMapper mapper, IFavoriteService favoriteService, IUnknowsService unknowsService)
-    {
-        _wordService = wordService;
-        _mapper = mapper;
-        _favoriteService = favoriteService;
-        _unknowsService = unknowsService;
-    }
-
     [HttpGet("")]
     [HttpGet("Index")]
-    public async Task<IActionResult> Index(int page = 1)
+    public async Task<IActionResult> Index()
     {
         var userId = User.GetUserId();
-        var words = await _wordService.Where(x => x.UserId == userId).ToListAsync();
-        return View(words.ToPagedList(page, 10));
+        var words = await wordService.Where(x => x.UserId == userId)
+            .Include(x => x.Favorite)
+            .Include(x => x.Unknows)
+            .ToListAsync();
+        return View(words);
     }
     [HttpGet("AddWord")]
     public IActionResult AddWord()
     {
         return View();
     }
-    [HttpPost]
+    [HttpPost("AddWord")]
     public async Task<IActionResult> AddWord(WordDto wordDto)
     {
+        if (!ModelState.IsValid)
+        {
+            return View(wordDto);
+        }
+
         var userId = User.GetUserId();
-        var word = _mapper.Map<Word>(wordDto);
-        word.UserId = userId;
-        word.CreatedTime = DateTime.Now;
-        await _wordService.AddAsync(word);
-        return RedirectToAction(nameof(Index));
+        if (string.IsNullOrEmpty(userId))
+        {
+            ModelState.AddModelError("", "Kullanıcı bilgisi bulunamadı.");
+            return View(wordDto);
+        }
+
+        var (success, errorMessage) = await wordService.AddWordAsync(wordDto, userId);
+
+        if (!success)
+        {
+            ModelState.AddModelError("EnglishWord", errorMessage ?? "Kelime eklenirken bir hata oluştu.");
+            return View(wordDto);
+        }
+
+        TempData["SuccessMessage"] = "Kelime başarıyla eklendi!";
+        return RedirectToAction(nameof(AddWord));
     }
-    [HttpPost]
+    [HttpPost("DeleteWord")]
     public async Task<IActionResult> DeleteWord(int id)
     {
         var userId = User.GetUserId();
-        var word = await _wordService.Where(x => x.Id == id && x.UserId == userId).FirstOrDefaultAsync();
-        if (word != null)
+        if (string.IsNullOrEmpty(userId))
         {
-            await _wordService.RemoveAsync(word);
-        }
-        return RedirectToAction(nameof(Index));
-    }
-    [HttpGet("UpdateWord")]
-    public async Task<IActionResult> UpdateWord(int id)
-    {
-        var userId = User.GetUserId();
-        var word = await _wordService.Where(x => x.Id == id && x.UserId == userId).FirstOrDefaultAsync();
-        return word == null ? NotFound() : View(word);
-    }
-    [HttpPost]
-    public async Task<IActionResult> UpdateWord(Word word)
-    {
-        var userId = User.GetUserId();
-        var existingWord = await _wordService.Where(x => x.Id == word.Id && x.UserId == userId).FirstOrDefaultAsync();
-        if (existingWord == null)
-        {
-            return NotFound();
+            return Json(new { success = false, message = "Kullanıcı bilgisi bulunamadı." });
         }
 
-        existingWord.EnglishWord = word.EnglishWord;
-        existingWord.TurkishWord = word.TurkishWord;
+        var (success, errorMessage) = await wordService.DeleteWordAsync(id, userId);
 
-        await _wordService.UpdateAsync(existingWord);
-        return RedirectToAction(nameof(Index));
+        if (!success)
+        {
+            return Json(new { success = false, message = errorMessage ?? "Kelime silinirken bir hata oluştu." });
+        }
+
+        return Json(new { success = true, message = "Kelime başarıyla silindi." });
+    }
+
+    [HttpGet("GetWord")]
+    public async Task<IActionResult> GetWord(int id)
+    {
+        var userId = User.GetUserId();
+        var word = await wordService.Where(x => x.Id == id && x.UserId == userId).FirstOrDefaultAsync();
+
+        if (word == null)
+        {
+            return Json(new { success = false, message = "Kelime bulunamadı." });
+        }
+
+        return Json(new
+        {
+            success = true,
+            word = new
+            {
+                id = word.Id,
+                englishWord = word.EnglishWord,
+                turkishWord = word.TurkishWord
+            }
+        });
+    }
+
+    [HttpPost("UpdateWord")]
+    public async Task<IActionResult> UpdateWord(WordDto wordDto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return Json(new { success = false, message = "Geçersiz veri." });
+        }
+
+        var userId = User.GetUserId();
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Json(new { success = false, message = "Kullanıcı bilgisi bulunamadı." });
+        }
+
+        var (success, errorMessage) = await wordService.UpdateWordAsync(wordDto.Id, wordDto, userId);
+
+        if (!success)
+        {
+            return Json(new { success = false, message = errorMessage ?? "Kelime güncellenirken bir hata oluştu." });
+        }
+
+        return Json(new { success = true, message = "Kelime başarıyla güncellendi." });
     }
 
 }

@@ -6,10 +6,9 @@ namespace Core.Service;
 public interface IFavoriteService
 {
     IQueryable<Favorite> Where(Expression<Func<Favorite, bool>> predicate);
-    Task<Favorite?> GetByIdAsync(int id);
-    Task<bool> AnyAsync(Expression<Func<Favorite, bool>> predicate);
     Task AddAsync(Favorite entity);
-    Task UpdateAsync(Favorite entity);
     Task RemoveAsync(Favorite entity);
-    Task<Favorite> GetLastFavorite();
+    Task<(bool Success, string? ErrorMessage)> DeleteFavoriteAsync(int favoriteId, string userId);
+    Task<string> GetRandomWordFromFavoritesAsync(string userId);
+    Task<bool> CheckTranslationAndUpdateAsync(string userId, string turkishWord, string englishWord, IWordService wordService);
 }

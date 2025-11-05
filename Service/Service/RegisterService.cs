@@ -5,20 +5,11 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Service.Service;
 
-public class RegisterService : IRegisterService
+public class RegisterService(UserManager<AppUser> userManager) : IRegisterService
 {
-
-    private readonly UserManager<AppUser> _userManager;
-    private readonly RoleManager<AppRole> _roleManager;
-    public RegisterService(UserManager<AppUser> userManager, RoleManager<AppRole> roleManager)
-    {
-        _userManager = userManager;
-        _roleManager = roleManager;
-    }
-
     public async Task<(bool, IEnumerable<IdentityError>?)> RegisterAsync(RegisterRequest request)
     {
-        var result = await _userManager.CreateAsync(new AppUser() { UserName = request.UserName, Email = request.Email, PhoneNumber = request.Phone }, request.Password);
+        var result = await userManager.CreateAsync(new AppUser() { UserName = request.UserName, Email = request.Email, PhoneNumber = request.Phone }, request.Password);
 
         if (!result.Succeeded)
         {
@@ -26,8 +17,8 @@ public class RegisterService : IRegisterService
         }
         else
         {
-            var user = await _userManager.FindByNameAsync(request.UserName);
-            await _userManager.AddToRoleAsync(user, "user");
+            var user = await userManager.FindByNameAsync(request.UserName);
+            await userManager.AddToRoleAsync(user, "user");
             return (true, null);
         }
     }
