@@ -91,7 +91,7 @@ public class WordService(IGenericRepository<Word> repository, IUnitOfWork unitOf
             x.Id != wordId &&
             x.UserId == userId &&
             x.EnglishWord != null &&
-            x.EnglishWord.ToLowerInvariant() == wordDto.EnglishWord.ToLowerInvariant());
+            x.EnglishWord == wordDto.EnglishWord);
 
         if (isDuplicate)
         {
@@ -128,7 +128,7 @@ public class WordService(IGenericRepository<Word> repository, IUnitOfWork unitOf
         var exists = await AnyAsync(x =>
             x.UserId == userId &&
             x.EnglishWord != null &&
-            x.EnglishWord.ToLowerInvariant() == normalizedWord.ToLowerInvariant());
+            x.EnglishWord == normalizedWord);
 
         return exists;
     }
@@ -147,14 +147,12 @@ public class WordService(IGenericRepository<Word> repository, IUnitOfWork unitOf
 
     public async Task<bool> CheckTranslationAndUpdateAsync(string userId, string turkishWord, string englishWord)
     {
-        // Gelen EnglishWord'i normalize et (standart formata getir)
         var normalizedEnglishWord = englishWord?.NormalizeEnglishWord();
 
-        // Karşılaştırma için ToLowerInvariant kullan (kültür sorununu çözer)
         var word = await Where(x =>
             x.UserId == userId &&
             x.EnglishWord != null &&
-            x.EnglishWord.ToLowerInvariant() == normalizedEnglishWord.ToLowerInvariant())
+            x.EnglishWord == normalizedEnglishWord)
             .FirstOrDefaultAsync();
 
         if (word == null)
@@ -162,8 +160,8 @@ public class WordService(IGenericRepository<Word> repository, IUnitOfWork unitOf
             return false;
         }
 
-        // Karşılaştırma için ToLowerInvariant kullan (kültür sorununu çözer)
-        bool isCorrect = word.TurkishWord?.ToLowerInvariant().Trim() == turkishWord?.ToLowerInvariant().Trim();
+        var normalizedTurkishWord = turkishWord?.NormalizeTurkishWord();
+        bool isCorrect = word.TurkishWord == normalizedTurkishWord;
 
         // Öğrenme takibini güncelle
         word.IsLastAnswerCorrect = isCorrect;

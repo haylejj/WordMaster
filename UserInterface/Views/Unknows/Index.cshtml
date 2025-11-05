@@ -5,7 +5,9 @@
     Layout = "~/Views/Shared/Main_Layout.cshtml";
 }
 <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
-<script src="\lib\jquery\dist\jquery.js"></script>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/js/unknows/delete.js"></script>
+<script src="~/js/unknows/update.js"></script>
 
 <h1 class="text-center page-title">Bilinmeyen Kelimeler</h1>
 <table class="table table-bordered table-striped table-hover">
@@ -75,95 +77,3 @@
         </div>
     </div>
 </div>
-
-<script>
-    function deleteUnknows(id, event) {
-        event.preventDefault();
-
-        swal({
-            title: "Emin misiniz?",
-            text: "Bu bilinmeyen kelimeyi silmek istediğinizden emin misiniz?",
-            icon: "warning",
-            buttons: true,
-            dangerMode: true,
-        })
-            .then((willDelete) => {
-                if (willDelete) {
-                    $.ajax({
-                        url: '/Unknows/DeleteUnknows',
-                        type: 'POST',
-                        data: { id: id },
-                        success: function (response) {
-                            if (response.success) {
-                                swal("Başarılı!", response.message, "success")
-                                    .then(() => {
-                                        location.reload();
-                                    });
-                            } else {
-                                swal("Hata!", response.message, "error");
-                            }
-                        },
-                        error: function () {
-                            swal("Hata!", "Bir hata oluştu. Lütfen tekrar deneyin.", "error");
-                        }
-                    });
-                }
-            });
-    }
-
-    function openUpdateModal(unknowsId, event) {
-        event.preventDefault();
-
-        $.ajax({
-            url: '/Unknows/GetWord',
-            type: 'GET',
-            data: { unknowsId: unknowsId },
-            success: function (response) {
-                if (response.success) {
-                    $('#updateWordId').val(response.word.id);
-                    $('#updateEnglishWord').val(response.word.englishWord);
-                    $('#updateTurkishWord').val(response.word.turkishWord);
-                    $('#updateModal').modal('show');
-                } else {
-                    swal("Hata!", response.message, "error");
-                }
-            },
-            error: function () {
-                swal("Hata!", "Kelime bilgisi alınamadı.", "error");
-            }
-        });
-    }
-
-    function updateWord() {
-        var wordDto = {
-            Id: parseInt($('#updateWordId').val()),
-            EnglishWord: $('#updateEnglishWord').val(),
-            TurkishWord: $('#updateTurkishWord').val()
-        };
-
-        if (!wordDto.EnglishWord || !wordDto.TurkishWord) {
-            swal("Hata!", "Lütfen tüm alanları doldurun.", "error");
-            return;
-        }
-
-        $.ajax({
-            url: '/Unknows/UpdateWord',
-            type: 'POST',
-            data: wordDto,
-            success: function (response) {
-                if (response.success) {
-                    $('#updateModal').modal('hide');
-                    swal("Başarılı!", response.message, "success")
-                        .then(() => {
-                            location.reload();
-                        });
-                } else {
-                    swal("Hata!", response.message, "error");
-                }
-            },
-            error: function () {
-                swal("Hata!", "Bir hata oluştu. Lütfen tekrar deneyin.", "error");
-            }
-        });
-    }
-</script>

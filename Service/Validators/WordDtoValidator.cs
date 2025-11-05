@@ -14,7 +14,7 @@ public class WordDtoValidator : AbstractValidator<WordDto>
 
         RuleFor(x => x.TurkishWord)
             .NotEmpty().WithMessage("Türkçe kelime alanı boş bırakılamaz")
-            .MaximumLength(30).WithMessage("Türkçe kelime en fazla 30 karakter olabilir")
+            .MaximumLength(60).WithMessage("Türkçe kelime en fazla 60 karakter olabilir")
             .Must(x => !string.IsNullOrWhiteSpace(x)).WithMessage("Türkçe kelime boş olamaz");
     }
 }

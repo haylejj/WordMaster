@@ -11,7 +11,7 @@ public class WordConfigurations : IEntityTypeConfiguration<Word>
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).UseIdentityColumn();
         builder.Property(x => x.EnglishWord).IsRequired().HasMaxLength(30);
-        builder.Property(x => x.TurkishWord).IsRequired().HasMaxLength(30);
+        builder.Property(x => x.TurkishWord).IsRequired().HasMaxLength(60);
         builder.Property(x => x.CreatedTime).IsRequired();
 
         // Öğrenme Takibi - Varsayılan değerler

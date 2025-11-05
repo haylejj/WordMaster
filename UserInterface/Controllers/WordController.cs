@@ -1,6 +1,4 @@
 ﻿using Core.Dto;
-using Core.Entity;
-using Core.Extensions;
 using Core.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

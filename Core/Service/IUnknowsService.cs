@@ -10,5 +10,5 @@ public interface IUnknowsService
     Task RemoveAsync(Unknows entity);
     Task<(bool Success, string? ErrorMessage)> DeleteUnknowsAsync(int unknowsId, string userId);
     Task<string> GetRandomWordFromUnknowsAsync(string userId);
-    Task<bool> CheckTranslationAndUpdateAsync(string userId, string turkishWord, string englishWord, IWordService wordService);
+    Task<bool> CheckTranslationAndUpdateAsync(string userId, string turkishWord, string englishWord);
 }

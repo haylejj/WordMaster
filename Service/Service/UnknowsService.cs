@@ -8,9 +8,10 @@ using System.Linq.Expressions;
 
 namespace Service.Service;
 
-public class UnknowsService(IGenericRepository<Unknows> repository, IUnitOfWork unitOfWork) : IUnknowsService
+public class UnknowsService(IGenericRepository<Unknows> repository, IUnitOfWork unitOfWork, IWordService wordService) : IUnknowsService
 {
     private static readonly Random _random = new();
+    private readonly IWordService _wordService = wordService;
     public IQueryable<Unknows> Where(Expression<Func<Unknows, bool>> predicate)
     {
         return repository.Where(predicate);
@@ -43,7 +44,7 @@ public class UnknowsService(IGenericRepository<Unknows> repository, IUnitOfWork 
         var unknows = await Where(x => x.UserId == userId)
             .Include(x => x.Word)
             .ToListAsync();
-        
+
         if (unknows == null || unknows.Count == 0)
         {
             return string.Empty;
@@ -53,17 +54,15 @@ public class UnknowsService(IGenericRepository<Unknows> repository, IUnitOfWork 
         return unknows[index].Word?.EnglishWord ?? string.Empty;
     }
 
-    public async Task<bool> CheckTranslationAndUpdateAsync(string userId, string turkishWord, string englishWord, IWordService wordService)
+    public async Task<bool> CheckTranslationAndUpdateAsync(string userId, string turkishWord, string englishWord)
     {
-        // Gelen EnglishWord'i normalize et (standart formata getir)
         var normalizedEnglishWord = englishWord?.NormalizeEnglishWord();
-        
-        // Karşılaştırma için ToLowerInvariant kullan (kültür sorununu çözer)
-        var unknow = await Where(x => 
-            x.Word != null && 
+
+        var unknow = await Where(x =>
+            x.Word != null &&
             x.UserId == userId &&
             x.Word.EnglishWord != null &&
-            x.Word.EnglishWord.ToLowerInvariant() == normalizedEnglishWord.ToLowerInvariant())
+            x.Word.EnglishWord == normalizedEnglishWord)
             .Include(x => x.Word)
             .FirstOrDefaultAsync();
 
@@ -73,8 +72,8 @@ public class UnknowsService(IGenericRepository<Unknows> repository, IUnitOfWork 
         }
 
         var word = unknow.Word;
-        // Karşılaştırma için ToLowerInvariant kullan (kültür sorununu çözer)
-        bool isCorrect = word.TurkishWord?.ToLowerInvariant().Trim() == turkishWord?.ToLowerInvariant().Trim();
+        var normalizedTurkishWord = turkishWord?.NormalizeTurkishWord();
+        bool isCorrect = word.TurkishWord == normalizedTurkishWord;
 
         // Öğrenme takibini güncelle
         word.IsLastAnswerCorrect = isCorrect;
@@ -93,7 +92,7 @@ public class UnknowsService(IGenericRepository<Unknows> repository, IUnitOfWork 
             word.TotalWrongCount++;
         }
 
-        await wordService.UpdateAsync(word);
+        await _wordService.UpdateAsync(word);
 
         return isCorrect;
     }

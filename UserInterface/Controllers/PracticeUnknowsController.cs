@@ -7,7 +7,7 @@ namespace UserInterface.Controllers;
 
 [Authorize]
 [Route("/PracticeUnknows")]
-public class PracticeUnknowsController(IUnknowsService unknowsService, IWordService wordService) : Controller
+public class PracticeUnknowsController(IUnknowsService unknowsService) : Controller
 {
     [HttpGet("")]
     [HttpGet("Index")]
@@ -23,7 +23,7 @@ public class PracticeUnknowsController(IUnknowsService unknowsService, IWordServ
     {
         var userId = User.GetUserId();
         if (userId == null) return Json(new { isCorrect = false });
-        bool isCorrect = await unknowsService.CheckTranslationAndUpdateAsync(userId, turkishWord, englishWord, wordService);
+        bool isCorrect = await unknowsService.CheckTranslationAndUpdateAsync(userId, turkishWord, englishWord);
         return Json(new { isCorrect });
     }
 

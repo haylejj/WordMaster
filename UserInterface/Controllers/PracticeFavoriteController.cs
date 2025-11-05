@@ -7,7 +7,7 @@ namespace UserInterface.Controllers;
 
 [Authorize]
 [Route("/PracticeFavorite")]
-public class PracticeFavoriteController(IFavoriteService favoriteService, IWordService wordService) : Controller
+public class PracticeFavoriteController(IFavoriteService favoriteService) : Controller
 {
     [HttpGet("")]
     [HttpGet("Index")]
@@ -23,7 +23,7 @@ public class PracticeFavoriteController(IFavoriteService favoriteService, IWordS
     {
         var userId = User.GetUserId();
         if (userId == null) return Json(new { isCorrect = false });
-        bool isCorrect = await favoriteService.CheckTranslationAndUpdateAsync(userId, turkishWord, englishWord, wordService);
+        bool isCorrect = await favoriteService.CheckTranslationAndUpdateAsync(userId, turkishWord, englishWord);
         return Json(new { isCorrect });
     }
 

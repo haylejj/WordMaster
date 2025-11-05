@@ -10,5 +10,5 @@ public interface IFavoriteService
     Task RemoveAsync(Favorite entity);
     Task<(bool Success, string? ErrorMessage)> DeleteFavoriteAsync(int favoriteId, string userId);
     Task<string> GetRandomWordFromFavoritesAsync(string userId);
-    Task<bool> CheckTranslationAndUpdateAsync(string userId, string turkishWord, string englishWord, IWordService wordService);
+    Task<bool> CheckTranslationAndUpdateAsync(string userId, string turkishWord, string englishWord);
 }

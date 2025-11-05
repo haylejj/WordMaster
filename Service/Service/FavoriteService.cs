@@ -8,9 +8,10 @@ using System.Linq.Expressions;
 
 namespace Service.Service;
 
-public class FavoriteService(IGenericRepository<Favorite> repository, IUnitOfWork unitOfWork) : IFavoriteService
+public class FavoriteService(IGenericRepository<Favorite> repository, IUnitOfWork unitOfWork, IWordService wordService) : IFavoriteService
 {
     private static readonly Random _random = new();
+    private readonly IWordService _wordService = wordService;
     public IQueryable<Favorite> Where(Expression<Func<Favorite, bool>> predicate)
     {
         return repository.Where(predicate);
@@ -52,17 +53,15 @@ public class FavoriteService(IGenericRepository<Favorite> repository, IUnitOfWor
         return favorites[index].Word?.EnglishWord ?? string.Empty;
     }
 
-    public async Task<bool> CheckTranslationAndUpdateAsync(string userId, string turkishWord, string englishWord, IWordService wordService)
+    public async Task<bool> CheckTranslationAndUpdateAsync(string userId, string turkishWord, string englishWord)
     {
-        // Gelen EnglishWord'i normalize et (standart formata getir)
         var normalizedEnglishWord = englishWord?.NormalizeEnglishWord();
 
-        // Karşılaştırma için ToLowerInvariant kullan (kültür sorununu çözer)
         var favorite = await Where(x =>
             x.Word != null &&
             x.UserId == userId &&
             x.Word.EnglishWord != null &&
-            x.Word.EnglishWord.ToLowerInvariant() == normalizedEnglishWord.ToLowerInvariant())
+            x.Word.EnglishWord == normalizedEnglishWord)
             .Include(x => x.Word)
             .FirstOrDefaultAsync();
 
@@ -72,8 +71,8 @@ public class FavoriteService(IGenericRepository<Favorite> repository, IUnitOfWor
         }
 
         var word = favorite.Word;
-        // Karşılaştırma için ToLowerInvariant kullan (kültür sorununu çözer)
-        bool isCorrect = word.TurkishWord?.ToLowerInvariant().Trim() == turkishWord?.ToLowerInvariant().Trim();
+        var normalizedTurkishWord = turkishWord?.NormalizeTurkishWord();
+        bool isCorrect = word.TurkishWord == normalizedTurkishWord;
 
         // Öğrenme takibini güncelle
         word.IsLastAnswerCorrect = isCorrect;
@@ -92,7 +91,7 @@ public class FavoriteService(IGenericRepository<Favorite> repository, IUnitOfWor
             word.TotalWrongCount++;
         }
 
-        await wordService.UpdateAsync(word);
+        await _wordService.UpdateAsync(word);
 
         return isCorrect;
     }
