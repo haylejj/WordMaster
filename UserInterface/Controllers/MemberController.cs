@@ -12,12 +12,13 @@ public class MemberController(IMemberService memberService) : Controller
     public async Task<IActionResult> LogOut()
     {
         await memberService.LogOutAsync();
-        return RedirectToAction("", "Login");
+        return RedirectToAction("Login", "Login");
     }
     public async Task<IActionResult> UserEdit()
     {
         ViewBag.genderList = memberService.GetGenderSelectList();
-        return View(await memberService.GetUserEditViewModelAsync(User.Identity!.Name!));
+        var vm = await memberService.GetUserEditViewModelAsync(User.Identity!.Name!);
+        return View(vm.Data);
     }
     [HttpPost]
     public async Task<IActionResult> UserEdit(UserEditRequest request)
@@ -26,10 +27,10 @@ public class MemberController(IMemberService memberService) : Controller
         {
             return View();
         }
-        var (isSuccess, error) = await memberService.EditUserAsync(request, User.Identity!.Name!);
-        if (!isSuccess)
+        var edit = await memberService.EditUserAsync(request, User.Identity!.Name!);
+        if (!edit.IsSuccess)
         {
-            ModelState.AddModelErrorList(error!.Select(x => x.Description).ToList());
+            ModelState.AddModelErrorList(edit.Data!.Select(x => x.Description).ToList());
         }
         TempData["SuccessMessage"] = "Güncelleme işlemi başarılı.";
         return RedirectToAction(nameof(UserEdit));
@@ -45,15 +46,16 @@ public class MemberController(IMemberService memberService) : Controller
         {
             return View();
         }
-        if (!await memberService.CheckPasswordAsync(User.Identity!.Name!, request.PasswordOld!))
+        var check = await memberService.CheckPasswordAsync(User.Identity!.Name!, request.PasswordOld!);
+        if (!check.Data)
         {
             ModelState.AddModelError(string.Empty, "Mevcut şifrenizi yanlış girdiniz.");
             return View();
         }
-        var (isSuccess, error) = await memberService.ChangePasswordAsync(request, User.Identity!.Name!);
-        if (!isSuccess)
+        var change = await memberService.ChangePasswordAsync(request, User.Identity!.Name!);
+        if (!change.IsSuccess)
         {
-            ModelState.AddModelErrorList(error!.Select(x => x.Description).ToList());
+            ModelState.AddModelErrorList(change.Data!.Select(x => x.Description).ToList());
             return View();
         }
         TempData["SuccessMessage"] = "Şifreniz başarıyla değiştirilmiştir.";

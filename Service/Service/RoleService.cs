@@ -4,6 +4,7 @@ using Core.Service;
 using Core.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Core.Results;
 
 namespace Service.Service;
 
@@ -15,51 +16,51 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
         var roleViewModel = roles.Select(x => new RoleViewModel() { Id = x.Id, Name = x.Name }).ToList();
         return roleViewModel;
     }
-    public async Task<(bool, IEnumerable<IdentityError>?)> CreateRoleAsync(RoleCreateRequest request)
+    public async Task<Result<IEnumerable<IdentityError>>> CreateRoleAsync(RoleCreateRequest request)
     {
         var result = await roleManager.CreateAsync(new AppRole() { Name = request.Name });
 
         if (!result.Succeeded)
         {
-            return (false, result.Errors);
+            return new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Rol oluşturulamadı.", Data = result.Errors };
         }
-        else { return (true, null); }
+        else { return Result<IEnumerable<IdentityError>>.Success(null); }
     }
-    public async Task<(bool, RoleUpdateViewModel?)> FindByIdReturnRoleUpdateViewModelAsync(string id)
+    public async Task<Result<RoleUpdateViewModel>> FindByIdReturnRoleUpdateViewModelAsync(string id)
     {
         var role = await roleManager.FindByIdAsync(id);
         if (role == null)
         {
-            return (false, null);
+            return Result<RoleUpdateViewModel>.Failure("Rol bulunamadı.");
         }
         var roleUpdateViewModel = new RoleUpdateViewModel() { Id = role.Id, Name = role.Name };
-        return (true, roleUpdateViewModel);
+        return Result<RoleUpdateViewModel>.Success(roleUpdateViewModel);
     }
 
-    public async Task<(bool, IEnumerable<IdentityError>?)> UpdateRoleAsync(RoleUpdateRequest request)
+    public async Task<Result<IEnumerable<IdentityError>>> UpdateRoleAsync(RoleUpdateRequest request)
     {
         var role = await roleManager.FindByIdAsync(request.Id);
         if (role == null)
         {
-            return (false, null);
+            return new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Rol bulunamadı.", Data = null };
         }
         role.Name = request.Name;
         var result = await roleManager.UpdateAsync(role);
-        if (!result.Succeeded) { return (false, result.Errors); }
+        if (!result.Succeeded) { return new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Rol güncellenemedi.", Data = result.Errors }; }
 
-        else { return (true, null); }
+        else { return Result<IEnumerable<IdentityError>>.Success(null); }
     }
-    public async Task<(bool, IEnumerable<IdentityError>?)> DeleteRoleAsync(string id)
+    public async Task<Result<IEnumerable<IdentityError>>> DeleteRoleAsync(string id)
     {
         var role = await roleManager.FindByIdAsync(id);
 
         var result = await roleManager.DeleteAsync(role);
         if (!result.Succeeded)
         {
-            return (false, result.Errors);
+            return new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Rol silinemedi.", Data = result.Errors };
 
         }
-        else { return (true, null); }
+        else { return Result<IEnumerable<IdentityError>>.Success(null); }
     }
 
     public async Task<List<AssignToRoleViewModel>> GetRoleByIdReturnAssignToRoleAsync(string id)

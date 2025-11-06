@@ -5,6 +5,7 @@ using Core.Service;
 using Core.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using Core.Results;
 
 namespace Service.Service;
 
@@ -12,33 +13,50 @@ public class FavoriteService(IGenericRepository<Favorite> repository, IUnitOfWor
 {
     private static readonly Random _random = new();
     private readonly IWordService _wordService = wordService;
-    public IQueryable<Favorite> Where(Expression<Func<Favorite, bool>> predicate)
-    {
-        return repository.Where(predicate);
-    }
-    public async Task AddAsync(Favorite entity)
-    {
-        await repository.AddAsync(entity);
-        await unitOfWork.CommitAsync();
-    }
-    public async Task RemoveAsync(Favorite entity)
-    {
-        repository.Remove(entity);
-        await unitOfWork.CommitAsync();
-    }
-    public async Task<(bool Success, string? ErrorMessage)> DeleteFavoriteAsync(int favoriteId, string userId)
+    public IQueryable<Favorite> Where(Expression<Func<Favorite, bool>> predicate) => repository.Where(predicate);
+
+    public async Task<Result> DeleteFavoriteAsync(int favoriteId, string userId)
     {
         // Favorite'ı kullanıcıya ait mi kontrol et
         var favorite = await Where(x => x.Id == favoriteId && x.UserId == userId).FirstOrDefaultAsync();
         if (favorite == null)
         {
-            return (false, "Favori bulunamadı veya size ait değil.");
+            return Result.Failure("Favori bulunamadı veya size ait değil.");
         }
 
-        await RemoveAsync(favorite);
-        return (true, null);
+        repository.Remove(favorite);
+        await unitOfWork.CommitAsync();
+        return Result.Success();
     }
-    public async Task<string> GetRandomWordFromFavoritesAsync(string userId)
+    public async Task<List<Favorite>> GetUserFavoritesAsync(string userId)
+    {
+        return await Where(x => x.UserId == userId).Include(x => x.Word).ToListAsync();
+    }
+    public async Task<Result<bool>> ToggleFavoriteAsync(int wordId, string userId)
+    {
+        var wordExists = await _wordService.GetWordForUserAsync(wordId, userId);
+        if (!wordExists.IsSuccess || wordExists.Data == null)
+        {
+            return Result<bool>.Failure("Kelime bulunamadı.");
+        }
+        var existingFavorite = await Where(x => x.WordId == wordId && x.UserId == userId).FirstOrDefaultAsync();
+        if (existingFavorite == null)
+        {
+            var favorite = new Favorite { WordId = wordId, UserId = userId, CreatedTime = DateTime.Now };
+            await repository.AddAsync(favorite);
+            await unitOfWork.CommitAsync();
+            return Result<bool>.Success(true);
+        }
+        repository.Remove(existingFavorite);
+        await unitOfWork.CommitAsync();
+        return Result<bool>.Success(false);
+    }
+    public async Task<Result<Favorite>> GetFavoriteWithWordAsync(int favoriteId, string userId)
+    {
+        var favorite = await Where(x => x.Id == favoriteId && x.UserId == userId).Include(x => x.Word).FirstOrDefaultAsync();
+        return favorite == null ? Result<Favorite>.Failure("Favori bulunamadı.") : Result<Favorite>.Success(favorite);
+    }
+    public async Task<Result<string>> GetRandomWordFromFavoritesAsync(string userId)
     {
         var favorites = await Where(x => x.UserId == userId)
             .Include(x => x.Word)
@@ -46,53 +64,39 @@ public class FavoriteService(IGenericRepository<Favorite> repository, IUnitOfWor
 
         if (favorites == null || favorites.Count == 0)
         {
-            return string.Empty;
+            return Result<string>.Failure("Kayıt bulunamadı.");
         }
 
         int index = _random.Next(0, favorites.Count);
-        return favorites[index].Word?.EnglishWord ?? string.Empty;
+        return Result<string>.Success(favorites[index].Word?.EnglishWord ?? string.Empty);
     }
 
-    public async Task<bool> CheckTranslationAndUpdateAsync(string userId, string turkishWord, string englishWord)
+    public async Task<Result<bool>> CheckTranslationAndUpdateAsync(string userId, string turkishWord, string englishWord)
     {
-        var normalizedEnglishWord = englishWord?.NormalizeEnglishWord();
+        return await _wordService.CheckTranslationAndUpdateAsync(userId, turkishWord, englishWord);
+    }
 
-        var favorite = await Where(x =>
-            x.Word != null &&
-            x.UserId == userId &&
-            x.Word.EnglishWord != null &&
-            x.Word.EnglishWord == normalizedEnglishWord)
+    public async Task<Result<(List<Favorite> Favorites, int TotalCount)>> GetPagedFavoritesAsync(string userId, string? search, int page, int pageSize)
+    {
+        if (page < 1) page = 1;
+        if (pageSize <= 0) pageSize = 10;
+
+        var query = Where(x => x.UserId == userId)
             .Include(x => x.Word)
-            .FirstOrDefaultAsync();
+            .AsQueryable();
 
-        if (favorite?.Word == null)
+        if (!string.IsNullOrWhiteSpace(search))
         {
-            return false;
+            query = query.Where(x => x.Word!.EnglishWord!.Contains(search) || x.Word!.TurkishWord!.Contains(search));
         }
 
-        var word = favorite.Word;
-        var normalizedTurkishWord = turkishWord?.NormalizeTurkishWord();
-        bool isCorrect = word.TurkishWord == normalizedTurkishWord;
+        var totalCount = await query.CountAsync();
+        var favorites = await query
+            .OrderBy(x => x.CreatedTime)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
 
-        // Öğrenme takibini güncelle
-        word.IsLastAnswerCorrect = isCorrect;
-        word.LastPracticeDate = DateTime.Now;
-
-        if (isCorrect)
-        {
-            word.ConsecutiveCorrectCount++;
-            word.ConsecutiveWrongCount = 0;
-            word.TotalCorrectCount++;
-        }
-        else
-        {
-            word.ConsecutiveWrongCount++;
-            word.ConsecutiveCorrectCount = 0;
-            word.TotalWrongCount++;
-        }
-
-        await _wordService.UpdateAsync(word);
-
-        return isCorrect;
+        return Result<(List<Favorite> Favorites, int TotalCount)>.Success((favorites, totalCount));
     }
 }

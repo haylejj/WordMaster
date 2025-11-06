@@ -15,8 +15,8 @@ public class PracticeUnknowsController(IUnknowsService unknowsService) : Control
     {
         var userId = User.GetUserId();
         if (userId == null) return Unauthorized();
-        string newEnglishWord = await unknowsService.GetRandomWordFromUnknowsAsync(userId);
-        return View((object)newEnglishWord);
+        var word = await unknowsService.GetRandomWordFromUnknowsAsync(userId);
+        return View((object)(word.IsSuccess ? word.Data : string.Empty));
     }
 
     [HttpGet("CheckTranslation")]
@@ -24,8 +24,8 @@ public class PracticeUnknowsController(IUnknowsService unknowsService) : Control
     {
         var userId = User.GetUserId();
         if (userId == null) return Json(new { isCorrect = false });
-        bool isCorrect = await unknowsService.CheckTranslationAndUpdateAsync(userId, turkishWord, englishWord);
-        return Json(new { isCorrect });
+        var result = await unknowsService.CheckTranslationAndUpdateAsync(userId, turkishWord, englishWord);
+        return Json(new { isCorrect = result.Data });
     }
 
     [HttpGet("GetNewEnglishWord")]
@@ -33,7 +33,7 @@ public class PracticeUnknowsController(IUnknowsService unknowsService) : Control
     {
         var userId = User.GetUserId();
         if (userId == null) return Content(string.Empty);
-        string newEnglishWord = await unknowsService.GetRandomWordFromUnknowsAsync(userId);
-        return Content(newEnglishWord);
+        var word = await unknowsService.GetRandomWordFromUnknowsAsync(userId);
+        return Content(word.IsSuccess ? word.Data : string.Empty);
     }
 }

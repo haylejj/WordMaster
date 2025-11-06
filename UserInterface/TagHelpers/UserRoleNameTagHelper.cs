@@ -5,21 +5,15 @@ using System.Text;
 
 namespace UserInterface.TagHelpers;
 
-public class UserRoleNameTagHelper : TagHelper
+public class UserRoleNameTagHelper(UserManager<AppUser> userManager) : TagHelper
 {
     public string UserId { get; set; } = null!;
-    private readonly UserManager<AppUser> _userManager;
-
-    public UserRoleNameTagHelper(UserManager<AppUser> userManager)
-    {
-        _userManager=userManager;
-    }
 
     public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
     {
-        var user = await _userManager.FindByIdAsync(UserId);
+        var user = await userManager.FindByIdAsync(UserId);
 
-        var userRoles = await _userManager.GetRolesAsync(user!);
+        var userRoles = await userManager.GetRolesAsync(user!);
 
         var stringBuilder = new StringBuilder();
 

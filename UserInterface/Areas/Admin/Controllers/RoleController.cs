@@ -35,11 +35,11 @@ public class RoleController : Controller
             return View();
         }
 
-        var (isSuccess, error) = await _roleService.CreateRoleAsync(request);
+        var result = await _roleService.CreateRoleAsync(request);
 
-        if (!isSuccess)
+        if (!result.IsSuccess)
         {
-            ModelState.AddModelErrorList(error!.Select(x => x.Description).ToList());
+            ModelState.AddModelErrorList(result.Data!.Select(x => x.Description).ToList());
             return View();
         }
         TempData["SuccessMessage"] = "Yeni rol başarıyla oluşturuldu";
@@ -48,9 +48,9 @@ public class RoleController : Controller
 
     public async Task<IActionResult> RoleUpdate(string roleId)
     {
-        var (isSuccess, role) = await _roleService.FindByIdReturnRoleUpdateViewModelAsync(roleId);
+        var role = await _roleService.FindByIdReturnRoleUpdateViewModelAsync(roleId);
 
-        return !isSuccess ? throw new Exception("Güncellenecek rol bulunamamıştır.") : (IActionResult)View(role);
+        return !role.IsSuccess ? throw new Exception("Güncellenecek rol bulunamamıştır.") : (IActionResult)View(role.Data);
     }
     [HttpPost]
     public async Task<IActionResult> RoleUpdate(RoleUpdateRequest request)
@@ -60,11 +60,11 @@ public class RoleController : Controller
             return View();
         }
 
-        var (isSuccess, error) = await _roleService.UpdateRoleAsync(request);
+        var result = await _roleService.UpdateRoleAsync(request);
 
-        if (!isSuccess)
+        if (!result.IsSuccess)
         {
-            ModelState.AddModelErrorList(error!.Select(x => x.Description).ToList());
+            ModelState.AddModelErrorList(result.Data!.Select(x => x.Description).ToList());
             return View();
         }
         else { TempData["SuccessMessage"] = "Güncelleme İşlemi Başarıyla Yapıldı"; }
@@ -72,10 +72,10 @@ public class RoleController : Controller
     }
     public async Task<IActionResult> RoleDelete(string roleId)
     {
-        var (isSuccess, error) = await _roleService.DeleteRoleAsync(roleId);
-        if (!isSuccess)
+        var result = await _roleService.DeleteRoleAsync(roleId);
+        if (!result.IsSuccess)
         {
-            ModelState.AddModelErrorList(error!.Select(x => x.Description).ToList());
+            ModelState.AddModelErrorList(result.Data!.Select(x => x.Description).ToList());
             return View();
         }
         else { TempData["SuccessMessage"] = "Rol başarıyla silinmiştir"; }

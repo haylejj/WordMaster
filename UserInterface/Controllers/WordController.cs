@@ -1,5 +1,6 @@
 ﻿using Core.Dto;
 using Core.Service;
+using Core.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,15 +13,22 @@ namespace UserInterface.Controllers;
 public class WordController(IWordService wordService) : Controller
 {
     [HttpGet("")]
-    [HttpGet("Index")]
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string? search, int page = 1, int pageSize = 10)
     {
         var userId = User.GetUserId();
-        var words = await wordService.Where(x => x.UserId == userId)
-            .Include(x => x.Favorite)
-            .Include(x => x.Unknows)
-            .ToListAsync();
-        return View(words);
+        var pageResult = await wordService.GetPagedWordsAsync(userId!, search, page, pageSize);
+        var (words, totalCount) = pageResult.IsSuccess ? pageResult.Data : (new List<Core.Entity.Word>(), 0);
+
+        var viewModel = new WordListViewModel
+        {
+            Words = words,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+            Search = search
+        };
+
+        return View(viewModel);
     }
     [HttpGet("AddWord")]
     public IActionResult AddWord()
@@ -42,11 +50,11 @@ public class WordController(IWordService wordService) : Controller
             return View(wordDto);
         }
 
-        var (success, errorMessage) = await wordService.AddWordAsync(wordDto, userId);
+        var result = await wordService.AddWordAsync(wordDto, userId);
 
-        if (!success)
+        if (!result.IsSuccess)
         {
-            ModelState.AddModelError("EnglishWord", errorMessage ?? "Kelime eklenirken bir hata oluştu.");
+            ModelState.AddModelError("EnglishWord", result.ErrorMessage ?? "Kelime eklenirken bir hata oluştu.");
             return View(wordDto);
         }
 
@@ -62,11 +70,11 @@ public class WordController(IWordService wordService) : Controller
             return Json(new { success = false, message = "Kullanıcı bilgisi bulunamadı." });
         }
 
-        var (success, errorMessage) = await wordService.DeleteWordAsync(id, userId);
+        var result = await wordService.DeleteWordAsync(id, userId);
 
-        if (!success)
+        if (!result.IsSuccess)
         {
-            return Json(new { success = false, message = errorMessage ?? "Kelime silinirken bir hata oluştu." });
+            return Json(new { success = false, message = result.ErrorMessage ?? "Kelime silinirken bir hata oluştu." });
         }
 
         return Json(new { success = true, message = "Kelime başarıyla silindi." });
@@ -76,9 +84,9 @@ public class WordController(IWordService wordService) : Controller
     public async Task<IActionResult> GetWord(int id)
     {
         var userId = User.GetUserId();
-        var word = await wordService.Where(x => x.Id == id && x.UserId == userId).FirstOrDefaultAsync();
+        var result = await wordService.GetWordForUserAsync(id, userId!);
 
-        if (word == null)
+        if (!result.IsSuccess || result.Data == null)
         {
             return Json(new { success = false, message = "Kelime bulunamadı." });
         }
@@ -88,9 +96,9 @@ public class WordController(IWordService wordService) : Controller
             success = true,
             word = new
             {
-                id = word.Id,
-                englishWord = word.EnglishWord,
-                turkishWord = word.TurkishWord
+                id = result.Data.Id,
+                englishWord = result.Data.EnglishWord,
+                turkishWord = result.Data.TurkishWord
             }
         });
     }
@@ -109,11 +117,11 @@ public class WordController(IWordService wordService) : Controller
             return Json(new { success = false, message = "Kullanıcı bilgisi bulunamadı." });
         }
 
-        var (success, errorMessage) = await wordService.UpdateWordAsync(wordDto.Id, wordDto, userId);
+        var result = await wordService.UpdateWordAsync(wordDto.Id, wordDto, userId);
 
-        if (!success)
+        if (!result.IsSuccess)
         {
-            return Json(new { success = false, message = errorMessage ?? "Kelime güncellenirken bir hata oluştu." });
+            return Json(new { success = false, message = result.ErrorMessage ?? "Kelime güncellenirken bir hata oluştu." });
         }
 
         return Json(new { success = true, message = "Kelime başarıyla güncellendi." });

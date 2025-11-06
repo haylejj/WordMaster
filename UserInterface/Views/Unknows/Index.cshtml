@@ -1,45 +1,112 @@
 ﻿@using Core.Entity
-@model List<Unknows>
+@using Core.ViewModels
+@model UnknowsListViewModel
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Unknows";
     Layout = "~/Views/Shared/Main_Layout.cshtml";
 }
 <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
 <script src="~/js/unknows/delete.js"></script>
-<script src="~/js/unknows/update.js"></script>
+<script src="~/js/word/update.js"></script>
+<script src="~/js/word/toggle.js"></script>
 
-<h1 class="text-center page-title">Bilinmeyen Kelimeler</h1>
+<h1 class="text-center page-title">Bilinmeyenler</h1>
+
+<form method="get" asp-controller="Unknows" asp-action="Index" class="row g-2 align-items-end mb-3">
+    <div class="col-sm-6 col-md-6">
+        <label for="search" class="form-label">Ara</label>
+        <input type="text" id="search" name="search" value="@Model?.Search" class="form-control"
+            placeholder="İngilizce veya Türkçe ara" />
+    </div>
+    <div class="col-sm-3 col-md-3">
+        <label for="pageSize" class="form-label">Sayfa başına</label>
+        <select id="pageSize" name="pageSize" class="form-select">
+            @if (Model?.PageSize == 10)
+            {
+                <option value="10" selected>10</option>
+            }
+            else
+            {
+                <option value="10">10</option>
+            }
+            @if (Model?.PageSize == 25)
+            {
+                <option value="25" selected>25</option>
+            }
+            else
+            {
+                <option value="25">25</option>
+            }
+            @if (Model?.PageSize == 50)
+            {
+                <option value="50" selected>50</option>
+            }
+            else
+            {
+                <option value="50">50</option>
+            }
+            @if (Model?.PageSize == 100)
+            {
+                <option value="100" selected>100</option>
+            }
+            else
+            {
+                <option value="100">100</option>
+            }
+        </select>
+    </div>
+    <input type="hidden" name="page" value="1" />
+    <div class="col-sm-3 col-md-3">
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary flex-fill">Uygula</button>
+            <a href="@Url.Action("", "Unknows")" class="btn btn-outline-secondary flex-fill">Filtreyi Temizle</a>
+        </div>
+    </div>
+</form>
+
 <table class="table table-bordered table-striped table-hover">
     <thead>
         <tr>
             <th>İngilizce</th>
             <th>Türkçe</th>
-            <th>Güncelle</th>
-            <th>Sil</th>
+            <th></th>
+            <th></th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
-        @if (Model == null || Model.Count == 0)
+        @if (Model == null || Model.Words == null || Model.Words.Count == 0)
         {
             <tr>
-                <td colspan="4" class="text-center">
+                <td colspan="5" class="text-center">
                     <p class="text-muted mt-3 mb-3">Veri bulunmamaktadır.</p>
                 </td>
             </tr>
         }
         else
         {
-            @foreach (var item in Model)
+            @foreach (var item in Model.Words)
             {
                 <tr>
-                    <td>@item.Word?.EnglishWord</td>
-                    <td>@item.Word?.TurkishWord</td>
-                    <td>
-                        <a href="#" class="btn btn-warning" onclick="openUpdateModal(@item.Id, event)">Güncelle</a>
+                    <td>@item.EnglishWord</td>
+                    <td>@item.TurkishWord</td>
+                    <td class="text-center">
+                        <div class="d-flex flex-column gap-2 align-items-center">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input unknows-checkbox" type="checkbox" data-word-id="@item.Id"
+                                    @(item.Unknows != null ? "checked" : "") id="unknows-@item.Id">
+                                <label class="form-check-label" for="unknows-@item.Id">Unknows</label>
+                            </div>
+                        </div>
                     </td>
-                    <td>
-                        <a href="#" class="btn btn-danger" onclick="deleteUnknows(@item.Id, event)">Sil</a>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-warning btn-sm text-dark text-nowrap"
+                            onclick="openUpdateModal(@item.Id, event)">Güncelle</button>
+                    </td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-danger btn-sm text-white text-nowrap"
+                            onclick="deleteUnknows(@item.Id, event)">Sil</button>
                     </td>
                 </tr>
             }
@@ -47,33 +114,35 @@
     </tbody>
 </table>
 
-<!-- Update Modal -->
-<div class="modal fade" id="updateModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Kelime Güncelle</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="updateWordForm">
-                    <input type="hidden" id="updateWordId" name="Id" />
-                    <div class="mb-3">
-                        <label for="updateEnglishWord" class="form-label">English:</label>
-                        <input type="text" class="form-control" id="updateEnglishWord" name="EnglishWord" required
-                            maxlength="30" />
-                    </div>
-                    <div class="mb-3">
-                        <label for="updateTurkishWord" class="form-label">Turkish:</label>
-                        <input type="text" class="form-control" id="updateTurkishWord" name="TurkishWord" required
-                            maxlength="30" />
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
-                <button type="button" class="btn btn-primary" onclick="updateWord()">Güncelle</button>
-            </div>
-        </div>
+@if (Model != null && Model.TotalPages > 1)
+{
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+        <div class="text-muted">Toplam @Model.TotalCount kayıt</div>
+        <nav>
+            <ul class="pagination mb-0">
+                @{
+                    var currentPage = Model.Page <= 0 ? 1 : Model.Page;
+                    var totalPages = Model.TotalPages;
+                    var prevDisabled = currentPage <= 1 ? "disabled" : "";
+                    var nextDisabled = currentPage >= totalPages ? "disabled" : "";
+                }
+                <li class="page-item @prevDisabled">
+                    <a class="page-link"
+                        href="@Url.Action("", "Unknows", new { search = Model.Search, page = currentPage - 1, pageSize = Model.PageSize })">«</a>
+                </li>
+                @for (int p = 1; p <= Model.TotalPages; p++)
+                {
+                    var active = p == currentPage ? "active" : string.Empty;
+                    <li class="page-item @active">
+                        <a class="page-link"
+                            href="@Url.Action("", "Unknows", new { search = Model.Search, page = p, pageSize = Model.PageSize })">@p</a>
+                    </li>
+                }
+                <li class="page-item @nextDisabled">
+                    <a class="page-link"
+                        href="@Url.Action("", "Unknows", new { search = Model.Search, page = currentPage + 1, pageSize = Model.PageSize })">»</a>
+                </li>
+            </ul>
+        </nav>
     </div>
-</div>
+}

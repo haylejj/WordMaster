@@ -11,8 +11,7 @@ namespace UserInterface.Controllers;
 public class LoginController(ILoginService loginService, UserManager<AppUser> userManager, IEmailService emailService) : Controller
 {
     [HttpGet("")]
-    [HttpGet("LogIn")]
-    public IActionResult LogIn()
+    public IActionResult Login()
     {
         // Eğer kullanıcı zaten login olmuşsa Word sayfasına yönlendir
         if (User.Identity?.IsAuthenticated == true)
@@ -23,8 +22,7 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
     }
 
     [HttpPost("")]
-    [HttpPost("LogIn")]
-    public async Task<IActionResult> LogIn(LoginRequest request, string? returnUrl = null)
+    public async Task<IActionResult> Login(LoginRequest request, string? returnUrl = null)
     {
         if (!ModelState.IsValid) // bir hata var ise validate de
         {
@@ -32,15 +30,15 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
         }
         returnUrl = returnUrl ?? Url.Action("Index", "Word");
 
-        var user = await loginService.FindByEmailAsync(request.Email!);
-        if (user == null)
+        var userResult = await loginService.FindByEmailAsync(request.Email!);
+        if (!userResult.IsSuccess || userResult.Data == null)
         {
             ModelState.AddModelErrorList(new List<string>() { "Email veya şifre yanlış" });
         }
 
-        var result = await loginService.LoginAsync(request, user!);
+        var result = await loginService.LoginAsync(request, userResult.Data!);
 
-        if (result)
+        if (result.IsSuccess)
         {
             return Redirect(returnUrl!);
         }
@@ -62,20 +60,20 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
             return View();
         }
         var user = await loginService.FindByEmailAsync(request.Email!);
-        if (user == null)
+        if (!user.IsSuccess || user.Data == null)
         {
             ModelState.AddModelError(string.Empty, "Bu email adresine sahip kullanıcı bulunamamıştır.");
             return View();
         }
 
-        var passwordResetToken = await loginService.GeneratePasswordResetTokenAsync(user.Id);// şimdi biz özel token ürettik. şifre değiştirmede kullanılacak 
+        var passwordResetToken = await loginService.GeneratePasswordResetTokenAsync(user.Data.Id);// şimdi biz özel token ürettik. şifre değiştirmede kullanılacak 
 
-        var passwordResetLink = Url.Action("ResetPassword", null, new { userId = user.Id, token = passwordResetToken }, HttpContext.Request.Scheme); // bu linkin ömrünü program.cs de belirliycez.
+        var passwordResetLink = Url.Action("ResetPassword", null, new { userId = user.Data.Id, token = passwordResetToken.Data }, HttpContext.Request.Scheme); // bu linkin ömrünü program.cs de belirliycez.
         //örnek link
         // https://localhost:7289?userId=12213&token=aasdfasdfsdf
 
         // email e link gönderme metodu.
-        await emailService.SendResetPasswordLinkToEmailAsync(passwordResetLink!, user.Email);
+        await emailService.SendResetPasswordLinkToEmailAsync(passwordResetLink!, user.Data.Email);
         //
         TempData["success"] = "Şifre yenileme linki e-posta adresinize gönderilmiştir.";
 

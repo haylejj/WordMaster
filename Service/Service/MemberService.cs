@@ -4,6 +4,7 @@ using Core.Service;
 using Core.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Core.Results;
 
 
 namespace Service.Service;
@@ -18,11 +19,11 @@ public class MemberService(UserManager<AppUser> userManager, SignInManager<AppUs
     {
         return new SelectList(Enum.GetNames(typeof(Gender)));
     }
-    public async Task<UserEditViewModel> GetUserEditViewModelAsync(string username)
+    public async Task<Result<UserEditViewModel>> GetUserEditViewModelAsync(string username)
     {
         var currentUser = await userManager.FindByNameAsync(username);
 
-        return new UserEditViewModel()
+        return Result<UserEditViewModel>.Success(new UserEditViewModel()
         {
             UserName = currentUser.UserName,
             Email = currentUser.Email,
@@ -30,9 +31,9 @@ public class MemberService(UserManager<AppUser> userManager, SignInManager<AppUs
             BirthDate = currentUser.BirthDate,
             City = currentUser.City,
             Gender = currentUser.Gender,
-        };
+        });
     }
-    public async Task<(bool, IEnumerable<IdentityError>?)> EditUserAsync(UserEditRequest request, string username)
+    public async Task<Result<IEnumerable<IdentityError>>> EditUserAsync(UserEditRequest request, string username)
     {
         var currentUser = await userManager.FindByNameAsync(username);
 
@@ -46,32 +47,32 @@ public class MemberService(UserManager<AppUser> userManager, SignInManager<AppUs
         var updateResult = await userManager.UpdateAsync(currentUser);
         if (!updateResult.Succeeded)
         {
-            return (false, updateResult.Errors);
+            return new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Güncelleme başarısız.", Data = updateResult.Errors };
         }
         await userManager.UpdateSecurityStampAsync(currentUser);
         await signInManager.SignOutAsync();
         await signInManager.SignInAsync(currentUser, true);
 
-        return (true, null);
+        return Result<IEnumerable<IdentityError>>.Success(null);
     }
-    public async Task<bool> CheckPasswordAsync(string userName, string passwordOld)
+    public async Task<Result<bool>> CheckPasswordAsync(string userName, string passwordOld)
     {
         var currentUser = await userManager.FindByNameAsync(userName);
-
-        return await userManager.CheckPasswordAsync(currentUser!, passwordOld);
+        var ok = await userManager.CheckPasswordAsync(currentUser!, passwordOld);
+        return Result<bool>.Success(ok);
     }
-    public async Task<(bool, IEnumerable<IdentityError>?)> ChangePasswordAsync(PasswordChangeRequest request, string userName)
+    public async Task<Result<IEnumerable<IdentityError>>> ChangePasswordAsync(PasswordChangeRequest request, string userName)
     {
         var currentUser = await userManager.FindByNameAsync(userName);
         var resultChangePassword = await userManager.ChangePasswordAsync(currentUser, request.PasswordOld!, request.PasswordNew!);
 
         if (!resultChangePassword.Succeeded)
         {
-            return (false, resultChangePassword.Errors);
+            return new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Şifre değiştirilemedi.", Data = resultChangePassword.Errors };
         }
         await userManager.UpdateSecurityStampAsync(currentUser);
         await signInManager.SignOutAsync();
         await signInManager.PasswordSignInAsync(currentUser, request.PasswordNew!, true, true);
-        return (true, null);
+        return Result<IEnumerable<IdentityError>>.Success(null);
     }
 }

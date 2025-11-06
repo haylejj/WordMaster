@@ -21,11 +21,11 @@ public class RegisterController(IRegisterService registerService) : Controller
         {
             return View();
         }
-        var (isSuccess, errors) = await registerService.RegisterAsync(request);
+        var result = await registerService.RegisterAsync(request);
 
-        if (!isSuccess)
+        if (!result.IsSuccess)
         {
-            ModelState.AddModelErrorList(errors!.Select(x => x.Description).ToList());
+            ModelState.AddModelErrorList(result.Data!.Select(x => x.Description).ToList());
             return View();
         }
 

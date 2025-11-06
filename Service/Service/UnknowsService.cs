@@ -5,6 +5,7 @@ using Core.Service;
 using Core.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using Core.Results;
 
 namespace Service.Service;
 
@@ -12,34 +13,23 @@ public class UnknowsService(IGenericRepository<Unknows> repository, IUnitOfWork 
 {
     private static readonly Random _random = new();
     private readonly IWordService _wordService = wordService;
-    public IQueryable<Unknows> Where(Expression<Func<Unknows, bool>> predicate)
-    {
-        return repository.Where(predicate);
-    }
-    public async Task AddAsync(Unknows entity)
-    {
-        await repository.AddAsync(entity);
-        await unitOfWork.CommitAsync();
-    }
-    public async Task RemoveAsync(Unknows entity)
-    {
-        repository.Remove(entity);
-        await unitOfWork.CommitAsync();
-    }
-    public async Task<(bool Success, string? ErrorMessage)> DeleteUnknowsAsync(int unknowsId, string userId)
+    public IQueryable<Unknows> Where(Expression<Func<Unknows, bool>> predicate) => repository.Where(predicate);
+
+    public async Task<Result> DeleteUnknowsAsync(int unknowsId, string userId)
     {
         // Unknows'ı kullanıcıya ait mi kontrol et
         var unknow = await Where(x => x.Id == unknowsId && x.UserId == userId).FirstOrDefaultAsync();
         if (unknow == null)
         {
-            return (false, "Bilinmeyen kelime bulunamadı veya size ait değil.");
+            return Result.Failure("Bilinmeyen kelime bulunamadı veya size ait değil.");
         }
 
-        await RemoveAsync(unknow);
-        return (true, null);
+        repository.Remove(unknow);
+        await unitOfWork.CommitAsync();
+        return Result.Success();
     }
 
-    public async Task<string> GetRandomWordFromUnknowsAsync(string userId)
+    public async Task<Result<string>> GetRandomWordFromUnknowsAsync(string userId)
     {
         var unknows = await Where(x => x.UserId == userId)
             .Include(x => x.Word)
@@ -47,53 +37,70 @@ public class UnknowsService(IGenericRepository<Unknows> repository, IUnitOfWork 
 
         if (unknows == null || unknows.Count == 0)
         {
-            return string.Empty;
+            return Result<string>.Failure("Kayıt bulunamadı.");
         }
 
         int index = _random.Next(0, unknows.Count);
-        return unknows[index].Word?.EnglishWord ?? string.Empty;
+        return Result<string>.Success(unknows[index].Word?.EnglishWord ?? string.Empty);
     }
 
-    public async Task<bool> CheckTranslationAndUpdateAsync(string userId, string turkishWord, string englishWord)
+    public async Task<Result<bool>> CheckTranslationAndUpdateAsync(string userId, string turkishWord, string englishWord)
     {
-        var normalizedEnglishWord = englishWord?.NormalizeEnglishWord();
+        return await _wordService.CheckTranslationAndUpdateAsync(userId, turkishWord, englishWord);
+    }
 
-        var unknow = await Where(x =>
-            x.Word != null &&
-            x.UserId == userId &&
-            x.Word.EnglishWord != null &&
-            x.Word.EnglishWord == normalizedEnglishWord)
+    public async Task<List<Unknows>> GetUserUnknowsAsync(string userId)
+    {
+        return await Where(x => x.UserId == userId).Include(x => x.Word).ToListAsync();
+    }
+
+    public async Task<Result<bool>> ToggleUnknowsAsync(int wordId, string userId)
+    {
+        var wordExists = await _wordService.GetWordForUserAsync(wordId, userId);
+        if (!wordExists.IsSuccess || wordExists.Data == null)
+        {
+            return Result<bool>.Failure("Kelime bulunamadı.");
+        }
+        var existingUnknow = await Where(x => x.WordId == wordId && x.UserId == userId).FirstOrDefaultAsync();
+        if (existingUnknow == null)
+        {
+            var unknow = new Unknows { WordId = wordId, UserId = userId, CreatedTime = DateTime.Now };
+            await repository.AddAsync(unknow);
+            await unitOfWork.CommitAsync();
+            return Result<bool>.Success(true);
+        }
+        repository.Remove(existingUnknow);
+        await unitOfWork.CommitAsync();
+        return Result<bool>.Success(false);
+    }
+
+    public async Task<Result<Unknows>> GetUnknowsWithWordAsync(int unknowsId, string userId)
+    {
+        var unknow = await Where(x => x.Id == unknowsId && x.UserId == userId).Include(x => x.Word).FirstOrDefaultAsync();
+        return unknow == null ? Result<Unknows>.Failure("Kayıt bulunamadı.") : Result<Unknows>.Success(unknow);
+    }
+
+    public async Task<Result<(List<Unknows> Unknows, int TotalCount)>> GetPagedUnknowsAsync(string userId, string? search, int page, int pageSize)
+    {
+        if (page < 1) page = 1;
+        if (pageSize <= 0) pageSize = 10;
+
+        var query = Where(x => x.UserId == userId)
             .Include(x => x.Word)
-            .FirstOrDefaultAsync();
+            .AsQueryable();
 
-        if (unknow?.Word == null)
+        if (!string.IsNullOrWhiteSpace(search))
         {
-            return false;
+            query = query.Where(x => x.Word!.EnglishWord!.Contains(search) || x.Word!.TurkishWord!.Contains(search));
         }
 
-        var word = unknow.Word;
-        var normalizedTurkishWord = turkishWord?.NormalizeTurkishWord();
-        bool isCorrect = word.TurkishWord == normalizedTurkishWord;
+        var totalCount = await query.CountAsync();
+        var items = await query
+            .OrderBy(x => x.CreatedTime)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
 
-        // Öğrenme takibini güncelle
-        word.IsLastAnswerCorrect = isCorrect;
-        word.LastPracticeDate = DateTime.Now;
-
-        if (isCorrect)
-        {
-            word.ConsecutiveCorrectCount++;
-            word.ConsecutiveWrongCount = 0;
-            word.TotalCorrectCount++;
-        }
-        else
-        {
-            word.ConsecutiveWrongCount++;
-            word.ConsecutiveCorrectCount = 0;
-            word.TotalWrongCount++;
-        }
-
-        await _wordService.UpdateAsync(word);
-
-        return isCorrect;
+        return Result<(List<Unknows> Unknows, int TotalCount)>.Success((items, totalCount));
     }
 }

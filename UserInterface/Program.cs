@@ -91,6 +91,6 @@ app.MapGet("/", async (HttpContext context) =>
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Login}/{action=LogIn}/{id?}");
+    pattern: "{controller=Login}/{action=Login}/{id?}");
 
 app.Run();

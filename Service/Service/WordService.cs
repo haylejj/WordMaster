@@ -6,36 +6,21 @@ using Core.Service;
 using Core.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using Core.Results;
 
 namespace Service.Service;
 
-public class WordService(IGenericRepository<Word> repository, IUnitOfWork unitOfWork, IWordRepository wordRepository) : IWordService
+public class WordService(IGenericRepository<Word> repository, IUnitOfWork unitOfWork) : IWordService
 {
     private static readonly Random _random = new();
-    public IQueryable<Word> Where(Expression<Func<Word, bool>> predicate)
+    public IQueryable<Word> Where(Expression<Func<Word, bool>> predicate) => repository.Where(predicate);
+
+    public async Task<Result<Word>> GetWordForUserAsync(int id, string userId)
     {
-        return repository.Where(predicate);
+        var word = await Where(x => x.Id == id && x.UserId == userId).FirstOrDefaultAsync();
+        return word == null ? Result<Word>.Failure("Kelime bulunamadı.") : Result<Word>.Success(word);
     }
-    public async Task<bool> AnyAsync(Expression<Func<Word, bool>> predicate)
-    {
-        return await repository.AnyAsync(predicate);
-    }
-    public async Task AddAsync(Word entity)
-    {
-        await repository.AddAsync(entity);
-        await unitOfWork.CommitAsync();
-    }
-    public async Task UpdateAsync(Word entity)
-    {
-        repository.Update(entity);
-        await unitOfWork.CommitAsync();
-    }
-    public async Task RemoveAsync(Word entity)
-    {
-        repository.Remove(entity);
-        await unitOfWork.CommitAsync();
-    }
-    public async Task<(bool Success, string? ErrorMessage)> AddWordAsync(WordDto wordDto, string userId)
+    public async Task<Result> AddWordAsync(WordDto wordDto, string userId)
     {
         // Normalize kelimeleri - standart formata getir
         wordDto.EnglishWord = wordDto.EnglishWord?.NormalizeEnglishWord();
@@ -44,14 +29,14 @@ public class WordService(IGenericRepository<Word> repository, IUnitOfWork unitOf
         // EnglishWord boş kontrolü
         if (string.IsNullOrWhiteSpace(wordDto.EnglishWord))
         {
-            return (false, "İngilizce kelime boş olamaz.");
+            return Result.Failure("İngilizce kelime boş olamaz.");
         }
 
         // Duplicate kontrol
         var isDuplicate = await IsWordDuplicateAsync(wordDto.EnglishWord, userId);
-        if (isDuplicate)
+        if (isDuplicate.Data == true)
         {
-            return (false, "Bu kelime zaten sözlüğünüzde mevcut.");
+            return Result.Failure("Bu kelime zaten sözlüğünüzde mevcut.");
         }
 
         // Entity oluştur ve kaydet
@@ -63,17 +48,18 @@ public class WordService(IGenericRepository<Word> repository, IUnitOfWork unitOf
             CreatedTime = DateTime.Now
         };
 
-        await AddAsync(word);
-        return (true, null);
+        await repository.AddAsync(word);
+        await unitOfWork.CommitAsync();
+        return Result.Success();
     }
 
-    public async Task<(bool Success, string? ErrorMessage)> UpdateWordAsync(int wordId, WordDto wordDto, string userId)
+    public async Task<Result> UpdateWordAsync(int wordId, WordDto wordDto, string userId)
     {
         // Kelimeyi kullanıcıya ait mi kontrol et
         var existingWord = await Where(x => x.Id == wordId && x.UserId == userId).FirstOrDefaultAsync();
         if (existingWord == null)
         {
-            return (false, "Kelime bulunamadı veya size ait değil.");
+            return Result.Failure("Kelime bulunamadı veya size ait değil.");
         }
 
         // Normalize kelimeleri - standart formata getir
@@ -83,11 +69,11 @@ public class WordService(IGenericRepository<Word> repository, IUnitOfWork unitOf
         // EnglishWord boş kontrolü
         if (string.IsNullOrWhiteSpace(wordDto.EnglishWord))
         {
-            return (false, "İngilizce kelime boş olamaz.");
+            return Result.Failure("İngilizce kelime boş olamaz.");
         }
 
         // Duplicate kontrol - kendi kelimesi hariç
-        var isDuplicate = await AnyAsync(x =>
+        var isDuplicate = await repository.AnyAsync(x =>
             x.Id != wordId &&
             x.UserId == userId &&
             x.EnglishWord != null &&
@@ -95,57 +81,59 @@ public class WordService(IGenericRepository<Word> repository, IUnitOfWork unitOf
 
         if (isDuplicate)
         {
-            return (false, "Bu kelime zaten sözlüğünüzde mevcut.");
+            return Result.Failure("Bu kelime zaten sözlüğünüzde mevcut.");
         }
 
         // Güncelle
         existingWord.EnglishWord = wordDto.EnglishWord;
         existingWord.TurkishWord = wordDto.TurkishWord;
 
-        await UpdateAsync(existingWord);
-        return (true, null);
+        repository.Update(existingWord);
+        await unitOfWork.CommitAsync();
+        return Result.Success();
     }
 
-    public async Task<(bool Success, string? ErrorMessage)> DeleteWordAsync(int wordId, string userId)
+    public async Task<Result> DeleteWordAsync(int wordId, string userId)
     {
         // Kelimeyi kullanıcıya ait mi kontrol et
         var word = await Where(x => x.Id == wordId && x.UserId == userId).FirstOrDefaultAsync();
         if (word == null)
         {
-            return (false, "Kelime bulunamadı veya size ait değil.");
+            return Result.Failure("Kelime bulunamadı veya size ait değil.");
         }
 
-        await RemoveAsync(word);
-        return (true, null);
+        repository.Remove(word);
+        await unitOfWork.CommitAsync();
+        return Result.Success();
     }
 
-    public async Task<bool> IsWordDuplicateAsync(string englishWord, string userId)
+    public async Task<Result<bool>> IsWordDuplicateAsync(string englishWord, string userId)
     {
         if (string.IsNullOrWhiteSpace(englishWord))
-            return false;
+            return Result<bool>.Success(false);
 
         var normalizedWord = englishWord.NormalizeEnglishWord();
-        var exists = await AnyAsync(x =>
+        var exists = await repository.AnyAsync(x =>
             x.UserId == userId &&
             x.EnglishWord != null &&
             x.EnglishWord == normalizedWord);
 
-        return exists;
+        return Result<bool>.Success(exists);
     }
 
-    public async Task<string> GetRandomWordAsync(string userId)
+    public async Task<Result<string>> GetRandomWordAsync(string userId)
     {
         var words = await Where(x => x.UserId == userId).ToListAsync();
         if (words == null || words.Count == 0)
         {
-            return string.Empty;
+            return Result<string>.Failure("Kayıt bulunamadı.");
         }
 
         int index = _random.Next(0, words.Count);
-        return words[index].EnglishWord ?? string.Empty;
+        return Result<string>.Success(words[index].EnglishWord ?? string.Empty);
     }
 
-    public async Task<bool> CheckTranslationAndUpdateAsync(string userId, string turkishWord, string englishWord)
+    public async Task<Result<bool>> CheckTranslationAndUpdateAsync(string userId, string turkishWord, string englishWord)
     {
         var normalizedEnglishWord = englishWord?.NormalizeEnglishWord();
 
@@ -157,7 +145,7 @@ public class WordService(IGenericRepository<Word> repository, IUnitOfWork unitOf
 
         if (word == null)
         {
-            return false;
+            return Result<bool>.Failure("Kelime bulunamadı.");
         }
 
         var normalizedTurkishWord = turkishWord?.NormalizeTurkishWord();
@@ -180,8 +168,34 @@ public class WordService(IGenericRepository<Word> repository, IUnitOfWork unitOf
             word.TotalWrongCount++;
         }
 
-        await UpdateAsync(word);
+        repository.Update(word);
+        await unitOfWork.CommitAsync();
 
-        return isCorrect;
+        return Result<bool>.Success(isCorrect);
+    }
+
+    public async Task<Result<(List<Word> Words, int TotalCount)>> GetPagedWordsAsync(string userId, string? search, int page, int pageSize)
+    {
+        if (page < 1) page = 1;
+        if (pageSize <= 0) pageSize = 10;
+
+        var query = Where(x => x.UserId == userId)
+            .Include(x => x.Favorite)
+            .Include(x => x.Unknows)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(x => x.EnglishWord!.Contains(search) || x.TurkishWord!.Contains(search));
+        }
+
+        var totalCount = await query.CountAsync();
+        var words = await query
+            .OrderBy(x => x.CreatedTime)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return Result<(List<Word> Words, int TotalCount)>.Success((words, totalCount));
     }
 }
