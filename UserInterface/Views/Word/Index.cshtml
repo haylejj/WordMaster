@@ -24,8 +24,8 @@
             <th>İngilizce</th>
             <th>Türkçe</th>
             <th>İşlemler</th>
-            <th>Sil</th>
             <th>Güncelle</th>
+            <th>Sil</th>
         </tr>
     </thead>
     <tbody>
@@ -59,10 +59,10 @@
                         </div>
                     </td>
                     <td>
-                        <a href="#" class="btn btn-danger" onclick="deleteWord(@item.Id, event)">Delete</a>
+                        <a href="#" class="btn btn-warning" onclick="openUpdateModal(@item.Id, event)">Update</a>
                     </td>
                     <td>
-                        <a href="#" class="btn btn-warning" onclick="openUpdateModal(@item.Id, event)">Update</a>
+                        <a href="#" class="btn btn-danger" onclick="deleteWord(@item.Id, event)">Delete</a>
                     </td>
                 </tr>
             }

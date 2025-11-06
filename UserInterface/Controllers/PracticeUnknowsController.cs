@@ -19,6 +19,7 @@ public class PracticeUnknowsController(IUnknowsService unknowsService) : Control
         return View((object)newEnglishWord);
     }
 
+    [HttpGet("CheckTranslation")]
     public async Task<IActionResult> CheckTranslation(string turkishWord, string englishWord)
     {
         var userId = User.GetUserId();
@@ -27,6 +28,7 @@ public class PracticeUnknowsController(IUnknowsService unknowsService) : Control
         return Json(new { isCorrect });
     }
 
+    [HttpGet("GetNewEnglishWord")]
     public async Task<IActionResult> GetNewEnglishWord()
     {
         var userId = User.GetUserId();
