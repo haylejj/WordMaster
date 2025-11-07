@@ -28,6 +28,11 @@ jobs:
         with:
           dotnet-version: '9.0.x'
           cache: true
+          cache-dependency-path: |
+            WordMaster.Domain/packages.lock.json
+            WordMaster.Application/packages.lock.json
+            WordMaster.Infrastructure/packages.lock.json
+            WordMaster.WebUI/packages.lock.json
 
       - name: Restore dependencies
         run: dotnet restore
@@ -49,7 +54,12 @@ jobs:
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '9.0.x'
-          cache: true 
+          cache: true
+          cache-dependency-path: |
+            WordMaster.Domain/packages.lock.json
+            WordMaster.Application/packages.lock.json
+            WordMaster.Infrastructure/packages.lock.json
+            WordMaster.WebUI/packages.lock.json
 
       - name: Restore
         run: dotnet restore
