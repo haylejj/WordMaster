@@ -1,0 +1,166 @@
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>WordMaster</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <link rel="icon" type="image/png" href="/favicon.ico">
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+</head>
+
+<body>
+    <div class="body-inner d-flex flex-column min-vh-100">
+        <header id="header" class="header-one">
+            <div class="site-navigation bg-dark">
+                <div class="container">
+                    <nav class="navbar navbar-expand-lg navbar-dark">
+                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#navbar-collapse" aria-controls="navbar-collapse" aria-expanded="false"
+                            aria-label="Toggle navigation">
+                            <span class="navbar-toggler-icon"></span>
+                        </button>
+                        <div id="navbar-collapse" class="collapse navbar-collapse">
+                            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                                <li class="nav-item"><a class="nav-link text-white px-3" href="/Word"><i
+                                            class="fas fa-book me-1"></i>Kelimelerim</a></li>
+                                <li class="nav-item"><a class="nav-link text-white px-3" href="/Word/AddWord"><i
+                                            class="fas fa-plus me-1"></i>Yeni Kelime Ekle</a></li>
+                                <li class="nav-item"><a class="nav-link text-white px-3" href="/Favorite"><i
+                                            class="fas fa-star me-1"></i>Favoriler</a>
+                                </li>
+                                <li class="nav-item"><a class="nav-link text-white px-3" href="/Unknows"><i
+                                            class="fas fa-question-circle me-1"></i>Bilinmeyenler</a>
+                                </li>
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle btn btn-warning btn-sm text-dark fw-bold px-3"
+                                        href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="fas fa-play me-1"></i> Pratik Yap
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item text-warning" href="/Practice"><i
+                                                    class="fas fa-book me-2"></i>T�m Kelimelerle</a></li>
+                                        <li><a class="dropdown-item text-warning" href="/PracticeFavorite"><i
+                                                    class="fas fa-star me-2"></i>Favorilerle</a></li>
+                                        <li><a class="dropdown-item text-warning" href="/PracticeUnknows"><i
+                                                    class="fas fa-question-circle me-2"></i>Bilinmeyenlerle</a></li>
+                                    </ul>
+                                </li>
+                            </ul>
+                            @if (User.Identity?.IsAuthenticated == true && User.IsInRole("admin"))
+                            {
+                                <ul class="navbar-nav">
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle text-white px-3" href="#" id="userDropdown"
+                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="fas fa-user"></i> @(User.Identity?.Name?.ToUpper() ?? "USER")
+                                        </a>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a class="dropdown-item" asp-action="UserList" asp-controller="Admin"
+                                                    asp-area="Admin"><i class="fas fa-users me-2"></i>User List</a></li>
+                                            <li><a class="dropdown-item" asp-action="RoleList" asp-controller="Role"
+                                                    asp-area="Admin"><i class="fas fa-user-shield me-2"></i>Role List</a>
+                                            </li>
+                                            <li>
+                                                <hr class="dropdown-divider">
+                                            </li>
+                                            <li><a class="dropdown-item" href="/Member/UserEdit"><i
+                                                        class="fas fa-user-edit me-2"></i>Update Your Profile</a></li>
+                                            <li><a class="dropdown-item" href="/Member/PasswordChange"><i
+                                                        class="fas fa-key me-2"></i>Password Change</a></li>
+                                            <li>
+                                                <hr class="dropdown-divider">
+                                            </li>
+                                            <li><a class="dropdown-item text-danger" href="/Member/LogOut"><i
+                                                        class="fas fa-sign-out-alt me-2"></i>Log Out</a></li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            }
+                            else if (User.Identity?.IsAuthenticated == true)
+                            {
+                                <ul class="navbar-nav">
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle text-white px-3" href="#" id="userDropdown"
+                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="fas fa-user"></i> @(User.Identity?.Name?.ToUpper() ?? "USER")
+                                        </a>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a class="dropdown-item" asp-action="UserEdit" asp-controller="Member"><i
+                                                        class="fas fa-user-edit me-2"></i>Update Your Profile</a></li>
+                                            <li><a class="dropdown-item" href="/Member/PasswordChange"><i
+                                                        class="fas fa-key me-2"></i>Password Change</a></li>
+                                            <li>
+                                                <hr class="dropdown-divider">
+                                            </li>
+                                            <li><a class="dropdown-item text-danger" asp-action="LogOut"
+                                                    asp-controller="Member"><i class="fas fa-sign-out-alt me-2"></i>Log
+                                                    Out</a></li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            }
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </header>
+        <div class="container main-content">
+            <main role="main" class="pb-3">
+                @RenderBody()
+            </main>
+        </div>
+
+        <footer class="bg-dark text-light py-4 mt-auto">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-12 text-center">
+                        <p class="mb-0">&copy; @DateTime.Now.Year English Practice Site. All rights reserved.</p>
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+
+        <!-- Back to Top Button -->
+        <button id="backToTop"
+            class="btn btn-warning position-fixed bottom-0 end-0 m-3 rounded-circle d-none back-to-top-btn"
+            title="Back to Top">
+            <i class="fas fa-arrow-up"></i>
+        </button>
+
+        <script>
+            // Back to Top Button
+            window.addEventListener('scroll', function () {
+                const backToTop = document.getElementById('backToTop');
+                if (window.pageYOffset > 300) {
+                    backToTop.classList.remove('d-none');
+                } else {
+                    backToTop.classList.add('d-none');
+                }
+            });
+
+            document.getElementById('backToTop').addEventListener('click', function () {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+        </script>
+        <script src="~/lib/jquery/dist/jquery.min.js"></script>
+        <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+        @await RenderSectionAsync("Scripts", required: false)
+    </div>
+</body>
+
+</html>

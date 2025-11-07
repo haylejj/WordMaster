@@ -1,0 +1,101 @@
+var turkishWordInput = document.getElementById("turkishWord");
+var englishWordInput = document.getElementById("englishWord");
+var checkButton = document.getElementById("checkButton");
+var notification = document.getElementById("notification");
+
+// Yeni İngilizce kelimeyi al ve İngilizce kelime alanına yerleştir
+function getNewEnglishWord() {
+    fetch("/Practice/GetNewEnglishWord")
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.text();
+        })
+        .then(newEnglishWord => {
+            if (newEnglishWord && newEnglishWord.trim() !== '') {
+                englishWordInput.value = newEnglishWord;
+                turkishWordInput.value = ""; // Türkçe kelime alanını temizle
+            } else {
+                showNotification("Kelime bulunamadı. Lütfen sözlüğünüze kelime ekleyin.", "error");
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching new word:', error);
+            showNotification("Bir hata oluştu. Lütfen tekrar deneyin.", "error");
+        });
+}
+
+// Sayfa yüklendiğinde, eğer İngilizce kelime alanı boşsa yeni kelime al
+document.addEventListener("DOMContentLoaded", function () {
+    // Eğer model'den gelen değer boşsa veya sayfa ilk yüklendiğinde yeni kelime al
+    if (!englishWordInput.value || englishWordInput.value.trim() === '') {
+        getNewEnglishWord();
+    }
+});
+
+checkButton.addEventListener("click", function () {
+    var turkishWord = turkishWordInput.value.trim();
+    var englishWord = englishWordInput.value.trim();
+
+    if (!turkishWord || !englishWord) {
+        showNotification("Lütfen her iki kelimeyi de girin.", "error");
+        return;
+    }
+
+    // URL parametrelerini encode et
+    var encodedTurkishWord = encodeURIComponent(turkishWord);
+    var encodedEnglishWord = encodeURIComponent(englishWord);
+
+    // Sunucuya doğrulama isteği gönder
+    fetch("/Practice/CheckTranslation?turkishWord=" + encodedTurkishWord + "&englishWord=" + encodedEnglishWord)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.isCorrect) {
+                // Doğru cevap verildi, yeni İngilizce kelimeyi al
+                showNotification("Doğru cevap!", "success"); // Bildirim göster
+                getNewEnglishWord();
+            } else {
+                showNotification("Yanlış cevap! Tekrar deneyin.", "error"); // Bildirim göster
+            }
+        })
+        .catch(error => {
+            console.error('Error checking translation:', error);
+            showNotification("Bir hata oluştu. Lütfen tekrar deneyin.", "error");
+        });
+});
+
+function showNotification(message, type) {
+    var messageElement = document.getElementById("notificationMessage");
+    messageElement.textContent = message;
+
+    // Önceki class'ları temizle
+    notification.classList.remove("alert-success", "alert-danger", "alert-warning", "alert-info");
+
+    // Yeni class ekle
+    if (type === "success") {
+        notification.classList.add("alert-success");
+    } else if (type === "error") {
+        notification.classList.add("alert-danger");
+    } else {
+        notification.classList.add("alert-info");
+    }
+
+    // Bildirimi göster
+    notification.style.display = "block";
+
+    // 3 saniye sonra otomatik gizle
+    setTimeout(function () {
+        hideNotification();
+    }, 3000);
+}
+
+function hideNotification() {
+    notification.style.display = "none";
+}
+

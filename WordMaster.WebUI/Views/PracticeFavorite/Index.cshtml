@@ -1,0 +1,25 @@
+@model PracticeViewModel
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/Main_Layout.cshtml";
+}
+<h2 class="text-center practice-title">Practice Time</h2>
+<div class="practice-container">
+    <div class="practice-form-group">
+        <label for="englishWord" class="label-english">İngilizce Kelime:</label>
+        <input type="text" id="englishWord" name="englishWord" class="form-control" value="@Model.EnglishWord" />
+    </div>
+    <div class="practice-form-group">
+        <label for="turkishWord" class="label-turkish">Türkçe Kelime:</label>
+        <input type="text" id="turkishWord" name="turkishWord" class="form-control" />
+    </div>
+    <div class="text-center">
+        <button id="checkButton" class="practice-btn">Cevabı Kontrol Et</button>
+    </div>
+    <div id="notification" class="alert mt-3" role="alert" style="display: none;">
+        <span id="notificationMessage"></span>
+        <button type="button" class="btn-close float-end" onclick="hideNotification()" aria-label="Close"></button>
+    </div>
+</div>
+
+<script src="~/js/practiceFavorite/index.js"></script>
