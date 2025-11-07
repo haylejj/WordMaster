@@ -1,0 +1,27 @@
+
+using Microsoft.AspNetCore.Identity;
+using WordMaster.Application.Requests;
+using WordMaster.Application.Services.Abstract;
+using WordMaster.Domain.Entities;
+using WordMaster.Domain.Results;
+
+namespace WordMaster.Infrastructure.Services;
+
+public class RegisterService(UserManager<AppUser> userManager) : IRegisterService
+{
+    public async Task<Result<IEnumerable<IdentityError>>> RegisterAsync(RegisterRequest request)
+    {
+        var result = await userManager.CreateAsync(new AppUser() { UserName = request.UserName, Email = request.Email, PhoneNumber = request.Phone }, request.Password);
+
+        if (!result.Succeeded)
+        {
+            return new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Kayýt baþarýsýz.", Data = result.Errors };
+        }
+        else
+        {
+            var user = await userManager.FindByNameAsync(request.UserName);
+            await userManager.AddToRoleAsync(user, "user");
+            return Result<IEnumerable<IdentityError>>.Success(null);
+        }
+    }
+}
