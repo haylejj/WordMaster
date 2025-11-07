@@ -1,0 +1,47 @@
+@model WordViewModel
+@{
+    ViewData["Title"] = "AddWord";
+    Layout = "~/Views/Shared/Main_Layout.cshtml";
+}
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+<script src="\lib\jquery\dist\jquery.js"></script>
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger">
+                    @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+                </div>
+            }
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    @using (Html.BeginForm("AddWord", "Word", FormMethod.Post))
+                    {
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">English:</label>
+                            @Html.TextBoxFor(x => x.EnglishWord, new { @class = "form-control", required = "required",
+                            maxlength = "30" })
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Turkish:</label>
+                        @Html.TextBoxFor(x => x.TurkishWord, new { @class = "form-control", required = "required",
+                                                maxlength = "60" })
+                    </div>
+                    <div class="text-center">
+                        <button class="practice-btn w-100" type="submit">Save</button>
+                    </div>
+                                        }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
