@@ -2,9 +2,9 @@ name: Audit
 
 on:
   push:
-    branches: [ main, dev1 ]
+    branches: [ master2, dev1 ]
   pull_request:
-    branches: [ main ]
+    branches: [ master2 ]
 
 jobs:
   codeql-analysis:
