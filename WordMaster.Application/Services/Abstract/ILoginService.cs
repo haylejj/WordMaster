@@ -8,5 +8,5 @@ public interface ILoginService
 {
     Task<Result<AppUser>> FindByEmailAsync(string email);
     Task<Result> LoginAsync(LoginRequest request, AppUser user);
-    Task<Result<string>> GeneratePasswordResetTokenAsync(string userýd);
+    Task<Result<string>> GeneratePasswordResetTokenAsync(string userId);
 }
