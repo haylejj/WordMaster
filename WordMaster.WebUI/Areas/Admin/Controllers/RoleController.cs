@@ -21,12 +21,17 @@ public class RoleController(IRoleService roleService) : Controller
         return View();
     }
     [HttpPost]
-    public async Task<IActionResult> RoleCreate(RoleCreateRequest request)
+    public async Task<IActionResult> RoleCreate(RoleCreateViewModel viewModel)
     {
         if (!ModelState.IsValid)
         {
             return View();
         }
+
+        var request = new RoleCreateRequest
+        {
+            Name = viewModel.Name
+        };
 
         var result = await roleService.CreateRoleAsync(request);
 
@@ -35,7 +40,7 @@ public class RoleController(IRoleService roleService) : Controller
             ModelState.AddModelErrorList(result.Data!.Select(x => x.Description).ToList());
             return View();
         }
-        TempData["SuccessMessage"] = "Yeni rol baþarýyla oluþturuldu";
+        TempData["SuccessMessage"] = "Yeni rol baï¿½arï¿½yla oluï¿½turuldu";
         return RedirectToAction(nameof(RoleList));
     }
 
@@ -43,7 +48,7 @@ public class RoleController(IRoleService roleService) : Controller
     {
         var role = await roleService.FindByIdReturnRoleUpdateViewModelAsync(roleId);
 
-        return !role.IsSuccess ? throw new Exception("Güncellenecek rol bulunamamýþtýr.") : (IActionResult)View(role.Data);
+        return !role.IsSuccess ? throw new Exception("Gï¿½ncellenecek rol bulunamamï¿½ï¿½tï¿½r.") : (IActionResult)View(role.Data);
     }
     [HttpPost]
     public async Task<IActionResult> RoleUpdate(RoleUpdateRequest request)
@@ -60,7 +65,7 @@ public class RoleController(IRoleService roleService) : Controller
             ModelState.AddModelErrorList(result.Data!.Select(x => x.Description).ToList());
             return View();
         }
-        else { TempData["SuccessMessage"] = "Güncelleme Ýþlemi Baþarýyla Yapýldý"; }
+        else { TempData["SuccessMessage"] = "Gï¿½ncelleme ï¿½ï¿½lemi Baï¿½arï¿½yla Yapï¿½ldï¿½"; }
         return RedirectToAction("RoleList", "Role");
     }
     public async Task<IActionResult> RoleDelete(string roleId)
@@ -71,7 +76,7 @@ public class RoleController(IRoleService roleService) : Controller
             ModelState.AddModelErrorList(result.Data!.Select(x => x.Description).ToList());
             return View();
         }
-        else { TempData["SuccessMessage"] = "Rol baþarýyla silinmiþtir"; }
+        else { TempData["SuccessMessage"] = "Rol baï¿½arï¿½yla silinmiï¿½tir"; }
         return RedirectToAction("RoleList", "Role");
     }
 

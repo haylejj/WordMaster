@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using WordMaster.Application.Requests;
 using WordMaster.Application.Services.Abstract;
+using WordMaster.Application.ViewModels;
 using WordMaster.Domain.Entities;
 using WordMaster.WebUI.Extensions;
 
@@ -13,12 +14,12 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
     [HttpGet("")]
     public IActionResult Login()
     {
-        // Eðer kullanýcý zaten login olmuþsa Word sayfasýna yönlendir
+        // Eï¿½er kullanï¿½cï¿½ zaten login olmuï¿½sa Word sayfasï¿½na yï¿½nlendir
         return User.Identity?.IsAuthenticated == true ? RedirectToAction("Index", "Word") : View();
     }
 
     [HttpPost("")]
-    public async Task<IActionResult> Login(LoginRequest request, string? returnUrl = null)
+    public async Task<IActionResult> Login(LoginViewModel viewModel, string? returnUrl = null)
     {
         if (!ModelState.IsValid) // bir hata var ise validate de
         {
@@ -26,10 +27,17 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
         }
         returnUrl = returnUrl ?? Url.Action("Index", "Word");
 
+        var request = new LoginRequest
+        {
+            Email = viewModel.Email,
+            Password = viewModel.Password,
+            RememberMe = viewModel.RememberMe
+        };
+
         var userResult = await loginService.FindByEmailAsync(request.Email!);
         if (!userResult.IsSuccess || userResult.Data == null)
         {
-            ModelState.AddModelErrorList(new List<string>() { "Email veya þifre yanlýþ" });
+            ModelState.AddModelErrorList(new List<string>() { "Email veya ï¿½ifre yanlï¿½ï¿½" });
         }
 
         var result = await loginService.LoginAsync(request, userResult.Data!);
@@ -39,7 +47,7 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
             return Redirect(returnUrl!);
         }
 
-        ModelState.AddModelErrorList(new List<string> { "Email veya þifre yanlýþ" });
+        ModelState.AddModelErrorList(new List<string> { "Email veya ï¿½ifre yanlï¿½ï¿½" });
         return View();
     }
     [HttpGet("ForgetPassword")]
@@ -49,29 +57,33 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
     }
 
     [HttpPost("ForgetPassword")]
-    public async Task<IActionResult> ForgetPassword(ForgetPasswordRequest request)
+    public async Task<IActionResult> ForgetPassword(ForgetPasswordViewModel viewModel)
     {
         if (!ModelState.IsValid)
         {
             return View();
         }
+        var request = new ForgetPasswordRequest
+        {
+            Email = viewModel.Email
+        };
         var user = await loginService.FindByEmailAsync(request.Email!);
         if (!user.IsSuccess || user.Data == null)
         {
-            ModelState.AddModelError(string.Empty, "Bu email adresine sahip kullanýcý bulunamamýþtýr.");
+            ModelState.AddModelError(string.Empty, "Bu email adresine sahip kullanï¿½cï¿½ bulunamamï¿½ï¿½tï¿½r.");
             return View();
         }
 
-        var passwordResetToken = await loginService.GeneratePasswordResetTokenAsync(user.Data.Id);// þimdi biz özel token ürettik. þifre deðiþtirmede kullanýlacak 
+        var passwordResetToken = await loginService.GeneratePasswordResetTokenAsync(user.Data.Id);// ï¿½imdi biz ï¿½zel token ï¿½rettik. ï¿½ifre deï¿½iï¿½tirmede kullanï¿½lacak 
 
-        var passwordResetLink = Url.Action("ResetPassword", null, new { userId = user.Data.Id, token = passwordResetToken.Data }, HttpContext.Request.Scheme); // bu linkin ömrünü program.cs de belirliycez.
-        //örnek link
+        var passwordResetLink = Url.Action("ResetPassword", null, new { userId = user.Data.Id, token = passwordResetToken.Data }, HttpContext.Request.Scheme); // bu linkin ï¿½mrï¿½nï¿½ program.cs de belirliycez.
+        //ï¿½rnek link
         // https://localhost:7289?userId=12213&token=aasdfasdfsdf
 
-        // email e link gönderme metodu.
+        // email e link gï¿½nderme metodu.
         await emailService.SendResetPasswordLinkToEmailAsync(passwordResetLink!, user.Data.Email!);
         //
-        TempData["success"] = "Þifre yenileme linki e-posta adresinize gönderilmiþtir.";
+        TempData["success"] = "ï¿½ifre yenileme linki e-posta adresinize gï¿½nderilmiï¿½tir.";
 
         return RedirectToAction(nameof(ForgetPassword));
     }
@@ -84,7 +96,7 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
     }
 
     [HttpPost("ResetPassword")]
-    public async Task<IActionResult> ResetPassword(ResetPasswordRequest request)
+    public async Task<IActionResult> ResetPassword(ResetPasswordViewModel viewModel)
     {
         if (!ModelState.IsValid)
         {
@@ -99,13 +111,18 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
         var hasUser = await userManager.FindByIdAsync(userId.ToString()!);
         if (hasUser == null)
         {
-            ModelState.AddModelErrorList(new List<string>() { "Kullanýcý bulunamamýþtýr." });
+            ModelState.AddModelErrorList(new List<string>() { "Kullanï¿½cï¿½ bulunamamï¿½ï¿½tï¿½r." });
             return View();
         }
+        var request = new ResetPasswordRequest
+        {
+            Password = viewModel.Password,
+            PasswordConfirm = viewModel.PasswordConfirm
+        };
         var result = await userManager.ResetPasswordAsync(hasUser, token!.ToString()!, request.Password!);
         if (result.Succeeded)
         {
-            TempData["SuccessMessage"] = "Þifreniz baþarýyla yenilenmiþtir.";
+            TempData["SuccessMessage"] = "ï¿½ifreniz baï¿½arï¿½yla yenilenmiï¿½tir.";
         }
         else
         {

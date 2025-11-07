@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using WordMaster.Application.Requests;
 using WordMaster.Application.Services.Abstract;
+using WordMaster.Application.ViewModels;
 using WordMaster.WebUI.Extensions;
 
 namespace WordMaster.WebUI.Controllers;
@@ -15,12 +16,20 @@ public class RegisterController(IRegisterService registerService) : Controller
     }
 
     [HttpPost("")]
-    public async Task<IActionResult> Register(RegisterRequest request)
+    public async Task<IActionResult> Register(RegisterViewModel viewModel)
     {
         if (!ModelState.IsValid)
         {
             return View();
         }
+        var request = new RegisterRequest
+        {
+            UserName = viewModel.UserName,
+            Email = viewModel.Email,
+            Password = viewModel.Password,
+            PasswordConfirm = viewModel.PasswordConfirm,
+            Phone = viewModel.Phone
+        };
         var result = await registerService.RegisterAsync(request);
 
         if (!result.IsSuccess)
@@ -29,7 +38,7 @@ public class RegisterController(IRegisterService registerService) : Controller
             return View();
         }
 
-        TempData["SuccessMessage"] = "Kayýt olma iþlemi baþarýyla tamamlanmýþtýr";
+        TempData["SuccessMessage"] = "Kayï¿½t olma iï¿½lemi baï¿½arï¿½yla tamamlanmï¿½ï¿½tï¿½r";
 
         return View(nameof(Register));
     }

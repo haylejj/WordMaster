@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WordMaster.Application.Requests;
 using WordMaster.Application.Services.Abstract;
+using WordMaster.Application.ViewModels;
 using WordMaster.WebUI.Extensions;
 
 namespace WordMaster.WebUI.Controllers;
@@ -40,12 +41,18 @@ public class MemberController(IUserService userService) : Controller
         return View();
     }
     [HttpPost]
-    public async Task<IActionResult> PasswordChange(PasswordChangeRequest request)
+    public async Task<IActionResult> PasswordChange(PasswordChangeViewModel viewModel)
     {
         if (!ModelState.IsValid)
         {
             return View();
         }
+        var request = new PasswordChangeRequest
+        {
+            PasswordOld = viewModel.PasswordOld,
+            PasswordNew = viewModel.PasswordNew,
+            PasswordConfirm = viewModel.PasswordConfirm
+        };
         var check = await userService.CheckPasswordAsync(User.Identity!.Name!, request.PasswordOld!);
         if (!check.Data)
         {

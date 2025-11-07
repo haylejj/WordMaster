@@ -60,7 +60,17 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
     {
         var userId = User.GetUserId();
         var result = await unknowsService.GetUnknowsWithWordAsync(id, userId!);
-        return !result.IsSuccess || result.Data?.Word == null ? NotFound() : View(result.Data.Word);
+        if (!result.IsSuccess || result.Data?.Word == null)
+        {
+            return NotFound();
+        }
+        var viewModel = new WordViewModel
+        {
+            Id = result.Data.Word.Id,
+            EnglishWord = result.Data.Word.EnglishWord,
+            TurkishWord = result.Data.Word.TurkishWord
+        };
+        return View(viewModel);
     }
     [HttpGet("GetWord")]
     public async Task<IActionResult> GetWord(int unknowsId)
@@ -86,7 +96,7 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
     }
 
     [HttpPost("UpdateWord")]
-    public async Task<IActionResult> UpdateWord(WordDto wordDto)
+    public async Task<IActionResult> UpdateWord(WordViewModel viewModel)
     {
         if (!ModelState.IsValid)
         {
@@ -98,6 +108,13 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
         {
             return Json(new { success = false, message = "Kullanıcı bilgisi bulunamadı." });
         }
+
+        var wordDto = new WordDto
+        {
+            Id = viewModel.Id,
+            EnglishWord = viewModel.EnglishWord,
+            TurkishWord = viewModel.TurkishWord
+        };
 
         var updateResult = await wordService.UpdateWordAsync(wordDto.Id, wordDto, userId);
 

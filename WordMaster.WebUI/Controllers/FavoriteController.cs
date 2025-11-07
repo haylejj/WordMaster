@@ -59,7 +59,17 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
     {
         var userId = User.GetUserId();
         var result = await favoriteService.GetFavoriteWithWordAsync(id, userId!);
-        return !result.IsSuccess || result.Data?.Word == null ? NotFound() : View(result.Data.Word);
+        if (!result.IsSuccess || result.Data?.Word == null)
+        {
+            return NotFound();
+        }
+        var viewModel = new WordViewModel
+        {
+            Id = result.Data.Word.Id,
+            EnglishWord = result.Data.Word.EnglishWord,
+            TurkishWord = result.Data.Word.TurkishWord
+        };
+        return View(viewModel);
     }
     [HttpGet("GetWord")]
     public async Task<IActionResult> GetWord(int favoriteId)
@@ -85,7 +95,7 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
     }
 
     [HttpPost("UpdateWord")]
-    public async Task<IActionResult> UpdateWord(WordDto wordDto)
+    public async Task<IActionResult> UpdateWord(WordViewModel viewModel)
     {
         if (!ModelState.IsValid)
         {
@@ -97,6 +107,13 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
         {
             return Json(new { success = false, message = "Kullan�c� bilgisi bulunamad�." });
         }
+
+        var wordDto = new WordDto
+        {
+            Id = viewModel.Id,
+            EnglishWord = viewModel.EnglishWord,
+            TurkishWord = viewModel.TurkishWord
+        };
 
         var updateResult = await wordService.UpdateWordAsync(wordDto.Id, wordDto, userId);
 

@@ -1,6 +1,4 @@
-
-@using WordMaster.Domain.Entities
-@model Word
+@model WordViewModel
 @{
     ViewData["Title"] = "UpdateWord";
     Layout = "~/Views/Shared/Main_Layout.cshtml";
@@ -26,15 +24,15 @@
 }
 <script>
     $('#btn2').click(function (event) {
-        event.preventDefault(); // Formun otomatik submit olmasýný engeller
+        event.preventDefault(); // Formun otomatik submit olmasï¿½nï¿½ engeller
 
         swal({
-            title: "Baþarýlý",
-            text: "Kelime baþarýyla güncellendi!",
+            title: "Baï¿½arï¿½lï¿½",
+            text: "Kelime baï¿½arï¿½yla gï¿½ncellendi!",
             icon: "success",
             button: "Tamam",
         }).then(function () {
-            $('form').submit(); // Formun submit iþlemini gerçekleþtirir
+            $('form').submit(); // Formun submit iï¿½lemini gerï¿½ekleï¿½tirir
         });
     });
 </script>
