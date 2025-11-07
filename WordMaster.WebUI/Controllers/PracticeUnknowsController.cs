@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WordMaster.Application.Services.Abstract;
+using WordMaster.Application.ViewModels;
 using WordMaster.WebUI.Extensions;
 
 namespace WordMaster.WebUI.Controllers;
@@ -15,8 +16,15 @@ public class PracticeUnknowsController(IUnknowsService unknowsService) : Control
     {
         var userId = User.GetUserId();
         if (userId == null) return Unauthorized();
+
         var word = await unknowsService.GetRandomWordFromUnknowsAsync(userId);
-        return View((object)(word.IsSuccess ? word.Data : string.Empty));
+        var viewModel = new PracticeViewModel
+        {
+            EnglishWord = word.IsSuccess && word.Data != null ? word.Data : string.Empty,
+            ErrorMessage = word.IsSuccess ? null : word.ErrorMessage
+        };
+
+        return View(viewModel);
     }
 
     [HttpGet("CheckTranslation")]
@@ -34,6 +42,6 @@ public class PracticeUnknowsController(IUnknowsService unknowsService) : Control
         var userId = User.GetUserId();
         if (userId == null) return Content(string.Empty);
         var word = await unknowsService.GetRandomWordFromUnknowsAsync(userId);
-        return Content(word.IsSuccess ? word.Data : string.Empty);
+        return Content(word.IsSuccess && word.Data != null ? word.Data : string.Empty);
     }
 }

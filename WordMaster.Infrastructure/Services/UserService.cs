@@ -42,7 +42,7 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
         var currentUser = await userManager.FindByNameAsync(username);
         if (currentUser == null)
         {
-            return new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Kullanıcı bulunamadı.", Data = Array.Empty<IdentityError>() };
+            return new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Kullanıcı bulunamadı.", Data = [] };
         }
 
         currentUser.UserName = request.UserName;
@@ -82,7 +82,7 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
         var currentUser = await userManager.FindByNameAsync(userName);
         if (currentUser == null)
         {
-            return new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Kullanıcı bulunamadı.", Data = Array.Empty<IdentityError>() };
+            return new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Kullanıcı bulunamadı.", Data = [] };
         }
 
         var resultChangePassword = await userManager.ChangePasswordAsync(currentUser, request.PasswordOld!, request.PasswordNew!);
@@ -102,9 +102,7 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
     {
         var users = await userManager.Users.ToListAsync();
 
-        return users
-            .Select(x => new UserViewModel { Id = x.Id, UserName = x.UserName, Email = x.Email })
-            .ToList();
+        return [.. users.Select(x => new UserViewModel { Id = x.Id, UserName = x.UserName!, Email = x.Email! })];
     }
 }
 

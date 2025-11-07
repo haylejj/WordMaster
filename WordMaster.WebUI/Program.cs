@@ -31,7 +31,7 @@ builder.Services.AddDbContext<AppDbContext>(x =>
 {
     x.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer"), option =>
     {
-        option.MigrationsAssembly(Assembly.GetAssembly(typeof(AppDbContext)).GetName().Name);
+        option.MigrationsAssembly(Assembly.GetAssembly(typeof(AppDbContext))!.GetName().Name);
     });
 });
 
@@ -84,7 +84,7 @@ app.MapControllerRoute(
 
 app.MapControllers();
 
-app.MapGet("/", async (HttpContext context) =>
+app.MapGet("/", (HttpContext context) =>
 {
     context.Response.Redirect("/Login");
 });

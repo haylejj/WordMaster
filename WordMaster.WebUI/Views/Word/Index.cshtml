@@ -1,4 +1,3 @@
-
 @model WordListViewModel
 @{
     ViewData["Title"] = "Index";
@@ -16,10 +15,10 @@
     <div class="col-sm-6 col-md-6">
         <label for="search" class="form-label">Ara</label>
         <input type="text" id="search" name="search" value="@Model?.Search" class="form-control"
-            placeholder="Ýngilizce veya Türkçe ara" />
+            placeholder="Ä°ngilizce veya TÃ¼rkÃ§e ara" />
     </div>
     <div class="col-sm-3 col-md-3">
-        <label for="pageSize" class="form-label">Sayfa baþýna</label>
+        <label for="pageSize" class="form-label">Sayfa baÅŸÄ±na</label>
         <select id="pageSize" name="pageSize" class="form-select">
             @if (Model?.PageSize == 10)
             {
@@ -71,11 +70,18 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 }
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
 <table class="table table-bordered table-striped table-hover">
     <thead>
         <tr>
-            <th>Ýngilizce</th>
-            <th>Türkçe</th>
+            <th>Ä°ngilizce</th>
+            <th>TÃ¼rkÃ§e</th>
             <th></th>
             <th></th>
             <th></th>
@@ -86,7 +92,7 @@
         {
             <tr>
                 <td colspan="5" class="text-center">
-                    <p class="text-muted mt-3 mb-3">Veri bulunmamaktadýr.</p>
+                    <p class="text-muted mt-3 mb-3">Veri bulunmamaktadÄ±r.</p>
                 </td>
             </tr>
         }
@@ -113,7 +119,7 @@
                     </td>
                     <td class="text-center">
                         <button type="button" class="btn btn-warning btn-sm text-dark text-nowrap"
-                            onclick="openUpdateModal(@item.Id, event)">Güncelle</button>
+                            onclick="openUpdateModal(@item.Id, event)">GÃ¼ncelle</button>
                     </td>
                     <td class="text-center">
                         <button type="button" class="btn btn-danger btn-sm text-white text-nowrap"
@@ -128,7 +134,7 @@
 @if (Model != null && Model.TotalPages > 1)
 {
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
-        <div class="text-muted">Toplam @Model.TotalCount kayýt</div>
+        <div class="text-muted">Toplam @Model.TotalCount kayÄ±t</div>
         <nav>
             <ul class="pagination mb-0">
                 @{
@@ -139,7 +145,7 @@
                 }
                 <li class="page-item @prevDisabled">
                     <a class="page-link"
-                        href="@Url.Action("", "Word", new { search = Model.Search, page = currentPage - 1, pageSize = Model.PageSize })">«</a>
+                        href="@Url.Action("", "Word", new { search = Model.Search, page = currentPage - 1, pageSize = Model.PageSize })">&laquo;</a>
                 </li>
                 @for (int p = 1; p <= Model.TotalPages; p++)
                 {
@@ -151,7 +157,7 @@
                 }
                 <li class="page-item @nextDisabled">
                     <a class="page-link"
-                        href="@Url.Action("", "Word", new { search = Model.Search, page = currentPage + 1, pageSize = Model.PageSize })">»</a>
+                        href="@Url.Action("", "Word", new { search = Model.Search, page = currentPage + 1, pageSize = Model.PageSize })">&raquo;</a>
                 </li>
             </ul>
         </nav>
@@ -163,7 +169,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Kelime Güncelle</h5>
+                <h5 class="modal-title">Kelime GÃ¼ncelle</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -182,8 +188,8 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Ýptal</button>
-                <button type="button" class="btn btn-primary" onclick="updateWord()">Güncelle</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Ä°ptal</button>
+                <button type="button" class="btn btn-primary" onclick="updateWord()">GÃ¼ncelle</button>
             </div>
         </div>
     </div>

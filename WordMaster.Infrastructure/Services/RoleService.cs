@@ -13,7 +13,7 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
     public async Task<List<RoleViewModel>> GetRoleListAsync()
     {
         var roles = await roleManager.Roles.AsNoTracking().ToListAsync();
-        var roleViewModel = roles.Select(x => new RoleViewModel() { Id = x.Id, Name = x.Name }).ToList();
+        var roleViewModel = roles.Select(x => new RoleViewModel() { Id = x.Id, Name = x.Name! }).ToList();
         return roleViewModel;
     }
     public async Task<Result<IEnumerable<IdentityError>>> CreateRoleAsync(RoleCreateRequest request)
@@ -21,7 +21,7 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
         var result = await roleManager.CreateAsync(new AppRole() { Name = request.Name });
 
         return !result.Succeeded
-            ? new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Rol oluþturulamadý.", Data = result.Errors }
+            ? new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Rol oluï¿½turulamadï¿½.", Data = result.Errors }
             : Result<IEnumerable<IdentityError>>.Success(null);
     }
     public async Task<Result<RoleUpdateViewModel>> FindByIdReturnRoleUpdateViewModelAsync(string id)
@@ -29,9 +29,9 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
         var role = await roleManager.FindByIdAsync(id);
         if (role == null)
         {
-            return Result<RoleUpdateViewModel>.Failure("Rol bulunamadý.");
+            return Result<RoleUpdateViewModel>.Failure("Rol bulunamadï¿½.");
         }
-        var roleUpdateViewModel = new RoleUpdateViewModel() { Id = role.Id, Name = role.Name };
+        var roleUpdateViewModel = new RoleUpdateViewModel() { Id = role.Id, Name = role.Name! };
         return Result<RoleUpdateViewModel>.Success(roleUpdateViewModel);
     }
 
@@ -40,17 +40,21 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
         var role = await roleManager.FindByIdAsync(request.Id);
         if (role == null)
         {
-            return new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Rol bulunamadý.", Data = null };
+            return new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Rol bulunamadï¿½.", Data = null };
         }
         role.Name = request.Name;
         var result = await roleManager.UpdateAsync(role);
         return !result.Succeeded
-            ? new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Rol güncellenemedi.", Data = result.Errors }
+            ? new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Rol gï¿½ncellenemedi.", Data = result.Errors }
             : Result<IEnumerable<IdentityError>>.Success(null);
     }
     public async Task<Result<IEnumerable<IdentityError>>> DeleteRoleAsync(string id)
     {
         var role = await roleManager.FindByIdAsync(id);
+        if (role == null)
+        {
+            return new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Rol bulunamadÄ±.", Data = null };
+        }
 
         var result = await roleManager.DeleteAsync(role);
         return !result.Succeeded
@@ -61,6 +65,10 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
     public async Task<List<AssignToRoleViewModel>> GetRoleByIdReturnAssignToRoleAsync(string id)
     {
         var user = await userManager.FindByIdAsync(id);
+        if (user == null)
+        {
+            return [];
+        }
 
         var roles = await roleManager.Roles.ToListAsync();
 
@@ -70,8 +78,8 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
 
         foreach (var role in roles)
         {
-            var assignToRoleViewModel = new AssignToRoleViewModel() { Id = role.Id, Name = role.Name };
-            if (userRoles.Contains(role.Name))
+            var assignToRoleViewModel = new AssignToRoleViewModel() { Id = role.Id, Name = role.Name! };
+            if (userRoles.Contains(role.Name!))
             {
                 assignToRoleViewModel.Exist = true;
             }
@@ -83,6 +91,10 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
     public async Task AssignRoleAsync(string id, List<AssignToRoleViewModel> request)
     {
         var user = await userManager.FindByIdAsync(id);
+        if (user == null)
+        {
+            return;
+        }
 
         foreach (var role in request)
         {

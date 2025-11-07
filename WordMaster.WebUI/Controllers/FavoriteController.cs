@@ -13,7 +13,6 @@ namespace WordMaster.WebUI.Controllers;
 public class FavoriteController(IFavoriteService favoriteService, IWordService wordService) : Controller
 {
     [HttpGet("")]
-    [HttpGet("Index")]
     public async Task<IActionResult> Index(string? search, int page = 1, int pageSize = 10)
     {
         var userId = User.GetUserId();
@@ -21,7 +20,7 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
 
         var viewModel = new FavoriteListViewModel
         {
-            Words = result.IsSuccess ? result.Data.Favorites.Where(x => x.Word != null).Select(x => x.Word!).ToList() : new List<Word>(),
+            Words = result.IsSuccess ? [.. result.Data.Favorites.Where(x => x.Word != null).Select(x => x.Word!)] : [],
             Page = page,
             PageSize = pageSize,
             TotalCount = result.IsSuccess ? result.Data.TotalCount : 0,
@@ -37,9 +36,9 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
         var result = await favoriteService.ToggleFavoriteAsync(id, userId!);
         if (!result.IsSuccess)
         {
-            return Json(new { success = false, message = result.ErrorMessage ?? "��lem ba�ar�s�z." });
+            return Json(new { success = false, message = result.ErrorMessage ?? "İşlem başarısız." });
         }
-        return Json(new { success = true, isFavorite = result.Data, message = result.Data == true ? "Favorilere eklendi." : "Favorilerden ��kar�ld�." });
+        return Json(new { success = true, isFavorite = result.Data, message = result.Data == true ? "Favorilere eklendi." : "Favorilerden çıkarıldı." });
     }
 
     [HttpGet("AddFavorite")]
@@ -47,8 +46,13 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
     {
         var userId = User.GetUserId();
         var result = await favoriteService.ToggleFavoriteAsync(id, userId!);
-
-        return RedirectToAction("Index", "Word");
+        if (!result.IsSuccess)
+        {
+            TempData["ErrorMessage"] = result.ErrorMessage ?? "Favori işlemi sırasında bir sorun oluştu.";
+            return Redirect("/Word");
+        }
+        TempData["SuccessMessage"] = result.Data == true ? "Favorilere eklendi." : "Favorilerden çıkarıldı.";
+        return Redirect("/Word");
     }
     [HttpGet("UpdateFavorite")]
     public async Task<IActionResult> UpdateFavorite(int id)

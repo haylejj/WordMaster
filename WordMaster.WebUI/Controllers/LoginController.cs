@@ -69,7 +69,7 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
         // https://localhost:7289?userId=12213&token=aasdfasdfsdf
 
         // email e link gönderme metodu.
-        await emailService.SendResetPasswordLinkToEmailAsync(passwordResetLink!, user.Data.Email);
+        await emailService.SendResetPasswordLinkToEmailAsync(passwordResetLink!, user.Data.Email!);
         //
         TempData["success"] = "Þifre yenileme linki e-posta adresinize gönderilmiþtir.";
 

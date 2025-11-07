@@ -15,7 +15,7 @@ public class LoginService(UserManager<AppUser> userManager, SignInManager<AppUse
     }
     public async Task<Result> LoginAsync(LoginRequest request, AppUser user)
     {
-        var result = await signInManager.PasswordSignInAsync(user, request.Password, request.RememberMe, true);
+        var result = await signInManager.PasswordSignInAsync(user, request.Password!, request.RememberMe, true);
         return result.Succeeded ? Result.Success() : Result.Failure("Email veya þifre yanlýþ");
     }
     public async Task<Result<string>> GeneratePasswordResetTokenAsync(string userýd)

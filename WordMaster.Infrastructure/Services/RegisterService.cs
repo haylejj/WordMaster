@@ -11,7 +11,7 @@ public class RegisterService(UserManager<AppUser> userManager) : IRegisterServic
 {
     public async Task<Result<IEnumerable<IdentityError>>> RegisterAsync(RegisterRequest request)
     {
-        var result = await userManager.CreateAsync(new AppUser() { UserName = request.UserName, Email = request.Email, PhoneNumber = request.Phone }, request.Password);
+        var result = await userManager.CreateAsync(new AppUser() { UserName = request.UserName, Email = request.Email, PhoneNumber = request.Phone }, request.Password!);
 
         if (!result.Succeeded)
         {
@@ -19,7 +19,11 @@ public class RegisterService(UserManager<AppUser> userManager) : IRegisterServic
         }
         else
         {
-            var user = await userManager.FindByNameAsync(request.UserName);
+            var user = await userManager.FindByNameAsync(request.UserName!);
+            if (user == null)
+            {
+                return new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Kullanýcý bulunamadý.", Data = null };
+            }
             await userManager.AddToRoleAsync(user, "user");
             return Result<IEnumerable<IdentityError>>.Success(null);
         }
