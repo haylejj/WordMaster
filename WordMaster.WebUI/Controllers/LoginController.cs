@@ -14,7 +14,7 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
     [HttpGet("")]
     public IActionResult Login()
     {
-        // E�er kullan�c� zaten login olmu�sa Word sayfas�na y�nlendir
+        // Eğer kullanıcı zaten login olmuşsa Word sayfasına yönlendir
         return User.Identity?.IsAuthenticated == true ? RedirectToAction("Index", "Word") : View();
     }
 
@@ -37,7 +37,7 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
         var userResult = await loginService.FindByEmailAsync(request.Email!);
         if (!userResult.IsSuccess || userResult.Data == null)
         {
-            ModelState.AddModelErrorList(new List<string>() { "Email veya �ifre yanl��" });
+            ModelState.AddModelErrorList(new List<string>() { "Email veya şifre yanlış" });
         }
 
         var result = await loginService.LoginAsync(request, userResult.Data!);
@@ -47,7 +47,7 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
             return Redirect(returnUrl!);
         }
 
-        ModelState.AddModelErrorList(new List<string> { "Email veya �ifre yanl��" });
+        ModelState.AddModelErrorList(new List<string> { "Email veya şifre yanlış" });
         return View();
     }
     [HttpGet("ForgetPassword")]
@@ -70,20 +70,20 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
         var user = await loginService.FindByEmailAsync(request.Email!);
         if (!user.IsSuccess || user.Data == null)
         {
-            ModelState.AddModelError(string.Empty, "Bu email adresine sahip kullan�c� bulunamam��t�r.");
+            ModelState.AddModelError(string.Empty, "Bu email adresine sahip kullanıcı bulunamamıştır.");
             return View();
         }
 
-        var passwordResetToken = await loginService.GeneratePasswordResetTokenAsync(user.Data.Id);// �imdi biz �zel token �rettik. �ifre de�i�tirmede kullan�lacak 
+        var passwordResetToken = await loginService.GeneratePasswordResetTokenAsync(user.Data.Id);// Şimdi biz özel token ürettik. Şifre değiştirmede kullanılacak 
 
-        var passwordResetLink = Url.Action("ResetPassword", null, new { userId = user.Data.Id, token = passwordResetToken.Data }, HttpContext.Request.Scheme); // bu linkin �mr�n� program.cs de belirliycez.
-        //�rnek link
+        var passwordResetLink = Url.Action("ResetPassword", null, new { userId = user.Data.Id, token = passwordResetToken.Data }, HttpContext.Request.Scheme); // bu linkin ömrünü program.cs de belirliycez.
+        //Örnek link
         // https://localhost:7289?userId=12213&token=aasdfasdfsdf
 
-        // email e link g�nderme metodu.
+        // email e link gönderme metodu.
         await emailService.SendResetPasswordLinkToEmailAsync(passwordResetLink!, user.Data.Email!);
         //
-        TempData["success"] = "�ifre yenileme linki e-posta adresinize g�nderilmi�tir.";
+        TempData["success"] = "Şifre yenileme linki e-posta adresinize gönderilmiştir.";
 
         return RedirectToAction(nameof(ForgetPassword));
     }
@@ -111,7 +111,7 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
         var hasUser = await userManager.FindByIdAsync(userId.ToString()!);
         if (hasUser == null)
         {
-            ModelState.AddModelErrorList(new List<string>() { "Kullan�c� bulunamam��t�r." });
+            ModelState.AddModelErrorList(new List<string>() { "Kullanıcı bulunamamıştır." });
             return View();
         }
         var request = new ResetPasswordRequest
@@ -122,7 +122,7 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
         var result = await userManager.ResetPasswordAsync(hasUser, token!.ToString()!, request.Password!);
         if (result.Succeeded)
         {
-            TempData["SuccessMessage"] = "�ifreniz ba�ar�yla yenilenmi�tir.";
+            TempData["SuccessMessage"] = "Şifreniz başarıyla yenilenmiştir.";
         }
         else
         {

@@ -79,7 +79,7 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
 
         if (!result.IsSuccess || result.Data?.Word == null)
         {
-            return Json(new { success = false, message = "Kelime bulunamad�." });
+            return Json(new { success = false, message = "Kelime bulunamadı." });
         }
 
         return Json(new
@@ -99,13 +99,13 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
     {
         if (!ModelState.IsValid)
         {
-            return Json(new { success = false, message = "Ge�ersiz veri." });
+            return Json(new { success = false, message = "Geçersiz veri." });
         }
 
         var userId = User.GetUserId();
         if (string.IsNullOrEmpty(userId))
         {
-            return Json(new { success = false, message = "Kullan�c� bilgisi bulunamad�." });
+            return Json(new { success = false, message = "Kullanıcı bilgisi bulunamadı." });
         }
 
         var wordDto = new WordDto
@@ -119,10 +119,10 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
 
         if (!updateResult.IsSuccess)
         {
-            return Json(new { success = false, message = updateResult.ErrorMessage ?? "Kelime g�ncellenirken bir hata olu�tu." });
+            return Json(new { success = false, message = updateResult.ErrorMessage ?? "Kelime güncellenirken bir hata oluştu." });
         }
 
-        return Json(new { success = true, message = "Kelime ba�ar�yla g�ncellendi." });
+        return Json(new { success = true, message = "Kelime başarıyla güncellendi." });
     }
 
     [HttpPost("DeleteFavorite")]
@@ -131,16 +131,16 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
         var userId = User.GetUserId();
         if (string.IsNullOrEmpty(userId))
         {
-            return Json(new { success = false, message = "Kullan�c� bilgisi bulunamad�." });
+            return Json(new { success = false, message = "Kullanıcı bilgisi bulunamadı." });
         }
 
         var result = await favoriteService.DeleteFavoriteAsync(id, userId);
 
         if (!result.IsSuccess)
         {
-            return Json(new { success = false, message = result.ErrorMessage ?? "Favori silinirken bir hata olu�tu." });
+            return Json(new { success = false, message = result.ErrorMessage ?? "Favori silinirken bir hata oluştu." });
         }
 
-        return Json(new { success = true, message = "Favori ba�ar�yla silindi." });
+        return Json(new { success = true, message = "Favori başarıyla silindi." });
     }
 }

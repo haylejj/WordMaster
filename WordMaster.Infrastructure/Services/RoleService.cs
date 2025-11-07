@@ -21,7 +21,7 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
         var result = await roleManager.CreateAsync(new AppRole() { Name = request.Name });
 
         return !result.Succeeded
-            ? new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Rol olu�turulamad�.", Data = result.Errors }
+            ? new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Rol oluşturulamadı.", Data = result.Errors }
             : Result<IEnumerable<IdentityError>>.Success(null);
     }
     public async Task<Result<RoleUpdateViewModel>> FindByIdReturnRoleUpdateViewModelAsync(string id)
@@ -29,7 +29,7 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
         var role = await roleManager.FindByIdAsync(id);
         if (role == null)
         {
-            return Result<RoleUpdateViewModel>.Failure("Rol bulunamad�.");
+            return Result<RoleUpdateViewModel>.Failure("Rol bulunamadı.");
         }
         var roleUpdateViewModel = new RoleUpdateViewModel() { Id = role.Id, Name = role.Name! };
         return Result<RoleUpdateViewModel>.Success(roleUpdateViewModel);
@@ -40,12 +40,12 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
         var role = await roleManager.FindByIdAsync(request.Id);
         if (role == null)
         {
-            return new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Rol bulunamad�.", Data = null };
+            return new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Rol bulunamadı.", Data = null };
         }
         role.Name = request.Name;
         var result = await roleManager.UpdateAsync(role);
         return !result.Succeeded
-            ? new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Rol g�ncellenemedi.", Data = result.Errors }
+            ? new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Rol güncellenemedi.", Data = result.Errors }
             : Result<IEnumerable<IdentityError>>.Success(null);
     }
     public async Task<Result<IEnumerable<IdentityError>>> DeleteRoleAsync(string id)

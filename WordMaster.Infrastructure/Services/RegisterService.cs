@@ -15,14 +15,14 @@ public class RegisterService(UserManager<AppUser> userManager) : IRegisterServic
 
         if (!result.Succeeded)
         {
-            return new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Kayıt başarısız.", Data = result.Errors };
+            return new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "KayÄ±t baÅŸarÄ±sÄ±z.", Data = result.Errors };
         }
         else
         {
             var user = await userManager.FindByNameAsync(request.UserName!);
             if (user == null)
             {
-                return new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Kullanıcı bulunamadı.", Data = null };
+                return new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "KullanÄ±cÄ± bulunamadÄ±.", Data = null };
             }
             await userManager.AddToRoleAsync(user, "user");
             return Result<IEnumerable<IdentityError>>.Success(null);

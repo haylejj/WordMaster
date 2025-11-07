@@ -11,17 +11,17 @@ public class LoginService(UserManager<AppUser> userManager, SignInManager<AppUse
     public async Task<Result<AppUser>> FindByEmailAsync(string email)
     {
         var user = await userManager.FindByEmailAsync(email);
-        return user == null ? Result<AppUser>.Failure("Kullanýcý bulunamadý.") : Result<AppUser>.Success(user);
+        return user == null ? Result<AppUser>.Failure("KullanÄ±cÄ± bulunamadÄ±.") : Result<AppUser>.Success(user);
     }
     public async Task<Result> LoginAsync(LoginRequest request, AppUser user)
     {
         var result = await signInManager.PasswordSignInAsync(user, request.Password!, request.RememberMe, true);
-        return result.Succeeded ? Result.Success() : Result.Failure("Email veya þifre yanlýþ");
+        return result.Succeeded ? Result.Success() : Result.Failure("Email veya ÅŸifre yanlÄ±ÅŸ");
     }
-    public async Task<Result<string>> GeneratePasswordResetTokenAsync(string userýd)
+    public async Task<Result<string>> GeneratePasswordResetTokenAsync(string userId)
     {
-        var user = await userManager.FindByIdAsync(userýd);
-        if (user == null) return Result<string>.Failure("Kullanýcý bulunamadý.");
+        var user = await userManager.FindByIdAsync(userId);
+        if (user == null) return Result<string>.Failure("KullanÄ±cÄ± bulunamadÄ±.");
         var token = await userManager.GeneratePasswordResetTokenAsync(user);
         return Result<string>.Success(token);
 
