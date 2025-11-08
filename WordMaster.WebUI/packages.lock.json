@@ -1304,6 +1304,23 @@
         "resolved": "6.11.0",
         "contentHash": "v/GGlIj2dd7svplFmASWEueu62veKW0MrMtBaZ7QG8aJTSGv2yE+pgUGhXRcQ4nxNOEq/wLBrz1vkth/1SND7A=="
       },
+      "Pipelines.Sockets.Unofficial": {
+        "type": "Transitive",
+        "resolved": "2.2.8",
+        "contentHash": "zG2FApP5zxSx6OcdJQLbZDk2AVlN2BNQD6MorwIfV6gVj0RRxWPEp2LXAxqDGZqeNV1Zp0BNPcNaey/GXmTdvQ==",
+        "dependencies": {
+          "System.IO.Pipelines": "5.0.1"
+        }
+      },
+      "StackExchange.Redis": {
+        "type": "Transitive",
+        "resolved": "2.9.32",
+        "contentHash": "j5Rjbf7gWz5izrn0UWQy9RlQY4cQDPkwJfVqATnVsOa/+zzJrps12LOgacMsDl/Vit2f01cDiDkG/Rst8v2iGw==",
+        "dependencies": {
+          "Microsoft.Extensions.Logging.Abstractions": "8.0.0",
+          "Pipelines.Sockets.Unofficial": "2.2.8"
+        }
+      },
       "System.ClientModel": {
         "type": "Transitive",
         "resolved": "1.0.0",
@@ -1566,6 +1583,7 @@
           "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "[8.0.10, )",
           "Microsoft.EntityFrameworkCore": "[9.0.0, )",
           "Microsoft.EntityFrameworkCore.SqlServer": "[9.0.0, )",
+          "StackExchange.Redis": "[2.9.32, )",
           "WordMaster.Application": "[1.0.0, )",
           "WordMaster.Domain": "[1.0.0, )"
         }

@@ -22,6 +22,9 @@ builder.Services.AddFluentValidationClientsideAdapters();
 
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 
+// Redis
+builder.Services.AddRedis(builder.Configuration);
+
 // Application Services
 builder.Services.AddApplicationServices();
 
