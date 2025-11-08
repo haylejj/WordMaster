@@ -89,6 +89,16 @@
           "Microsoft.EntityFrameworkCore.Design": "9.0.0"
         }
       },
+      "StackExchange.Redis": {
+        "type": "Direct",
+        "requested": "[2.9.32, )",
+        "resolved": "2.9.32",
+        "contentHash": "j5Rjbf7gWz5izrn0UWQy9RlQY4cQDPkwJfVqATnVsOa/+zzJrps12LOgacMsDl/Vit2f01cDiDkG/Rst8v2iGw==",
+        "dependencies": {
+          "Microsoft.Extensions.Logging.Abstractions": "8.0.0",
+          "Pipelines.Sockets.Unofficial": "2.2.8"
+        }
+      },
       "AutoMapper": {
         "type": "Transitive",
         "resolved": "12.0.1",
@@ -468,6 +478,14 @@
         "contentHash": "YqueG52R/Xej4VVbKuRIodjiAhV0HR/XVbLbNrJhCZnzjnSjgMJ/dCdV0akQQxavX6hp/LC6rqLGLcXeQYU7XA==",
         "dependencies": {
           "System.CodeDom": "6.0.0"
+        }
+      },
+      "Pipelines.Sockets.Unofficial": {
+        "type": "Transitive",
+        "resolved": "2.2.8",
+        "contentHash": "zG2FApP5zxSx6OcdJQLbZDk2AVlN2BNQD6MorwIfV6gVj0RRxWPEp2LXAxqDGZqeNV1Zp0BNPcNaey/GXmTdvQ==",
+        "dependencies": {
+          "System.IO.Pipelines": "5.0.1"
         }
       },
       "System.ClientModel": {

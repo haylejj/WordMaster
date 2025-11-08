@@ -1,4 +1,6 @@
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using StackExchange.Redis;
 using WordMaster.Application.Persistence;
 using WordMaster.Application.Persistence.Repositories;
 using WordMaster.Application.Services.Abstract;
@@ -11,6 +13,13 @@ namespace WordMaster.Infrastructure.Extensions;
 
 public static class ServiceCollectionExtensions
 {
+    public static IServiceCollection AddRedis(this IServiceCollection services, IConfiguration configuration)
+    {
+        var connectionString = configuration.GetConnectionString("Redis") ?? "localhost:6379";
+        services.AddSingleton<IConnectionMultiplexer>(sp => ConnectionMultiplexer.Connect(connectionString));
+        return services;
+    }
+
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
         // UnitOfWork
@@ -33,6 +42,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ILoginService, LoginService>();
         services.AddScoped<IRoleService, RoleService>();
         services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<ICacheService, RedisCacheService>();
 
         return services;
     }
