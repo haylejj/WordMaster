@@ -26,10 +26,10 @@ public class EmailService(IOptions<EmailSettings> settings) : IEmailService
         };
         mailMessage.To.Add(toEmail);
 
-        mailMessage.Subject="Localhost | Şifre sıfırlama linki:";
+        mailMessage.Subject="Localhost | Åifre sÄ±fÄ±rlama linki:";
         mailMessage.Body=$@"
-                        <h4> Şifrenizi yenilemek için aşağıdaki linke tıklayınız.</h4>
-                        <p><a href='{resetEmailLink}'>Şifre Yenileme Linki</a><p/>";
+                        <h4> Åifrenizi yenilemek iÃ§in aÅŸaÄŸÄ±daki linke tÄ±klayÄ±nÄ±z.</h4>
+                        <p><a href='{resetEmailLink}'>Åifre Yenileme Linki</a><p/>";
         mailMessage.IsBodyHtml = true;
         await smtpClient.SendMailAsync(mailMessage);
     }
