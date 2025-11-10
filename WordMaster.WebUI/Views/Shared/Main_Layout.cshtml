@@ -66,14 +66,6 @@
                                             <i class="fas fa-user"></i> @(User.Identity?.Name?.ToUpper() ?? "USER")
                                         </a>
                                         <ul class="dropdown-menu dropdown-menu-end">
-                                            <li><a class="dropdown-item" asp-action="UserList" asp-controller="Admin"
-                                                    asp-area="Admin"><i class="fas fa-users me-2"></i>User List</a></li>
-                                            <li><a class="dropdown-item" asp-action="RoleList" asp-controller="Role"
-                                                    asp-area="Admin"><i class="fas fa-user-shield me-2"></i>Role List</a>
-                                            </li>
-                                            <li>
-                                                <hr class="dropdown-divider">
-                                            </li>
                                             <li><a class="dropdown-item" href="/Member/UserEdit"><i
                                                         class="fas fa-user-edit me-2"></i>Update Your Profile</a></li>
                                             <li><a class="dropdown-item" href="/Member/PasswordChange"><i

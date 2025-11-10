@@ -4,6 +4,8 @@
     Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
 }
 
+<link rel="stylesheet" href="~/css/admin-allowedipaddress.css" asp-append-version="true" />
+
 <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
 <script src="~/js/admin/allowedipaddress/create.js"></script>
@@ -29,7 +31,7 @@
     <button type="button" class="btn btn-success" onclick="openCreateModal()">Yeni IP Adresi Ekle</button>
 </div>
 
-<table class="table table-bordered table-striped table-hover">
+<table class="table table-bordered table-striped table-hover admin-allowedipaddress-table">
     <thead>
         <tr>
             <th>IP Adresi</th>
@@ -92,15 +94,17 @@
             <div class="modal-body">
                 <form id="createAllowedIpAddressForm">
                     <div class="mb-3">
-                        <label for="createIpAddress" class="form-label fw-bold">IP Adresi: <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="createIpAddress" name="IpAddress" 
-                               placeholder="192.168.1.1 veya IPv6 formatı" required />
-                        <small class="form-text text-muted">IPv4 veya IPv6 formatında geçerli bir IP adresi giriniz.</small>
+                        <label for="createIpAddress" class="form-label fw-bold">IP Adresi: <span
+                                class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="createIpAddress" name="IpAddress"
+                            placeholder="192.168.1.1 veya IPv6 formatı" required />
+                        <small class="form-text text-muted">IPv4 veya IPv6 formatında geçerli bir IP adresi
+                            giriniz.</small>
                     </div>
                     <div class="mb-3">
                         <label for="createDescription" class="form-label fw-bold">Açıklama:</label>
-                        <textarea class="form-control" id="createDescription" name="Description" rows="3" 
-                                  placeholder="Opsiyonel açıklama"></textarea>
+                        <textarea class="form-control" id="createDescription" name="Description" rows="3"
+                            placeholder="Opsiyonel açıklama"></textarea>
                     </div>
                     <div class="mb-3">
                         <div class="form-check">
@@ -132,15 +136,17 @@
                 <form id="updateAllowedIpAddressForm">
                     <input type="hidden" id="updateAllowedIpAddressId" name="Id" />
                     <div class="mb-3">
-                        <label for="updateIpAddress" class="form-label fw-bold">IP Adresi: <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="updateIpAddress" name="IpAddress" 
-                               placeholder="192.168.1.1 veya IPv6 formatı" required />
-                        <small class="form-text text-muted">IPv4 veya IPv6 formatında geçerli bir IP adresi giriniz.</small>
+                        <label for="updateIpAddress" class="form-label fw-bold">IP Adresi: <span
+                                class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="updateIpAddress" name="IpAddress"
+                            placeholder="192.168.1.1 veya IPv6 formatı" required />
+                        <small class="form-text text-muted">IPv4 veya IPv6 formatında geçerli bir IP adresi
+                            giriniz.</small>
                     </div>
                     <div class="mb-3">
                         <label for="updateDescription" class="form-label fw-bold">Açıklama:</label>
-                        <textarea class="form-control" id="updateDescription" name="Description" rows="3" 
-                                  placeholder="Opsiyonel açıklama"></textarea>
+                        <textarea class="form-control" id="updateDescription" name="Description" rows="3"
+                            placeholder="Opsiyonel açıklama"></textarea>
                     </div>
                     <div class="mb-3">
                         <div class="form-check">
@@ -159,4 +165,3 @@
         </div>
     </div>
 </div>
-
