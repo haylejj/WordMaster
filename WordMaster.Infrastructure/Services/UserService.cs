@@ -3,16 +3,16 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
+using WordMaster.Application.Persistence.Repositories;
 using WordMaster.Application.Requests;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Application.ViewModels;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Results;
-using WordMaster.Infrastructure.EfCore;
 
 namespace WordMaster.Infrastructure.Services;
 
-public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, RoleManager<AppRole> roleManager, AppDbContext context) : IUserService
+public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, RoleManager<AppRole> roleManager, ILogHistoryService logHistoryService, IWordRepository wordRepository, IFavoriteRepository favoriteRepository, IUnknowsRepository unknowsRepository) : IUserService
 {
     public async Task LogOutAsync() => await signInManager.SignOutAsync();
 
@@ -143,7 +143,7 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
                 Id = user.Id,
                 UserName = user.UserName!,
                 Email = user.Email!,
-                Roles = roles.ToList()
+                Roles = [.. roles]
             });
         }
 
@@ -164,7 +164,7 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
             Id = user.Id,
             UserName = user.UserName!,
             Email = user.Email!,
-            Roles = roles.ToList()
+            Roles = [.. roles]
         };
 
         return Result<UserWithRolesViewModel>.Success(userWithRoles);
@@ -198,27 +198,15 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
         }
 
         // Login Statistics
-        var loginStats = await context.LogHistories
-            .Where(x => x.AppUserId == id)
-            .GroupBy(x => x.IsSuccessful)
-            .Select(g => new { IsSuccessful = g.Key, Count = g.Count() })
-            .ToListAsync();
-
-        var totalLogins = await context.LogHistories.CountAsync(x => x.AppUserId == id);
-        var successfulLogins = loginStats.FirstOrDefault(x => x.IsSuccessful)?.Count ?? 0;
-        var failedLogins = loginStats.FirstOrDefault(x => !x.IsSuccessful)?.Count ?? 0;
-
-        var lastLoginRecord = await context.LogHistories
-            .Where(x => x.AppUserId == id && x.IsSuccessful)
-            .OrderByDescending(x => x.AttemptedAt)
-            .FirstOrDefaultAsync();
+        var userLoginStats = await logHistoryService.GetUserLoginStatsAsync(id);
+        var lastLoginInfo = await logHistoryService.GetLastSuccessfulLoginAsync(id);
 
         // Word Statistics
-        var wordCount = await context.Words.CountAsync(x => x.UserId == id);
-        var favoriteCount = await context.Favorites.CountAsync(x => x.UserId == id);
-        var unknowsCount = await context.Unknows.CountAsync(x => x.UserId == id);
+        var wordCount = await wordRepository.CountAsync(x => x.UserId == id);
+        var favoriteCount = await favoriteRepository.CountAsync(x => x.UserId == id);
+        var unknowsCount = await unknowsRepository.CountAsync(x => x.UserId == id);
 
-        var lastPracticeDate = await context.Words
+        var lastPracticeDate = await wordRepository
             .Where(x => x.UserId == id && x.LastPracticeDate != null)
             .OrderByDescending(x => x.LastPracticeDate)
             .Select(x => x.LastPracticeDate)
@@ -233,11 +221,11 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
             BirthDate = user.BirthDate,
             City = user.City,
             Gender = user.Gender,
-            TotalLoginAttempts = totalLogins,
-            SuccessfulLogins = successfulLogins,
-            FailedLogins = failedLogins,
-            LastLoginDate = lastLoginRecord != null ? lastLoginRecord.AttemptedAt : null,
-            LastLoginIpAddress = lastLoginRecord?.IpAddress,
+            TotalLoginAttempts = userLoginStats.TotalLogins,
+            SuccessfulLogins = userLoginStats.SuccessfulLogins,
+            FailedLogins = userLoginStats.FailedLogins,
+            LastLoginDate = lastLoginInfo.LastLoginDate,
+            LastLoginIpAddress = lastLoginInfo.LastLoginIpAddress,
             WordCount = wordCount,
             FavoriteCount = favoriteCount,
             UnknowsCount = unknowsCount,
