@@ -21,5 +21,6 @@ public interface IUserService
     Task<Result<UserDetailViewModel>> GetUserDetailAsync(string id);
     Task<Result<IEnumerable<IdentityError>>> UpdateUserAsync(string id, UserEditRequest request);
     Task<Result<bool>> DeleteUserAsync(string id);
+    Task<Result<string>> ResetUserPasswordAsync(string id);
 }
 

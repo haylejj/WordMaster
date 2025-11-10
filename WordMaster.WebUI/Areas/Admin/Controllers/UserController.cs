@@ -206,6 +206,24 @@ public class UserController(IUserService userService, IRoleService roleService) 
 
         return Json(new { success = true, message = "Kullanıcı rolleri başarıyla güncellendi." });
     }
+
+    [HttpPost("ResetPassword")]
+    public async Task<IActionResult> ResetPassword(string id)
+    {
+        if (string.IsNullOrEmpty(id))
+        {
+            return Json(new { success = false, message = "Kullanıcı ID gerekli." });
+        }
+
+        var result = await userService.ResetUserPasswordAsync(id);
+
+        if (!result.IsSuccess)
+        {
+            return Json(new { success = false, message = result.ErrorMessage ?? "Şifre sıfırlanırken bir hata oluştu." });
+        }
+
+        return Json(new { success = true, message = "Şifre başarıyla sıfırlandı ve kullanıcıya email olarak gönderildi." });
+    }
 }
 
 

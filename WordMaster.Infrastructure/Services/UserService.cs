@@ -1,16 +1,18 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using WordMaster.Application.Persistence;
 using WordMaster.Application.Persistence.Repositories;
 using WordMaster.Application.Requests;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Application.ViewModels;
 using WordMaster.Domain.Entities;
+using WordMaster.Domain.Helpers;
 using WordMaster.Domain.Results;
 
 namespace WordMaster.Infrastructure.Services;
 
-public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, ILogHistoryService logHistoryService, IWordRepository wordRepository, IFavoriteRepository favoriteRepository, IUnknowsRepository unknowsRepository) : IUserService
+public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, ILogHistoryService logHistoryService, IWordRepository wordRepository, IFavoriteRepository favoriteRepository, IUnknowsRepository unknowsRepository, IEmailService emailService, IUnitOfWork unitOfWork) : IUserService
 {
     public async Task LogOutAsync() => await signInManager.SignOutAsync();
 
@@ -258,6 +260,60 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
 
         var result = await userManager.DeleteAsync(user);
         return !result.Succeeded ? Result<bool>.Failure("Kullanıcı silinirken bir hata oluştu.") : Result<bool>.Success(true);
+    }
+
+    public async Task<Result<string>> ResetUserPasswordAsync(string id)
+    {
+        var user = await userManager.FindByIdAsync(id);
+        if (user == null)
+        {
+            return Result<string>.Failure("Kullanıcı bulunamadı.");
+        }
+
+        if (string.IsNullOrEmpty(user.Email))
+        {
+            return Result<string>.Failure("Kullanıcının email adresi bulunamadı.");
+        }
+
+        // Kriptografik olarak güvenli rastgele şifre oluştur
+        var newPassword = PasswordHelper.GenerateRandomPassword();
+
+        // Transaction başlat
+        await unitOfWork.BeginTransactionAsync();
+        try
+        {
+            // Mevcut şifreyi kaldır ve yeni şifreyi ayarla
+            var removePasswordResult = await userManager.RemovePasswordAsync(user);
+            if (!removePasswordResult.Succeeded)
+            {
+                await unitOfWork.RollbackTransactionAsync();
+                return Result<string>.Failure("Şifre sıfırlanırken bir hata oluştu.");
+            }
+
+            var addPasswordResult = await userManager.AddPasswordAsync(user, newPassword);
+            if (!addPasswordResult.Succeeded)
+            {
+                await unitOfWork.RollbackTransactionAsync();
+                return Result<string>.Failure("Yeni şifre atanırken bir hata oluştu.");
+            }
+
+            // Değişiklikleri kaydet
+            await unitOfWork.CommitAsync();
+
+            // Şifreyi email olarak gönder
+            await emailService.SendPasswordToEmailAsync(newPassword, user.Email, user.UserName ?? "Kullanıcı");
+
+            // Email başarılı oldu, transaction'ı commit et
+            await unitOfWork.CommitTransactionAsync();
+
+            return Result<string>.Success(newPassword);
+        }
+        catch (Exception ex)
+        {
+            // Hata durumunda transaction'ı rollback et
+            await unitOfWork.RollbackTransactionAsync();
+            return Result<string>.Failure($"Şifre sıfırlanırken bir hata oluştu: {ex.Message}");
+        }
     }
 }
 

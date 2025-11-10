@@ -12,6 +12,7 @@
 <script src="~/js/admin/user/delete.js"></script>
 <script src="~/js/admin/user/detail.js"></script>
 <script src="~/js/admin/user/updateRoles.js"></script>
+<script src="~/js/admin/user/resetPassword.js"></script>
 
 <h1 class="text-center page-title">Kullanıcılar</h1>
 
@@ -93,13 +94,14 @@
             <th></th>
             <th></th>
             <th></th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
-        @if (Model == null || Model.Users == null || Model.Users.Count == 0)
+            @if (Model == null || Model.Users == null || Model.Users.Count == 0)
         {
             <tr>
-                <td colspan="7" class="text-center">
+                <td colspan="8" class="text-center">
                     <p class="text-muted mt-3 mb-3">Veri bulunmamaktadır.</p>
                 </td>
             </tr>
@@ -139,6 +141,10 @@
                     <td class="text-center">
                         <button type="button" class="btn btn-success btn-sm text-white text-nowrap"
                             onclick="openUpdateRolesModal('@item.Id', event)">Rolleri Güncelle</button>
+                    </td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-secondary btn-sm text-white text-nowrap"
+                            onclick="resetPassword('@item.Id', event)">Şifre Sıfırla</button>
                     </td>
                 </tr>
             }
