@@ -12,11 +12,8 @@ using WordMaster.Infrastructure.EfCore;
 
 namespace WordMaster.Infrastructure.Services;
 
-public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, RoleManager<AppRole> roleManager, AppDbContext context, ICacheService cacheService) : IUserService
+public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, RoleManager<AppRole> roleManager, AppDbContext context) : IUserService
 {
-    private readonly ICacheService _cacheService = cacheService;
-    private static readonly TimeSpan PagedUsersCacheExpiration = TimeSpan.FromMinutes(5);
-    private static readonly TimeSpan UserDetailCacheExpiration = TimeSpan.FromMinutes(10);
     public async Task LogOutAsync() => await signInManager.SignOutAsync();
 
     public SelectList GetGenderSelectList() => new(Enum.GetNames<Gender>());
@@ -211,10 +208,9 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
         var successfulLogins = loginStats.FirstOrDefault(x => x.IsSuccessful)?.Count ?? 0;
         var failedLogins = loginStats.FirstOrDefault(x => !x.IsSuccessful)?.Count ?? 0;
 
-        var lastLogin = await context.LogHistories
+        var lastLoginRecord = await context.LogHistories
             .Where(x => x.AppUserId == id && x.IsSuccessful)
             .OrderByDescending(x => x.AttemptedAt)
-            .Select(x => x.AttemptedAt)
             .FirstOrDefaultAsync();
 
         // Word Statistics
@@ -240,7 +236,8 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
             TotalLoginAttempts = totalLogins,
             SuccessfulLogins = successfulLogins,
             FailedLogins = failedLogins,
-            LastLoginDate = lastLogin != default ? lastLogin : null,
+            LastLoginDate = lastLoginRecord != null ? lastLoginRecord.AttemptedAt : null,
+            LastLoginIpAddress = lastLoginRecord?.IpAddress,
             WordCount = wordCount,
             FavoriteCount = favoriteCount,
             UnknowsCount = unknowsCount,

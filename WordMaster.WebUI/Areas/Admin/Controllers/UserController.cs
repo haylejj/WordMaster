@@ -146,6 +146,7 @@ public class UserController(IUserService userService) : Controller
                 successfulLogins = detail.SuccessfulLogins,
                 failedLogins = detail.FailedLogins,
                 lastLoginDate = detail.LastLoginDate?.ToString("dd.MM.yyyy HH:mm") ?? "-",
+                lastLoginIpAddress = detail.LastLoginIpAddress ?? "-",
                 wordCount = detail.WordCount,
                 favoriteCount = detail.FavoriteCount,
                 unknowsCount = detail.UnknowsCount,

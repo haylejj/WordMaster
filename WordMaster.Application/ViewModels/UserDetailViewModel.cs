@@ -17,6 +17,7 @@ public class UserDetailViewModel
     public int SuccessfulLogins { get; set; }
     public int FailedLogins { get; set; }
     public DateTime? LastLoginDate { get; set; }
+    public string? LastLoginIpAddress { get; set; }
 
     // Word Statistics
     public int WordCount { get; set; }

@@ -26,6 +26,7 @@ function openDetailModal(id, event) {
                 $('#detailSuccessfulLogins').text(detail.successfulLogins);
                 $('#detailFailedLogins').text(detail.failedLogins);
                 $('#detailLastLoginDate').text(detail.lastLoginDate);
+                $('#detailLastLoginIpAddress').text(detail.lastLoginIpAddress);
 
                 // Kelime İstatistikleri
                 $('#detailWordCount').text(detail.wordCount);
