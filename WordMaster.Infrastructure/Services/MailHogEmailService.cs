@@ -1,28 +1,26 @@
 using Microsoft.Extensions.Options;
-using System.Net;
 using System.Net.Mail;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Configuration;
 
 namespace WordMaster.Infrastructure.Services;
 
-public class EmailService(IOptions<EmailSettings> settings) : IEmailService
+public class MailHogEmailService(IOptions<MailHogSettings> settings) : IEmailService
 {
     public async Task SendResetPasswordLinkToEmailAsync(string resetEmailLink, string toEmail)
     {
         var smtpClient = new SmtpClient
         {
-            Host = settings.Value.Host!,
+            Host = settings.Value.Host,
             DeliveryMethod = SmtpDeliveryMethod.Network,
-            UseDefaultCredentials = false,
-            Port = 587,
-            Credentials = new NetworkCredential(settings.Value.Email, settings.Value.Password),
-            EnableSsl = true
+            UseDefaultCredentials = true,
+            Port = settings.Value.Port,
+            EnableSsl = settings.Value.EnableSsl
         };
 
         MailMessage mailMessage = new()
         {
-            From = new MailAddress(settings.Value.Email!)
+            From = new MailAddress(settings.Value.FromEmail)
         };
         mailMessage.To.Add(toEmail);
 
@@ -34,3 +32,4 @@ public class EmailService(IOptions<EmailSettings> settings) : IEmailService
         await smtpClient.SendMailAsync(mailMessage);
     }
 }
+

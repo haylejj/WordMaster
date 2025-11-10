@@ -20,6 +20,13 @@ services:
       - "5540:5540"
     depends_on:
       - redis
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: mailhog
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # Web UI
+    restart: unless-stopped
 
 volumes:
   redis-data:
