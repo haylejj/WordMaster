@@ -1,5 +1,3 @@
-using WordMaster.Domain.Entities;
-
 namespace WordMaster.Application.ViewModels;
 
 public class UserListViewModel
@@ -11,13 +9,5 @@ public class UserListViewModel
     public string? Search { get; set; }
 
     public int TotalPages => PageSize <= 0 ? 0 : (int)Math.Ceiling((double)TotalCount / PageSize);
-}
-
-public class UserWithRolesViewModel
-{
-    public string Id { get; set; } = null!;
-    public string UserName { get; set; } = null!;
-    public string Email { get; set; } = null!;
-    public List<string> Roles { get; set; } = [];
 }
 

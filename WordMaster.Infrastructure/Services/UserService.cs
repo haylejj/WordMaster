@@ -1,8 +1,6 @@
-using System;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
 using WordMaster.Application.Persistence.Repositories;
 using WordMaster.Application.Requests;
 using WordMaster.Application.Services.Abstract;
@@ -12,7 +10,7 @@ using WordMaster.Domain.Results;
 
 namespace WordMaster.Infrastructure.Services;
 
-public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, RoleManager<AppRole> roleManager, ILogHistoryService logHistoryService, IWordRepository wordRepository, IFavoriteRepository favoriteRepository, IUnknowsRepository unknowsRepository) : IUserService
+public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, ILogHistoryService logHistoryService, IWordRepository wordRepository, IFavoriteRepository favoriteRepository, IUnknowsRepository unknowsRepository) : IUserService
 {
     public async Task LogOutAsync() => await signInManager.SignOutAsync();
 
@@ -22,20 +20,17 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
     {
         var currentUser = await userManager.FindByNameAsync(username);
 
-        if (currentUser == null)
-        {
-            return Result<UserEditViewModel>.Failure("Kullanıcı bulunamadı.");
-        }
-
-        return Result<UserEditViewModel>.Success(new UserEditViewModel
-        {
-            UserName = currentUser.UserName,
-            Email = currentUser.Email,
-            Phone = currentUser.PhoneNumber,
-            BirthDate = currentUser.BirthDate,
-            City = currentUser.City,
-            Gender = currentUser.Gender,
-        });
+        return currentUser == null
+            ? Result<UserEditViewModel>.Failure("Kullanıcı bulunamadı.")
+            : Result<UserEditViewModel>.Success(new UserEditViewModel
+            {
+                UserName = currentUser.UserName,
+                Email = currentUser.Email,
+                Phone = currentUser.PhoneNumber,
+                BirthDate = currentUser.BirthDate,
+                City = currentUser.City,
+                Gender = currentUser.Gender,
+            });
     }
 
     public async Task<Result<IEnumerable<IdentityError>>> EditUserAsync(UserEditRequest request, string username)
@@ -173,20 +168,17 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
     public async Task<Result<UserEditViewModel>> GetUserEditViewModelByIdAsync(string id)
     {
         var user = await userManager.FindByIdAsync(id);
-        if (user == null)
-        {
-            return Result<UserEditViewModel>.Failure("Kullanıcı bulunamadı.");
-        }
-
-        return Result<UserEditViewModel>.Success(new UserEditViewModel
-        {
-            UserName = user.UserName,
-            Email = user.Email,
-            Phone = user.PhoneNumber,
-            BirthDate = user.BirthDate,
-            City = user.City,
-            Gender = user.Gender,
-        });
+        return user == null
+            ? Result<UserEditViewModel>.Failure("Kullanıcı bulunamadı.")
+            : Result<UserEditViewModel>.Success(new UserEditViewModel
+            {
+                UserName = user.UserName,
+                Email = user.Email,
+                Phone = user.PhoneNumber,
+                BirthDate = user.BirthDate,
+                City = user.City,
+                Gender = user.Gender,
+            });
     }
 
     public async Task<Result<UserDetailViewModel>> GetUserDetailAsync(string id)
@@ -251,12 +243,9 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
         user.Gender = request.Gender;
 
         var updateResult = await userManager.UpdateAsync(user);
-        if (!updateResult.Succeeded)
-        {
-            return new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Güncelleme başarısız.", Data = updateResult.Errors };
-        }
-
-        return Result<IEnumerable<IdentityError>>.Success(null);
+        return !updateResult.Succeeded
+            ? new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Güncelleme başarısız.", Data = updateResult.Errors }
+            : Result<IEnumerable<IdentityError>>.Success(null);
     }
 
     public async Task<Result<bool>> DeleteUserAsync(string id)
@@ -268,12 +257,7 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
         }
 
         var result = await userManager.DeleteAsync(user);
-        if (!result.Succeeded)
-        {
-            return Result<bool>.Failure("Kullanıcı silinirken bir hata oluştu.");
-        }
-
-        return Result<bool>.Success(true);
+        return !result.Succeeded ? Result<bool>.Failure("Kullanıcı silinirken bir hata oluştu.") : Result<bool>.Success(true);
     }
 }
 

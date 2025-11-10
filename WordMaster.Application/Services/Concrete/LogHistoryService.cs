@@ -44,20 +44,17 @@ public class LogHistoryService(ILogHistoryRepository logHistoryRepository, IUnit
     {
         var lastLogin = await logHistoryRepository.GetLastSuccessfulLoginAsync(userId);
 
-        if (lastLogin == null)
-        {
-            return new LastLoginInfoViewModel
+        return lastLogin == null
+            ? new LastLoginInfoViewModel
             {
                 LastLoginDate = null,
                 LastLoginIpAddress = null
+            }
+            : new LastLoginInfoViewModel
+            {
+                LastLoginDate = lastLogin.AttemptedAt,
+                LastLoginIpAddress = lastLogin.IpAddress
             };
-        }
-
-        return new LastLoginInfoViewModel
-        {
-            LastLoginDate = lastLogin.AttemptedAt,
-            LastLoginIpAddress = lastLogin.IpAddress
-        };
     }
 
     public async Task<LoginStatisticsViewModel> GetLoginStatisticsAsync()

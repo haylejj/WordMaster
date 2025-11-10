@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using WordMaster.Application.Dto;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Application.ViewModels;
-using WordMaster.Domain.Entities;
 using WordMaster.WebUI.Extensions;
 
 namespace WordMaster.WebUI.Controllers;
