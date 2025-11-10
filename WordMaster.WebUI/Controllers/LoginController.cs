@@ -9,7 +9,7 @@ using WordMaster.WebUI.Extensions;
 namespace WordMaster.WebUI.Controllers;
 
 [Route("/Login")]
-public class LoginController(ILoginService loginService, UserManager<AppUser> userManager, IEmailService emailService) : Controller
+public class LoginController(ILoginService loginService, UserManager<AppUser> userManager, IEmailService emailService, ILogHistoryService logHistoryService) : Controller
 {
     [HttpGet("")]
     public IActionResult Login()
@@ -23,7 +23,7 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
     {
         if (!ModelState.IsValid) // bir hata var ise validate de
         {
-            return View();
+            return View(viewModel);
         }
         returnUrl = returnUrl ?? Url.Action("Index", "Word");
 
@@ -35,20 +35,26 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
         };
 
         var userResult = await loginService.FindByEmailAsync(request.Email!);
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+
         if (!userResult.IsSuccess || userResult.Data == null)
         {
             ModelState.AddModelErrorList(new List<string>() { "Email veya şifre yanlış" });
+            await logHistoryService.RecordAsync(null, request.Email, ipAddress, false, "UserLogin");
+            return View(viewModel);
         }
 
-        var result = await loginService.LoginAsync(request, userResult.Data!);
+        var login = await loginService.LoginAsync(request, userResult.Data);
 
-        if (result.IsSuccess)
+        await logHistoryService.RecordAsync(userResult.Data.Id, request.Email, ipAddress, login.IsSuccess, "UserLogin");
+
+        if (login.IsSuccess)
         {
             return Redirect(returnUrl!);
         }
 
         ModelState.AddModelErrorList(new List<string> { "Email veya şifre yanlış" });
-        return View();
+        return View(viewModel);
     }
     [HttpGet("ForgetPassword")]
     public IActionResult ForgetPassword()

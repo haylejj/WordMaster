@@ -1569,6 +1569,7 @@
         "dependencies": {
           "AutoMapper": "[12.0.1, )",
           "FluentValidation": "[11.9.1, )",
+          "Microsoft.EntityFrameworkCore": "[9.0.0, )",
           "WordMaster.Domain": "[1.0.0, )"
         }
       },

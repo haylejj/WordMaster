@@ -1,0 +1,362 @@
+@model WordMaster.Application.ViewModels.UserListViewModel
+@{
+    ViewData["Title"] = "Kullanıcılar";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/admin-user.css" asp-append-version="true" />
+
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/js/admin/user/update.js"></script>
+<script src="~/js/admin/user/delete.js"></script>
+<script src="~/js/admin/user/detail.js"></script>
+<script src="~/js/admin/user/updateRoles.js"></script>
+<script src="~/js/admin/user/resetPassword.js"></script>
+
+<h1 class="text-center page-title">Kullanıcılar</h1>
+
+<form method="get" asp-area="Admin" asp-controller="User" asp-action="Index" class="row g-2 align-items-end mb-3">
+    <div class="col-sm-6 col-md-6">
+        <label for="search" class="form-label">Ara</label>
+        <input type="text" id="search" name="search" value="@Model?.Search" class="form-control"
+            placeholder="Kullanıcı adı, email veya ID ara" />
+    </div>
+    <div class="col-sm-3 col-md-3">
+        <label for="pageSize" class="form-label">Sayfa başına</label>
+        <select id="pageSize" name="pageSize" class="form-select">
+            @if (Model?.PageSize == 10)
+            {
+                <option value="10" selected>10</option>
+            }
+            else
+            {
+                <option value="10">10</option>
+            }
+            @if (Model?.PageSize == 25)
+            {
+                <option value="25" selected>25</option>
+            }
+            else
+            {
+                <option value="25">25</option>
+            }
+            @if (Model?.PageSize == 50)
+            {
+                <option value="50" selected>50</option>
+            }
+            else
+            {
+                <option value="50">50</option>
+            }
+            @if (Model?.PageSize == 100)
+            {
+                <option value="100" selected>100</option>
+            }
+            else
+            {
+                <option value="100">100</option>
+            }
+        </select>
+    </div>
+    <input type="hidden" name="page" value="1" />
+    <div class="col-sm-3 col-md-3">
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary flex-fill">Uygula</button>
+            <a href="@Url.Action("Index", "User", new { area = "Admin" })"
+                class="btn btn-outline-secondary flex-fill">Filtreyi Temizle</a>
+        </div>
+    </div>
+</form>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<table class="table table-bordered table-striped table-hover admin-user-table">
+    <thead>
+        <tr>
+            <th>Kullanıcı Adı</th>
+            <th>Email</th>
+            <th>Roller</th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+            @if (Model == null || Model.Users == null || Model.Users.Count == 0)
+        {
+            <tr>
+                <td colspan="8" class="text-center">
+                    <p class="text-muted mt-3 mb-3">Veri bulunmamaktadır.</p>
+                </td>
+            </tr>
+        }
+        else
+        {
+            @foreach (var item in Model.Users)
+            {
+                <tr>
+                    <td>@item.UserName</td>
+                    <td>@item.Email</td>
+                    <td>
+                        @if (item.Roles != null && item.Roles.Any())
+                        {
+                            @foreach (var role in item.Roles)
+                            {
+                                <span class="badge bg-primary me-1">@role</span>
+                            }
+                        }
+                        else
+                        {
+                            <span class="text-muted">Rol yok</span>
+                        }
+                    </td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-info btn-sm text-white text-nowrap"
+                            onclick="openDetailModal('@item.Id', event)">Detay</button>
+                    </td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-warning btn-sm text-dark text-nowrap"
+                            onclick="openUpdateModal('@item.Id', event)">Güncelle</button>
+                    </td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-danger btn-sm text-white text-nowrap"
+                            onclick="deleteUser('@item.Id', event)">Sil</button>
+                    </td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-success btn-sm text-white text-nowrap"
+                            onclick="openUpdateRolesModal('@item.Id', event)">Rolleri Güncelle</button>
+                    </td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-secondary btn-sm text-white text-nowrap"
+                            onclick="resetPassword('@item.Id', event)">Şifre Sıfırla</button>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+@if (Model != null && Model.TotalPages > 1)
+{
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+        <div class="text-muted">Toplam @Model.TotalCount kayıt</div>
+        <nav>
+            <ul class="pagination mb-0">
+                @{
+                    var currentPage = Model.Page <= 0 ? 1 : Model.Page;
+                    var totalPages = Model.TotalPages;
+                    var prevDisabled = currentPage <= 1 ? "disabled" : "";
+                    var nextDisabled = currentPage >= totalPages ? "disabled" : "";
+                }
+                <li class="page-item @prevDisabled">
+                    <a class="page-link"
+                        href="@Url.Action("Index", "User", new { area = "Admin", search = Model.Search, page = currentPage - 1, pageSize = Model.PageSize })">&laquo;</a>
+                </li>
+                @for (int p = 1; p <= Model.TotalPages; p++)
+                {
+                    var active = p == currentPage ? "active" : string.Empty;
+                    <li class="page-item @active">
+                        <a class="page-link"
+                            href="@Url.Action("Index", "User", new { area = "Admin", search = Model.Search, page = p, pageSize = Model.PageSize })">@p</a>
+                    </li>
+                }
+                <li class="page-item @nextDisabled">
+                    <a class="page-link"
+                        href="@Url.Action("Index", "User", new { area = "Admin", search = Model.Search, page = currentPage + 1, pageSize = Model.PageSize })">&raquo;</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+}
+
+<!-- Update Modal -->
+<div class="modal fade" id="updateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Kullanıcı Güncelle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="updateUserForm">
+                    <input type="hidden" id="updateUserId" name="Id" />
+                    <div class="mb-3">
+                        <label for="updateUserName" class="form-label fw-bold">Kullanıcı Adı:</label>
+                        <input type="text" class="form-control" id="updateUserName" name="UserName" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="updateEmail" class="form-label fw-bold">Email:</label>
+                        <input type="email" class="form-control" id="updateEmail" name="Email" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="updatePhone" class="form-label fw-bold">Telefon:</label>
+                        <input type="text" class="form-control" id="updatePhone" name="Phone" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="updateCity" class="form-label fw-bold">Şehir:</label>
+                        <input type="text" class="form-control" id="updateCity" name="City" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="updateBirthDate" class="form-label fw-bold">Doğum Tarihi:</label>
+                        <input type="date" class="form-control" id="updateBirthDate" name="BirthDate" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="updateGender" class="form-label fw-bold">Cinsiyet:</label>
+                        <select class="form-select" id="updateGender" name="Gender">
+                            <option value="">Seçiniz</option>
+                            <option value="0">Erkek</option>
+                            <option value="1">Kadın</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-primary" onclick="updateUser()">Güncelle</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Kullanıcı Detayları</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold mb-3">Kişisel Bilgiler</h6>
+                        <table class="table table-borderless">
+                            <tr>
+                                <td class="fw-bold" style="width: 40%;">ID:</td>
+                                <td id="detailId">-</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Kullanıcı Adı:</td>
+                                <td id="detailUserName">-</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Email:</td>
+                                <td id="detailEmail">-</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Telefon:</td>
+                                <td id="detailPhone">-</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Doğum Tarihi:</td>
+                                <td id="detailBirthDate">-</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Şehir:</td>
+                                <td id="detailCity">-</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Cinsiyet:</td>
+                                <td id="detailGender">-</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold mb-3">Giriş İstatistikleri</h6>
+                        <table class="table table-borderless">
+                            <tr>
+                                <td class="fw-bold" style="width: 50%;">Toplam Giriş:</td>
+                                <td id="detailTotalLoginAttempts">-</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Başarılı Giriş:</td>
+                                <td id="detailSuccessfulLogins">-</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Başarısız Giriş:</td>
+                                <td id="detailFailedLogins">-</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Son Giriş Tarihi:</td>
+                                <td id="detailLastLoginDate">-</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Son Giriş IP Adresi:</td>
+                                <td id="detailLastLoginIpAddress">-</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h6 class="fw-bold mb-3">Kelime İstatistikleri</h6>
+                        <table class="table table-borderless">
+                            <tr>
+                                <td class="fw-bold" style="width: 30%;">Toplam Kelime:</td>
+                                <td id="detailWordCount">-</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Favori Sayısı:</td>
+                                <td id="detailFavoriteCount">-</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Bilinmeyen Sayısı:</td>
+                                <td id="detailUnknowsCount">-</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Son Pratik Tarihi:</td>
+                                <td id="detailLastPracticeDate">-</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Roles Modal -->
+<div class="modal fade" id="updateRolesModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="updateRolesForm">
+                    <input type="hidden" id="updateRolesUserId" name="UserId" />
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Roller:</label>
+                        <div id="rolesContainer" class="border rounded p-3"
+                            style="max-height: 300px; overflow-y: auto;">
+                            <!-- Roller buraya yüklenecek -->
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-primary" onclick="updateUserRoles()">Güncelle</button>
+            </div>
+        </div>
+    </div>
+</div>

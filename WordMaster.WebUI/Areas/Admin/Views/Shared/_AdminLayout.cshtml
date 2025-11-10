@@ -1,0 +1,136 @@
+@{
+    Layout = null;
+    var userName = User.Identity?.Name?.ToUpperInvariant() ?? "ADMIN";
+}
+
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <title>@ViewData["Title"] - WordMaster Admin</title>
+    <link rel="icon" type="image/png" href="~/favicon.ico" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="~/css/admin-layout.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+
+<body class="admin-body">
+    <div class="admin-wrapper">
+        <aside class="admin-sidebar" id="adminSidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i class="fas fa-pen-nib"></i>
+                </div>
+                <div class="sidebar-title">
+                    <span class="brand-name">WordMaster</span>
+                    <span class="brand-subtitle">Admin Panel</span>
+                </div>
+                <button class="sidebar-close d-lg-none" type="button" data-toggle-sidebar>
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <nav class="sidebar-nav">
+                <ul class="sidebar-menu list-unstyled">
+                    <li class="sidebar-item">
+                        <a class="sidebar-link" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+                            <i class="fas fa-gauge-high me-2"></i>
+                            <span>Kontrol Paneli</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a class="sidebar-link" asp-area="Admin" asp-controller="User" asp-action="Index">
+                            <i class="fas fa-users me-2"></i>
+                            <span>Kullanıcılar</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a class="sidebar-link" asp-area="Admin" asp-controller="Role" asp-action="Index">
+                            <i class="fas fa-user-shield me-2"></i>
+                            <span>Roller</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a class="sidebar-link" asp-area="Admin" asp-controller="AllowedIpAddress" asp-action="Index">
+                            <i class="fas fa-network-wired me-2"></i>
+                            <span>IP Adresler</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a class="sidebar-link" asp-area="" asp-controller="Word" asp-action="Index">
+                            <i class="fas fa-arrow-up-right-from-square me-2"></i>
+                            <span>Siteye Dön</span>
+                        </a>
+                    </li>
+                </ul>
+                @await RenderSectionAsync("SidebarExtras", required: false)
+            </nav>
+        </aside>
+
+        <div class="admin-content">
+            <header class="admin-topbar">
+                <div class="topbar-left">
+                    <button class="sidebar-toggle d-lg-none" type="button" data-toggle-sidebar>
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1 class="topbar-title">@ViewData["Title"]</h1>
+                </div>
+                <div class="topbar-right">
+                    <div class="admin-user d-none d-md-flex align-items-center">
+                        <span class="user-avatar">
+                            <i class="fas fa-user"></i>
+                        </span>
+                        <div class="user-info">
+                            <span class="user-label">Hoş geldin</span>
+                            <span class="user-name">@userName</span>
+                        </div>
+                    </div>
+                    <a class="btn btn-sm btn-danger logout-button" asp-area="" asp-controller="Member"
+                        asp-action="LogOut">
+                        <i class="fas fa-sign-out-alt me-1"></i> Çıkış Yap
+                    </a>
+                </div>
+            </header>
+
+            <main class="admin-main">
+                <div class="admin-main-inner">
+                    @RenderBody()
+                </div>
+            </main>
+
+            <footer class="admin-footer">
+                <span>&copy; @DateTime.Now.Year WordMaster Admin. Tüm hakları saklıdır.</span>
+            </footer>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (function () {
+            const sidebar = document.getElementById('adminSidebar');
+            const toggles = document.querySelectorAll('[data-toggle-sidebar]');
+            toggles.forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    sidebar.classList.toggle('sidebar-open');
+                    document.body.classList.toggle('sidebar-open');
+                });
+            });
+
+            window.addEventListener('resize', function () {
+                if (window.innerWidth >= 992) {
+                    sidebar.classList.remove('sidebar-open');
+                    document.body.classList.remove('sidebar-open');
+                }
+            });
+        })();
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+
+</html>

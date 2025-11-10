@@ -8,17 +8,33 @@ using WordMaster.Domain.Results;
 
 namespace WordMaster.Infrastructure.Services;
 
-public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> userManager) : IRoleService
+public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> userManager, ICacheService cacheService) : IRoleService
 {
+    private const string RolesCacheKey = "roles:list";
+    private static readonly TimeSpan RolesCacheExpiration = TimeSpan.FromMinutes(10);
+
     public async Task<List<RoleViewModel>> GetRoleListAsync()
     {
+        var cachedRoles = await cacheService.GetAsync<List<RoleViewModel>>(RolesCacheKey);
+        if (cachedRoles != null)
+        {
+            return cachedRoles;
+        }
+
         var roles = await roleManager.Roles.AsNoTracking().ToListAsync();
         var roleViewModel = roles.Select(x => new RoleViewModel() { Id = x.Id, Name = x.Name! }).ToList();
+
+        await cacheService.SetAsync(RolesCacheKey, roleViewModel, RolesCacheExpiration);
         return roleViewModel;
     }
     public async Task<Result<IEnumerable<IdentityError>>> CreateRoleAsync(RoleCreateRequest request)
     {
         var result = await roleManager.CreateAsync(new AppRole() { Name = request.Name });
+
+        if (result.Succeeded)
+        {
+            await cacheService.RemoveAsync(RolesCacheKey);
+        }
 
         return !result.Succeeded
             ? new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Rol oluşturulamadı.", Data = result.Errors }
@@ -44,6 +60,12 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
         }
         role.Name = request.Name;
         var result = await roleManager.UpdateAsync(role);
+
+        if (result.Succeeded)
+        {
+            await cacheService.RemoveAsync(RolesCacheKey);
+        }
+
         return !result.Succeeded
             ? new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Rol güncellenemedi.", Data = result.Errors }
             : Result<IEnumerable<IdentityError>>.Success(null);
@@ -57,6 +79,12 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
         }
 
         var result = await roleManager.DeleteAsync(role);
+
+        if (result.Succeeded)
+        {
+            await cacheService.RemoveAsync(RolesCacheKey);
+        }
+
         return !result.Succeeded
             ? new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Rol silinemedi.", Data = result.Errors }
             : Result<IEnumerable<IdentityError>>.Success(null);
@@ -96,13 +124,20 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
             return;
         }
 
+        var userRoles = await userManager.GetRolesAsync(user);
+
         foreach (var role in request)
         {
-            if (role.Exist)
+            var isInRole = userRoles.Contains(role.Name);
+
+            if (role.Exist && !isInRole)
             {
                 await userManager.AddToRoleAsync(user, role.Name);
             }
-            else await userManager.RemoveFromRoleAsync(user, role.Name);
+            else if (!role.Exist && isInRole)
+            {
+                await userManager.RemoveFromRoleAsync(user, role.Name);
+            }
         }
     }
 }

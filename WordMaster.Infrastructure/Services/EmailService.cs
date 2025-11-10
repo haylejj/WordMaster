@@ -33,4 +33,33 @@ public class EmailService(IOptions<EmailSettings> settings) : IEmailService
         mailMessage.IsBodyHtml = true;
         await smtpClient.SendMailAsync(mailMessage);
     }
+
+    public async Task SendPasswordToEmailAsync(string password, string toEmail, string userName)
+    {
+        var smtpClient = new SmtpClient
+        {
+            Host = settings.Value.Host!,
+            DeliveryMethod = SmtpDeliveryMethod.Network,
+            UseDefaultCredentials = false,
+            Port = 587,
+            Credentials = new NetworkCredential(settings.Value.Email, settings.Value.Password),
+            EnableSsl = true
+        };
+
+        MailMessage mailMessage = new()
+        {
+            From = new MailAddress(settings.Value.Email!)
+        };
+        mailMessage.To.Add(toEmail);
+
+        mailMessage.Subject = "WordMaster | Şifre Sıfırlama";
+        mailMessage.Body = $@"
+                        <h4>Merhaba {userName},</h4>
+                        <p>Hesabınızın şifresi başarıyla sıfırlanmıştır.</p>
+                        <p><strong>Yeni Şifreniz:</strong> {password}</p>
+                        <p>Güvenliğiniz için lütfen giriş yaptıktan sonra şifrenizi değiştirin.</p>
+                        <p>İyi günler dileriz.</p>";
+        mailMessage.IsBodyHtml = true;
+        await smtpClient.SendMailAsync(mailMessage);
+    }
 }

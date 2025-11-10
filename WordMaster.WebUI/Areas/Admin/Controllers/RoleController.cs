@@ -3,93 +3,123 @@ using Microsoft.AspNetCore.Mvc;
 using WordMaster.Application.Requests;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Application.ViewModels;
-using WordMaster.WebUI.Extensions;
 
 namespace WordMaster.WebUI.Areas.Admin.Controllers;
 
-[Authorize(Roles = "admin")]
 [Area("Admin")]
+[Authorize(Roles = "admin")]
+[Route("[area]/[controller]")]
 public class RoleController(IRoleService roleService) : Controller
 {
-    public async Task<IActionResult> RoleList()
+    [HttpGet("")]
+    public async Task<IActionResult> Index()
     {
         var roles = await roleService.GetRoleListAsync();
-        return View(roles);
-    }
-    public IActionResult RoleCreate()
-    {
-        return View();
-    }
-    [HttpPost]
-    public async Task<IActionResult> RoleCreate(RoleCreateViewModel viewModel)
-    {
-        if (!ModelState.IsValid)
+        var viewModel = new RoleListViewModel
         {
-            return View();
-        }
-
-        var request = new RoleCreateRequest
-        {
-            Name = viewModel.Name
+            Roles = roles
         };
-
-        var result = await roleService.CreateRoleAsync(request);
-
-        if (!result.IsSuccess)
-        {
-            ModelState.AddModelErrorList(result.Data!.Select(x => x.Description).ToList());
-            return View();
-        }
-        TempData["SuccessMessage"] = "Yeni rol ba�ar�yla olu�turuldu";
-        return RedirectToAction(nameof(RoleList));
+        return View(viewModel);
     }
 
-    public async Task<IActionResult> RoleUpdate(string roleId)
+    [HttpGet("GetRole")]
+    public async Task<IActionResult> GetRole(string id)
     {
-        var role = await roleService.FindByIdReturnRoleUpdateViewModelAsync(roleId);
+        if (string.IsNullOrEmpty(id))
+        {
+            return Json(new { success = false, message = "Rol ID gerekli." });
+        }
 
-        return !role.IsSuccess ? throw new Exception("G�ncellenecek rol bulunamam��t�r.") : (IActionResult)View(role.Data);
+        var result = await roleService.FindByIdReturnRoleUpdateViewModelAsync(id);
+
+        if (!result.IsSuccess || result.Data == null)
+        {
+            return Json(new { success = false, message = "Rol bulunamadı." });
+        }
+
+        var role = result.Data;
+
+        return Json(new
+        {
+            success = true,
+            role = new
+            {
+                id = role.Id,
+                name = role.Name
+            }
+        });
     }
-    [HttpPost]
-    public async Task<IActionResult> RoleUpdate(RoleUpdateRequest request)
+
+    [HttpPost("UpdateRole")]
+    public async Task<IActionResult> UpdateRole([FromBody] RoleUpdateRequest request)
     {
         if (!ModelState.IsValid)
         {
-            return View();
+            var errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .ToList();
+            return Json(new { success = false, message = string.Join(", ", errors) });
         }
 
         var result = await roleService.UpdateRoleAsync(request);
 
         if (!result.IsSuccess)
         {
-            ModelState.AddModelErrorList(result.Data!.Select(x => x.Description).ToList());
-            return View();
+            var errorMessage = result.ErrorMessage ?? "Rol güncellenirken bir hata oluştu.";
+            if (result.Data != null && result.Data.Any())
+            {
+                errorMessage = string.Join(", ", result.Data.Select(e => e.Description));
+            }
+            return Json(new { success = false, message = errorMessage });
         }
-        else { TempData["SuccessMessage"] = "G�ncelleme ��lemi Ba�ar�yla Yap�ld�"; }
-        return RedirectToAction("RoleList", "Role");
-    }
-    public async Task<IActionResult> RoleDelete(string roleId)
-    {
-        var result = await roleService.DeleteRoleAsync(roleId);
-        if (!result.IsSuccess)
-        {
-            ModelState.AddModelErrorList(result.Data!.Select(x => x.Description).ToList());
-            return View();
-        }
-        else { TempData["SuccessMessage"] = "Rol ba�ar�yla silinmi�tir"; }
-        return RedirectToAction("RoleList", "Role");
+
+        return Json(new { success = true, message = "Rol başarıyla güncellendi." });
     }
 
-    public async Task<IActionResult> AssignToRole(string id)
+    [HttpPost("DeleteRole")]
+    public async Task<IActionResult> DeleteRole(string id)
     {
-        var userRoles = await roleService.GetRoleByIdReturnAssignToRoleAsync(id);
-        ViewBag.Id = id;
-        return View(userRoles);
+        var result = await roleService.DeleteRoleAsync(id);
+
+        if (!result.IsSuccess)
+        {
+            var errorMessage = result.ErrorMessage ?? "Rol silinirken bir hata oluştu.";
+            if (result.Data != null && result.Data.Any())
+            {
+                errorMessage = string.Join(", ", result.Data.Select(e => e.Description));
+            }
+            return Json(new { success = false, message = errorMessage });
+        }
+
+        return Json(new { success = true, message = "Rol başarıyla silindi." });
     }
-    [HttpPost]
-    public async Task<IActionResult> AssignToRole(string id, List<AssignToRoleViewModel> requestList)
+
+    [HttpPost("CreateRole")]
+    public async Task<IActionResult> CreateRole([FromBody] RoleCreateRequest request)
     {
-        await roleService.AssignRoleAsync(id, requestList);
-        return RedirectToAction("UserList", "Admin");
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .ToList();
+            return Json(new { success = false, message = string.Join(", ", errors) });
+        }
+
+        var result = await roleService.CreateRoleAsync(request);
+
+        if (!result.IsSuccess)
+        {
+            var errorMessage = result.ErrorMessage ?? "Rol oluşturulurken bir hata oluştu.";
+            if (result.Data != null && result.Data.Any())
+            {
+                errorMessage = string.Join(", ", result.Data.Select(e => e.Description));
+            }
+            return Json(new { success = false, message = errorMessage });
+        }
+
+        return Json(new { success = true, message = "Rol başarıyla oluşturuldu." });
     }
 }
+

@@ -17,12 +17,7 @@ public class RedisCacheService(IConnectionMultiplexer redis) : ICacheService
     {
         var value = await _database.StringGetAsync(key);
 
-        if (!value.HasValue)
-        {
-            return default;
-        }
-
-        return JsonSerializer.Deserialize<T>(value!, jsonSerializerOptions);
+        return !value.HasValue ? default : JsonSerializer.Deserialize<T>(value!, jsonSerializerOptions);
     }
 
     public async Task SetAsync<T>(string key, T value, TimeSpan? expiration = null)

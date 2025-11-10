@@ -1,5 +1,6 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
@@ -8,8 +9,6 @@ using WordMaster.Application.Validation;
 using WordMaster.Domain.Configuration;
 using WordMaster.Infrastructure.EfCore;
 using WordMaster.Infrastructure.Extensions;
-using WordMaster.Application.Services.Abstract;
-using WordMaster.Infrastructure.Services;
 using WordMaster.WebUI.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -32,6 +31,13 @@ builder.Services.AddRedis(builder.Configuration);
 builder.Services.AddApplicationServices();
 
 builder.Services.AddAutoMapper(typeof(MapProfile));
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 builder.Services.AddDbContext<AppDbContext>(x =>
 {
@@ -77,6 +83,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+app.UseForwardedHeaders();
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
