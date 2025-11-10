@@ -32,6 +32,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IWordRepository, WordRepository>();
         services.AddScoped<IFavoriteRepository, FavoriteRepository>();
         services.AddScoped<IUnknowsRepository, UnknowsRepository>();
+        services.AddScoped<ILogHistoryRepository, LogHistoryRepository>();
 
         // Services
         services.AddScoped<IWordService, WordService>();
@@ -44,6 +45,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IEmailService, MailHogEmailService>();
         services.AddScoped<ICacheService, RedisCacheService>();
+        services.AddScoped<ILogHistoryService, LogHistoryService>();
+        services.AddScoped<IAdminDashboardService, AdminDashboardService>();
 
         return services;
     }

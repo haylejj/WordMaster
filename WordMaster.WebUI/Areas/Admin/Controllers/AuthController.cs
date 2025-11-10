@@ -10,7 +10,7 @@ using WordMaster.WebUI.Extensions;
 namespace WordMaster.WebUI.Areas.Admin.Controllers;
 
 [Area("Admin")]
-public class AuthController(ILoginService loginService, UserManager<AppUser> userManager) : Controller
+public class AuthController(ILoginService loginService, UserManager<AppUser> userManager, ILogHistoryService logHistoryService) : Controller
 {
     [HttpGet]
     [AllowAnonymous]
@@ -32,9 +32,12 @@ public class AuthController(ILoginService loginService, UserManager<AppUser> use
         }
 
         var userResult = await loginService.FindByEmailAsync(viewModel.Email!);
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+
         if (!userResult.IsSuccess || userResult.Data == null)
         {
             ModelState.AddModelErrorList(new List<string> { "Email veya şifre yanlış" });
+            await logHistoryService.RecordAsync(null, viewModel.Email, ipAddress, false, "AdminLogin");
             return View(viewModel);
         }
 
@@ -43,6 +46,7 @@ public class AuthController(ILoginService loginService, UserManager<AppUser> use
         if (!isAdmin)
         {
             ModelState.AddModelErrorList(new List<string> { "Bu panele erişim yetkiniz yok." });
+            await logHistoryService.RecordAsync(userResult.Data.Id, viewModel.Email, ipAddress, false, "AdminLogin");
             return View(viewModel);
         }
 
@@ -57,12 +61,14 @@ public class AuthController(ILoginService loginService, UserManager<AppUser> use
         if (!login.IsSuccess)
         {
             ModelState.AddModelErrorList(new List<string> { "Email veya şifre yanlış" });
+            await logHistoryService.RecordAsync(userResult.Data.Id, viewModel.Email, ipAddress, false, "AdminLogin");
             return View(viewModel);
         }
 
         TempData["AdminLoginSuccess"] = "Başarıyla giriş yaptınız.";
+        await logHistoryService.RecordAsync(userResult.Data.Id, viewModel.Email, ipAddress, true, "AdminLogin");
 
-        return RedirectToAction(nameof(Login));
+        return Redirect("/Admin/Dashboard");
     }
 }
 

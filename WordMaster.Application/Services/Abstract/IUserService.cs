@@ -15,5 +15,11 @@ public interface IUserService
     Task<Result<bool>> CheckPasswordAsync(string userName, string passwordOld);
     Task<Result<IEnumerable<IdentityError>>> ChangePasswordAsync(PasswordChangeRequest request, string userName);
     Task<List<UserViewModel>> GetUsersAsync();
+    Task<Result<(List<UserWithRolesViewModel> Users, int TotalCount)>> GetPagedUsersAsync(string? search, int page, int pageSize);
+    Task<Result<UserWithRolesViewModel>> GetUserByIdAsync(string id);
+    Task<Result<UserEditViewModel>> GetUserEditViewModelByIdAsync(string id);
+    Task<Result<UserDetailViewModel>> GetUserDetailAsync(string id);
+    Task<Result<IEnumerable<IdentityError>>> UpdateUserAsync(string id, UserEditRequest request);
+    Task<Result<bool>> DeleteUserAsync(string id);
 }
 

@@ -10,6 +10,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<Word> Words { get; set; }
     public DbSet<Favorite> Favorites { get; set; }
     public DbSet<Unknows> Unknows { get; set; }
+    public DbSet<LogHistory> LogHistories { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
