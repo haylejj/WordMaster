@@ -23,7 +23,7 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
     {
         if (!ModelState.IsValid) // bir hata var ise validate de
         {
-            return View();
+            return View(viewModel);
         }
         returnUrl = returnUrl ?? Url.Action("Index", "Word");
 
@@ -41,7 +41,7 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
         {
             ModelState.AddModelErrorList(new List<string>() { "Email veya şifre yanlış" });
             await logHistoryService.RecordAsync(null, request.Email, ipAddress, false, "UserLogin");
-            return View();
+            return View(viewModel);
         }
 
         var login = await loginService.LoginAsync(request, userResult.Data);
@@ -54,7 +54,7 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
         }
 
         ModelState.AddModelErrorList(new List<string> { "Email veya şifre yanlış" });
-        return View();
+        return View(viewModel);
     }
     [HttpGet("ForgetPassword")]
     public IActionResult ForgetPassword()
