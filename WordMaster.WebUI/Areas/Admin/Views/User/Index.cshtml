@@ -11,6 +11,7 @@
 <script src="~/js/admin/user/update.js"></script>
 <script src="~/js/admin/user/delete.js"></script>
 <script src="~/js/admin/user/detail.js"></script>
+<script src="~/js/admin/user/updateRoles.js"></script>
 
 <h1 class="text-center page-title">Kullanıcılar</h1>
 
@@ -91,13 +92,14 @@
             <th></th>
             <th></th>
             <th></th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
         @if (Model == null || Model.Users == null || Model.Users.Count == 0)
         {
             <tr>
-                <td colspan="6" class="text-center">
+                <td colspan="7" class="text-center">
                     <p class="text-muted mt-3 mb-3">Veri bulunmamaktadır.</p>
                 </td>
             </tr>
@@ -133,6 +135,10 @@
                     <td class="text-center">
                         <button type="button" class="btn btn-danger btn-sm text-white text-nowrap"
                             onclick="deleteUser('@item.Id', event)">Sil</button>
+                    </td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-success btn-sm text-white text-nowrap"
+                            onclick="openUpdateRolesModal('@item.Id', event)">Rolleri Güncelle</button>
                     </td>
                 </tr>
             }
@@ -317,6 +323,33 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Roles Modal -->
+<div class="modal fade" id="updateRolesModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="updateRolesForm">
+                    <input type="hidden" id="updateRolesUserId" name="UserId" />
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Roller:</label>
+                        <div id="rolesContainer" class="border rounded p-3"
+                            style="max-height: 300px; overflow-y: auto;">
+                            <!-- Roller buraya yüklenecek -->
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-primary" onclick="updateUserRoles()">Güncelle</button>
             </div>
         </div>
     </div>

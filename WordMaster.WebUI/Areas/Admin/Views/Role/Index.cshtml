@@ -1,0 +1,119 @@
+@model WordMaster.Application.ViewModels.RoleListViewModel
+@{
+    ViewData["Title"] = "Roller";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/admin-role.css" asp-append-version="true" />
+
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/js/admin/role/create.js"></script>
+<script src="~/js/admin/role/update.js"></script>
+<script src="~/js/admin/role/delete.js"></script>
+
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="mb-3">
+    <button type="button" class="btn btn-success" onclick="openCreateModal()">Yeni Rol Ekle</button>
+</div>
+
+<table class="table table-bordered table-striped table-hover admin-role-table">
+    <thead>
+        <tr>
+            <th>Rol Adı</th>
+            <th></th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model == null || Model.Roles == null || Model.Roles.Count == 0)
+        {
+            <tr>
+                <td colspan="3" class="text-center">
+                    <p class="text-muted mt-3 mb-3">Veri bulunmamaktadır.</p>
+                </td>
+            </tr>
+        }
+        else
+        {
+            @foreach (var item in Model.Roles)
+            {
+                <tr>
+                    <td>@item.Name</td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-warning btn-sm text-dark text-nowrap"
+                            onclick="openUpdateModal('@item.Id', event)">Güncelle</button>
+                    </td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-danger btn-sm text-white text-nowrap"
+                            onclick="deleteRole('@item.Id', event)">Sil</button>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+<!-- Create Modal -->
+<div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Yeni Rol Ekle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createRoleForm">
+                    <div class="mb-3">
+                        <label for="createRoleName" class="form-label fw-bold">Rol Adı:</label>
+                        <input type="text" class="form-control" id="createRoleName" name="Name" required />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-primary" onclick="createRole()">Oluştur</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Modal -->
+<div class="modal fade" id="updateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Rol Güncelle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="updateRoleForm">
+                    <input type="hidden" id="updateRoleId" name="Id" />
+                    <div class="mb-3">
+                        <label for="updateRoleName" class="form-label fw-bold">Rol Adı:</label>
+                        <input type="text" class="form-control" id="updateRoleName" name="Name" required />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-primary" onclick="updateRole()">Güncelle</button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -9,7 +9,7 @@ namespace WordMaster.WebUI.Areas.Admin.Controllers;
 [Area("Admin")]
 [Authorize(Roles = "admin")]
 [Route("[area]/[controller]")]
-public class UserController(IUserService userService) : Controller
+public class UserController(IUserService userService, IRoleService roleService) : Controller
 {
     [HttpGet("")]
     public async Task<IActionResult> Index(string? search, int page = 1, int pageSize = 10)
@@ -153,6 +153,58 @@ public class UserController(IUserService userService) : Controller
                 lastPracticeDate = detail.LastPracticeDate?.ToString("dd.MM.yyyy HH:mm") ?? "-"
             }
         });
+    }
+
+    [HttpGet("GetUserRoles")]
+    public async Task<IActionResult> GetUserRoles(string id)
+    {
+        if (string.IsNullOrEmpty(id))
+        {
+            return Json(new { success = false, message = "Kullanıcı ID gerekli." });
+        }
+
+        var roles = await roleService.GetRoleByIdReturnAssignToRoleAsync(id);
+
+        if (roles == null || roles.Count == 0)
+        {
+            return Json(new { success = false, message = "Roller bulunamadı." });
+        }
+
+        return Json(new
+        {
+            success = true,
+            roles = roles.Select(r => new
+            {
+                id = r.Id,
+                name = r.Name,
+                exist = r.Exist
+            }).ToList()
+        });
+    }
+
+    [HttpPost("UpdateUserRoles")]
+    public async Task<IActionResult> UpdateUserRoles([FromBody] UpdateUserRolesRequest request)
+    {
+        if (string.IsNullOrEmpty(request.UserId))
+        {
+            return Json(new { success = false, message = "Kullanıcı ID gerekli." });
+        }
+
+        if (request.Roles == null || request.Roles.Count == 0)
+        {
+            return Json(new { success = false, message = "Rol bilgisi gerekli." });
+        }
+
+        var assignToRoleViewModels = request.Roles.Select(r => new AssignToRoleViewModel
+        {
+            Id = r.Id,
+            Name = r.Name,
+            Exist = r.Exist
+        }).ToList();
+
+        await roleService.AssignRoleAsync(request.UserId, assignToRoleViewModels);
+
+        return Json(new { success = true, message = "Kullanıcı rolleri başarıyla güncellendi." });
     }
 }
 
