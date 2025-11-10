@@ -42,6 +42,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ILoginService, LoginService>();
         services.AddScoped<IRoleService, RoleService>();
         services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<IEmailService, MailHogEmailService>();
         services.AddScoped<ICacheService, RedisCacheService>();
 
         return services;

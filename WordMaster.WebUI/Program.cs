@@ -8,6 +8,8 @@ using WordMaster.Application.Validation;
 using WordMaster.Domain.Configuration;
 using WordMaster.Infrastructure.EfCore;
 using WordMaster.Infrastructure.Extensions;
+using WordMaster.Application.Services.Abstract;
+using WordMaster.Infrastructure.Services;
 using WordMaster.WebUI.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,6 +23,7 @@ builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddFluentValidationClientsideAdapters();
 
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.Configure<MailHogSettings>(builder.Configuration.GetSection("MailHog"));
 
 // Redis
 builder.Services.AddRedis(builder.Configuration);
