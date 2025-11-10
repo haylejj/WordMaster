@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WordMaster.Infrastructure.EfCore;
 
@@ -11,9 +12,11 @@ using WordMaster.Infrastructure.EfCore;
 namespace WordMaster.Infrastructure.EfCore.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251110180237_04_add_allowed_ip_address")]
+    partial class _04_add_allowed_ip_address
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -159,24 +162,6 @@ namespace WordMaster.Infrastructure.EfCore.Migrations
                         .IsUnique();
 
                     b.ToTable("AllowedIpAddresses", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Localhost IPv4 - Local Development",
-                            IpAddress = "127.0.0.1",
-                            IsActive = true
-                        },
-                        new
-                        {
-                            Id = 2,
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Localhost IPv6 - Local Development",
-                            IpAddress = "::1",
-                            IsActive = true
-                        });
                 });
 
             modelBuilder.Entity("WordMaster.Domain.Entities.AppRole", b =>

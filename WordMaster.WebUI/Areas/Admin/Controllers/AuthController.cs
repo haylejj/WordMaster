@@ -10,7 +10,7 @@ using WordMaster.WebUI.Extensions;
 namespace WordMaster.WebUI.Areas.Admin.Controllers;
 
 [Area("Admin")]
-public class AuthController(ILoginService loginService, UserManager<AppUser> userManager, ILogHistoryService logHistoryService) : Controller
+public class AuthController(ILoginService loginService, UserManager<AppUser> userManager, ILogHistoryService logHistoryService, IAllowedIpAddressService allowedIpAddressService) : Controller
 {
     [HttpGet]
     [AllowAnonymous]
@@ -33,6 +33,18 @@ public class AuthController(ILoginService loginService, UserManager<AppUser> use
 
         var userResult = await loginService.FindByEmailAsync(viewModel.Email!);
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+
+        // IP adresi kontrolü
+        if (!string.IsNullOrWhiteSpace(ipAddress))
+        {
+            var isIpAllowed = await allowedIpAddressService.IsIpAllowedAsync(ipAddress);
+            if (!isIpAllowed)
+            {
+                ModelState.AddModelErrorList(new List<string> { "Bu IP adresinden admin paneline giriş yapma yetkiniz yok." });
+                await logHistoryService.RecordAsync(null, viewModel.Email, ipAddress, false, "AdminLogin");
+                return View(viewModel);
+            }
+        }
 
         if (!userResult.IsSuccess || userResult.Data == null)
         {

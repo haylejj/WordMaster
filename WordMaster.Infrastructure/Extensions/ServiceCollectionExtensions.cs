@@ -47,6 +47,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICacheService, RedisCacheService>();
         services.AddScoped<ILogHistoryService, LogHistoryService>();
         services.AddScoped<IAdminDashboardService, AdminDashboardService>();
+        services.AddScoped<IAllowedIpAddressService, AllowedIpAddressService>();
 
         return services;
     }
