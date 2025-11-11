@@ -1,0 +1,254 @@
+@model WordMaster.WebUI.Models.FolderDetailViewModel
+@{
+    ViewData["Title"] = Model.FolderName;
+    Layout = "~/Views/Shared/Main_Layout.cshtml";
+}
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+<style>
+    .flip-card {
+        perspective: 1000px;
+        cursor: pointer;
+    }
+
+    .flip-card-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        transition: transform 0.6s;
+        transform-style: preserve-3d;
+    }
+
+    .flip-card.flipped .flip-card-inner {
+        transform: rotateY(180deg);
+    }
+
+    .flip-card-front,
+    .flip-card-back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        backface-visibility: hidden;
+        top: 0;
+        left: 0;
+    }
+
+    .flip-card-back {
+        transform: rotateY(180deg);
+    }
+
+    .card-actions {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        display: flex;
+        gap: 6px;
+    }
+
+    .btn-icon {
+        padding: 2px 6px;
+        font-size: 0.8rem;
+        line-height: 1;
+    }
+
+    /* Flashcard sizing */
+    .flash-card {
+        min-height: 180px;
+    }
+
+    .flash-card .card-body {
+        padding: 1.25rem 1rem;
+    }
+
+    .flash-card h5 {
+        font-size: 1.25rem;
+    }
+</style>
+
+<div class="card shadow-sm mt-3">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3 gap-2">
+            <h2 class="mb-0">@Model.FolderName</h2>
+            <form method="post" asp-controller="Folder" asp-action="AddWord" class="d-flex align-items-center gap-2">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="folderId" value="@Model.FolderId" />
+                <select id="selectWord" name="wordId" class="form-select" style="min-width:320px;" required>
+                    <option value="">Kelime seçin...</option>
+                    @foreach (var w in Model.AllWords)
+                    {
+                        <option value="@w.Id">@w.EnglishWord</option>
+                    }
+                </select>
+                <button type="submit" class="btn btn-primary">Ekle</button>
+            </form>
+        </div>
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                @TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        @if (Model.Words == null || !Model.Words.Any())
+        {
+            <div class="text-center text-muted mt-4">Bu klasörde henüz kelime yok.</div>
+        }
+        else
+        {
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
+                @foreach (var word in Model.Words)
+                {
+                    <div class="col">
+                        <div class="card h-100 flip-card flash-card" onclick="toggleFlip(this)">
+                            <div class="flip-card-inner">
+                                <div
+                                    class="flip-card-front card-body d-flex flex-column justify-content-center align-items-center">
+                                    <div class="card-actions">
+                                        <button type="button" class="btn btn-sm btn-warning btn-icon" title="Düzenle"
+                                            onclick="openUpdateModal(@word.Id, event)">✏️</button>
+                                        <button type="button" class="btn btn-sm btn-danger btn-icon" title="Kaldır"
+                                            onclick="removeWordFromFolder(@Model.FolderId, @word.Id, event)">🗑️</button>
+                                    </div>
+                                    <h5 class="mb-0 text-center">@word.EnglishWord</h5>
+                                </div>
+                                <div
+                                    class="flip-card-back card-body d-flex flex-column justify-content-center align-items-center bg-light">
+                                    <h5 class="mb-0 text-center">@word.TurkishWord</h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Update Modal (reuses Word update endpoints) -->
+<div class="modal fade" id="updateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Kelime Güncelle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="updateWordForm">
+                    <input type="hidden" id="updateWordId" name="Id" />
+                    <div class="mb-3">
+                        <label for="updateEnglishWord" class="form-label">English:</label>
+                        <input type="text" class="form-control" id="updateEnglishWord" name="EnglishWord" required
+                            maxlength="30" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="updateTurkishWord" class="form-label">Turkish:</label>
+                        <input type="text" class="form-control" id="updateTurkishWord" name="TurkishWord" required
+                            maxlength="30" />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-primary" onclick="updateWord()">Güncelle</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('#selectWord').select2({
+            placeholder: 'Kelime seçin...',
+            allowClear: true,
+            width: 'resolve'
+        });
+    });
+
+    function toggleFlip(cardEl) {
+        // stop click bubbling if inner button clicked
+        if (event && (event.target.closest('button') || event.target.closest('form'))) {
+            return;
+        }
+        cardEl.classList.toggle('flipped');
+    }
+
+    // Modal helpers using existing Word endpoints
+    function openUpdateModal(id, e) {
+        e.stopPropagation();
+        $.get('/Word/GetWord', { id: id })
+            .done(function (res) {
+                if (!res.success) {
+                    swal('Hata', res.message || 'Kelime getirilemedi.', 'error');
+                    return;
+                }
+                $('#updateWordId').val(res.word.id);
+                $('#updateEnglishWord').val(res.word.englishWord);
+                $('#updateTurkishWord').val(res.word.turkishWord);
+                var modal = new bootstrap.Modal(document.getElementById('updateModal'));
+                modal.show();
+            })
+            .fail(function () {
+                swal('Hata', 'Sunucu hatası.', 'error');
+            });
+    }
+
+    function updateWord() {
+        var data = {
+            Id: $('#updateWordId').val(),
+            EnglishWord: $('#updateEnglishWord').val(),
+            TurkishWord: $('#updateTurkishWord').val()
+        };
+        $.post('/Word/UpdateWord', data)
+            .done(function (res) {
+                if (!res.success) {
+                    swal('Hata', res.message || 'Güncelleme başarısız.', 'error');
+                    return;
+                }
+                swal('Başarılı', 'Kelime güncellendi.', 'success')
+                    .then(() => window.location.reload());
+            })
+            .fail(function () {
+                swal('Hata', 'Sunucu hatası.', 'error');
+            });
+    }
+
+    function removeWordFromFolder(folderId, wordId, e) {
+        e.stopPropagation();
+        swal({
+            title: 'Emin misiniz?',
+            text: 'Bu kelime klasörden kaldırılacak.',
+            icon: 'warning',
+            buttons: ['İptal', 'Kaldır'],
+            dangerMode: true
+        }).then(function (willDelete) {
+            if (!willDelete) return;
+            var token = $('input[name="__RequestVerificationToken"]').first().val();
+            $.ajax({
+                url: '/Folder/RemoveWord',
+                method: 'POST',
+                data: { folderId: folderId, wordId: wordId, __RequestVerificationToken: token }
+            }).done(function () {
+                swal('Kaldırıldı', 'Kelime klasörden kaldırıldı.', 'success');
+                // Remove the card smoothly
+                var btn = e.target.closest('.btn');
+                var cardCol = btn.closest('.col');
+                $(cardCol).fadeOut(200, function () { $(this).remove(); });
+            }).fail(function () {
+                swal('Hata', 'İşlem gerçekleştirilemedi.', 'error');
+            });
+        });
+    }
+</script>

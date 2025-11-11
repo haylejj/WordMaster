@@ -8,6 +8,8 @@ namespace WordMaster.Infrastructure.EfCore;
 public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbContext<AppUser, AppRole, string>(options)
 {
     public DbSet<Word> Words { get; set; }
+    public DbSet<Folder> Folders { get; set; }
+    public DbSet<WordFolder> WordFolders { get; set; }
     public DbSet<Favorite> Favorites { get; set; }
     public DbSet<Unknows> Unknows { get; set; }
     public DbSet<LogHistory> LogHistories { get; set; }
