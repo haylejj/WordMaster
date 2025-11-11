@@ -10,6 +10,7 @@ public class Word
     public AppUser? User { get; set; }
     public Favorite? Favorite { get; set; }
     public Unknows? Unknows { get; set; }
+    public ICollection<WordFolder> WordFolders { get; set; } = new List<WordFolder>();
 
     // Öğrenme Takibi
     public bool? IsLastAnswerCorrect { get; set; } // Son cevap doğru mu?

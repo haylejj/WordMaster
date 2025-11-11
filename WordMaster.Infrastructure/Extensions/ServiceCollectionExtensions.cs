@@ -30,12 +30,15 @@ public static class ServiceCollectionExtensions
 
         // Repositories
         services.AddScoped<IWordRepository, WordRepository>();
+        services.AddScoped<IFolderRepository, FolderRepository>();
+        services.AddScoped<IWordFolderRepository, WordFolderRepository>();
         services.AddScoped<IFavoriteRepository, FavoriteRepository>();
         services.AddScoped<IUnknowsRepository, UnknowsRepository>();
         services.AddScoped<ILogHistoryRepository, LogHistoryRepository>();
 
         // Services
         services.AddScoped<IWordService, WordService>();
+        services.AddScoped<IFolderService, FolderService>();
         services.AddScoped<IFavoriteService, FavoriteService>();
         services.AddScoped<IUnknowsService, UnknowsService>();
         services.AddScoped<IUserService, UserService>();
