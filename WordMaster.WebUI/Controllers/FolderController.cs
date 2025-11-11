@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Entities;
-using WordMaster.Infrastructure.EfCore;
 using WordMaster.WebUI.Extensions;
 using WordMaster.WebUI.Models;
 
@@ -10,8 +9,10 @@ namespace WordMaster.WebUI.Controllers;
 
 [Authorize]
 [Route("/Folder")]
-public class FolderController(AppDbContext dbContext) : Controller
+public class FolderController(IFolderService folderService) : Controller
 {
+    private readonly IFolderService _folderService = folderService;
+
     [HttpGet("")]
     public async Task<IActionResult> Index()
     {
@@ -21,13 +22,14 @@ public class FolderController(AppDbContext dbContext) : Controller
             return RedirectToAction("LogIn", "Login");
         }
 
-        var folders = await dbContext.Folders
-            .AsNoTracking()
-            .Where(f => f.UserId == userId)
-            .OrderByDescending(f => f.CreatedTime)
-            .ToListAsync();
+        var foldersResult = await _folderService.GetUserFoldersAsync(userId);
+        if (!foldersResult.IsSuccess)
+        {
+            TempData["ErrorMessage"] = foldersResult.ErrorMessage ?? "Klasörler getirilirken hata oluştu.";
+            return View(new List<Folder>());
+        }
 
-        return View(folders);
+        return View(foldersResult.Data ?? []);
     }
 
     [HttpGet("{id:int}")]
@@ -39,34 +41,25 @@ public class FolderController(AppDbContext dbContext) : Controller
             return RedirectToAction("LogIn", "Login");
         }
 
-        var folder = await dbContext.Folders
-            .AsNoTracking()
-            .FirstOrDefaultAsync(f => f.Id == id && f.UserId == userId);
-        if (folder == null)
+        var folderResult = await _folderService.GetUserFolderAsync(id, userId);
+        if (!folderResult.IsSuccess)
         {
             TempData["ErrorMessage"] = "Klasör bulunamadı.";
             return RedirectToAction(nameof(Index));
         }
 
-        var wordsInFolder = await dbContext.WordFolders
-            .AsNoTracking()
-            .Where(wf => wf.FolderId == id)
-            .Include(wf => wf.Word)
-            .Select(wf => wf.Word)
-            .ToListAsync();
-
-        var allUserWords = await dbContext.Words
-            .AsNoTracking()
-            .Where(w => w.UserId == userId)
-            .OrderBy(w => w.EnglishWord)
-            .ToListAsync();
+        var wordsResult = await _folderService.GetWordsInFolderAsync(id, userId);
+        if (!wordsResult.IsSuccess)
+        {
+            TempData["ErrorMessage"] = wordsResult.ErrorMessage ?? "Klasör kelimeleri getirilemedi.";
+            return RedirectToAction(nameof(Index));
+        }
 
         var vm = new FolderDetailViewModel
         {
-            FolderId = folder.Id,
-            FolderName = folder.Name,
-            Words = wordsInFolder,
-            AllWords = allUserWords
+            FolderId = folderResult.Data!.Id,
+            FolderName = folderResult.Data!.Name,
+            Words = wordsResult.Data ?? []
         };
 
         return View(vm);
@@ -83,29 +76,12 @@ public class FolderController(AppDbContext dbContext) : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        if (string.IsNullOrWhiteSpace(name))
+        var result = await _folderService.AddFolderAsync(name, userId);
+        if (!result.IsSuccess)
         {
-            TempData["ErrorMessage"] = "Klasör adı gereklidir.";
+            TempData["ErrorMessage"] = result.ErrorMessage ?? "İşlem başarısız.";
             return RedirectToAction(nameof(Index));
         }
-
-        // Aynı isimde klasör var mı kontrolü (isteğe bağlı)
-        var exists = await dbContext.Folders.AnyAsync(f => f.UserId == userId && f.Name == name.Trim());
-        if (exists)
-        {
-            TempData["ErrorMessage"] = "Bu isimde bir klasör zaten mevcut.";
-            return RedirectToAction(nameof(Index));
-        }
-
-        var folder = new Folder
-        {
-            Name = name.Trim(),
-            UserId = userId,
-            CreatedTime = DateTime.UtcNow
-        };
-
-        dbContext.Folders.Add(folder);
-        await dbContext.SaveChangesAsync();
 
         TempData["SuccessMessage"] = "Klasör eklendi.";
         return RedirectToAction(nameof(Index));
@@ -122,24 +98,12 @@ public class FolderController(AppDbContext dbContext) : Controller
             return RedirectToAction(nameof(Detail), new { id = folderId });
         }
 
-        // yetki ve varlık kontrolleri
-        var folderExists = await dbContext.Folders.AnyAsync(f => f.Id == folderId && f.UserId == userId);
-        var wordExists = await dbContext.Words.AnyAsync(w => w.Id == wordId && w.UserId == userId);
-        if (!folderExists || !wordExists)
+        var result = await _folderService.AddWordToFolderAsync(folderId, wordId, userId);
+        if (!result.IsSuccess)
         {
-            TempData["ErrorMessage"] = "Klasör veya kelime bulunamadı.";
+            TempData["ErrorMessage"] = result.ErrorMessage ?? "İşlem başarısız.";
             return RedirectToAction(nameof(Detail), new { id = folderId });
         }
-
-        var linkExists = await dbContext.WordFolders.AnyAsync(x => x.FolderId == folderId && x.WordId == wordId);
-        if (linkExists)
-        {
-            TempData["ErrorMessage"] = "Kelime zaten bu klasörde.";
-            return RedirectToAction(nameof(Detail), new { id = folderId });
-        }
-
-        dbContext.WordFolders.Add(new WordFolder { FolderId = folderId, WordId = wordId });
-        await dbContext.SaveChangesAsync();
         TempData["SuccessMessage"] = "Kelime klasöre eklendi.";
         return RedirectToAction(nameof(Detail), new { id = folderId });
     }
@@ -155,24 +119,32 @@ public class FolderController(AppDbContext dbContext) : Controller
             return RedirectToAction(nameof(Detail), new { id = folderId });
         }
 
-        var folder = await dbContext.Folders.FirstOrDefaultAsync(f => f.Id == folderId && f.UserId == userId);
-        if (folder == null)
+        var result = await _folderService.RemoveWordFromFolderAsync(folderId, wordId, userId);
+        if (!result.IsSuccess)
         {
-            TempData["ErrorMessage"] = "Klasör bulunamadı.";
-            return RedirectToAction(nameof(Index));
-        }
-
-        var link = await dbContext.WordFolders.FirstOrDefaultAsync(x => x.FolderId == folderId && x.WordId == wordId);
-        if (link == null)
-        {
-            TempData["ErrorMessage"] = "Kelime bu klasörde değil.";
+            TempData["ErrorMessage"] = result.ErrorMessage ?? "İşlem başarısız.";
             return RedirectToAction(nameof(Detail), new { id = folderId });
         }
-
-        dbContext.WordFolders.Remove(link);
-        await dbContext.SaveChangesAsync();
         TempData["SuccessMessage"] = "Kelime klasörden kaldırıldı.";
         return RedirectToAction(nameof(Detail), new { id = folderId });
+    }
+
+    [HttpGet("UserWords")]
+    public async Task<IActionResult> GetUserWords(string? term, int take = 20)
+    {
+        var userId = User.GetUserId();
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Json(new { results = Array.Empty<object>() });
+        }
+        // Fetch all words once (service caches per user); client will filter locally
+        var wordsResult = await _folderService.GetUserWordsAsync(userId, null, int.MaxValue);
+        if (!wordsResult.IsSuccess || wordsResult.Data == null)
+        {
+            return Json(new { results = Array.Empty<object>() });
+        }
+        var results = wordsResult.Data.Select(w => new { id = w.Id, text = w.EnglishWord ?? string.Empty });
+        return Json(new { results });
     }
 }
 

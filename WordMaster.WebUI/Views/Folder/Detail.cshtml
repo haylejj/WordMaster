@@ -78,10 +78,6 @@
                 <input type="hidden" name="folderId" value="@Model.FolderId" />
                 <select id="selectWord" name="wordId" class="form-select" style="min-width:320px;" required>
                     <option value="">Kelime seçin...</option>
-                    @foreach (var w in Model.AllWords)
-                    {
-                        <option value="@w.Id">@w.EnglishWord</option>
-                    }
                 </select>
                 <button type="submit" class="btn btn-primary">Ekle</button>
             </form>
@@ -168,87 +164,5 @@
     </div>
 </div>
 
-<script>
-    $(function () {
-        $('#selectWord').select2({
-            placeholder: 'Kelime seçin...',
-            allowClear: true,
-            width: 'resolve'
-        });
-    });
-
-    function toggleFlip(cardEl) {
-        // stop click bubbling if inner button clicked
-        if (event && (event.target.closest('button') || event.target.closest('form'))) {
-            return;
-        }
-        cardEl.classList.toggle('flipped');
-    }
-
-    // Modal helpers using existing Word endpoints
-    function openUpdateModal(id, e) {
-        e.stopPropagation();
-        $.get('/Word/GetWord', { id: id })
-            .done(function (res) {
-                if (!res.success) {
-                    swal('Hata', res.message || 'Kelime getirilemedi.', 'error');
-                    return;
-                }
-                $('#updateWordId').val(res.word.id);
-                $('#updateEnglishWord').val(res.word.englishWord);
-                $('#updateTurkishWord').val(res.word.turkishWord);
-                var modal = new bootstrap.Modal(document.getElementById('updateModal'));
-                modal.show();
-            })
-            .fail(function () {
-                swal('Hata', 'Sunucu hatası.', 'error');
-            });
-    }
-
-    function updateWord() {
-        var data = {
-            Id: $('#updateWordId').val(),
-            EnglishWord: $('#updateEnglishWord').val(),
-            TurkishWord: $('#updateTurkishWord').val()
-        };
-        $.post('/Word/UpdateWord', data)
-            .done(function (res) {
-                if (!res.success) {
-                    swal('Hata', res.message || 'Güncelleme başarısız.', 'error');
-                    return;
-                }
-                swal('Başarılı', 'Kelime güncellendi.', 'success')
-                    .then(() => window.location.reload());
-            })
-            .fail(function () {
-                swal('Hata', 'Sunucu hatası.', 'error');
-            });
-    }
-
-    function removeWordFromFolder(folderId, wordId, e) {
-        e.stopPropagation();
-        swal({
-            title: 'Emin misiniz?',
-            text: 'Bu kelime klasörden kaldırılacak.',
-            icon: 'warning',
-            buttons: ['İptal', 'Kaldır'],
-            dangerMode: true
-        }).then(function (willDelete) {
-            if (!willDelete) return;
-            var token = $('input[name="__RequestVerificationToken"]').first().val();
-            $.ajax({
-                url: '/Folder/RemoveWord',
-                method: 'POST',
-                data: { folderId: folderId, wordId: wordId, __RequestVerificationToken: token }
-            }).done(function () {
-                swal('Kaldırıldı', 'Kelime klasörden kaldırıldı.', 'success');
-                // Remove the card smoothly
-                var btn = e.target.closest('.btn');
-                var cardCol = btn.closest('.col');
-                $(cardCol).fadeOut(200, function () { $(this).remove(); });
-            }).fail(function () {
-                swal('Hata', 'İşlem gerçekleştirilemedi.', 'error');
-            });
-        });
-    }
-</script>
+<script src="~/js/word/modals.js"></script>
+<script src="~/js/folder/detail.js"></script>
