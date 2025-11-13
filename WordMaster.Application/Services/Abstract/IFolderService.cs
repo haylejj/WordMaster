@@ -1,4 +1,4 @@
-using WordMaster.Application.Dto;
+using WordMaster.Application.Dto.Word;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Results;
 

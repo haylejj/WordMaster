@@ -1,8 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WordMaster.Application.Requests;
+using WordMaster.Application.Requests.AllowedIpAddress;
 using WordMaster.Application.Services.Abstract;
-using WordMaster.Application.ViewModels;
+using WordMaster.Application.ViewModels.AllowedIpAddress;
+using WordMaster.Domain.Results;
 
 namespace WordMaster.WebUI.Areas.Admin.Controllers;
 
@@ -14,7 +15,7 @@ public class AllowedIpAddressController(IAllowedIpAddressService allowedIpAddres
     [HttpGet("")]
     public async Task<IActionResult> Index()
     {
-        var allowedIpAddresses = await allowedIpAddressService.GetAllAsync();
+        List<AllowedIpAddressViewModel> allowedIpAddresses = await allowedIpAddressService.GetAllAsync();
         var viewModel = new AllowedIpAddressListViewModel
         {
             AllowedIpAddresses = allowedIpAddresses
@@ -30,14 +31,14 @@ public class AllowedIpAddressController(IAllowedIpAddressService allowedIpAddres
             return Json(new { success = false, message = "IP adresi ID gerekli." });
         }
 
-        var result = await allowedIpAddressService.GetByIdAsync(id);
+        Result<AllowedIpAddressViewModel> result = await allowedIpAddressService.GetByIdAsync(id);
 
         if (!result.IsSuccess || result.Data == null)
         {
             return Json(new { success = false, message = "IP adresi bulunamadı." });
         }
 
-        var allowedIpAddress = result.Data;
+        AllowedIpAddressViewModel allowedIpAddress = result.Data;
 
         return Json(new
         {
@@ -57,18 +58,18 @@ public class AllowedIpAddressController(IAllowedIpAddressService allowedIpAddres
     {
         if (!ModelState.IsValid)
         {
-            var errors = ModelState.Values
+            List<string> errors = ModelState.Values
                 .SelectMany(v => v.Errors)
                 .Select(e => e.ErrorMessage)
                 .ToList();
             return Json(new { success = false, message = string.Join(", ", errors) });
         }
 
-        var result = await allowedIpAddressService.UpdateAsync(request);
+        Result<IEnumerable<string>> result = await allowedIpAddressService.UpdateAsync(request);
 
         if (!result.IsSuccess)
         {
-            var errorMessage = result.ErrorMessage ?? "IP adresi güncellenirken bir hata oluştu.";
+            string errorMessage = result.ErrorMessage ?? "IP adresi güncellenirken bir hata oluştu.";
             if (result.Data != null && result.Data.Any())
             {
                 errorMessage = string.Join(", ", result.Data);
@@ -82,11 +83,11 @@ public class AllowedIpAddressController(IAllowedIpAddressService allowedIpAddres
     [HttpPost("DeleteAllowedIpAddress")]
     public async Task<IActionResult> DeleteAllowedIpAddress(int id)
     {
-        var result = await allowedIpAddressService.DeleteAsync(id);
+        Result<IEnumerable<string>> result = await allowedIpAddressService.DeleteAsync(id);
 
         if (!result.IsSuccess)
         {
-            var errorMessage = result.ErrorMessage ?? "IP adresi silinirken bir hata oluştu.";
+            string errorMessage = result.ErrorMessage ?? "IP adresi silinirken bir hata oluştu.";
             if (result.Data != null && result.Data.Any())
             {
                 errorMessage = string.Join(", ", result.Data);
@@ -102,18 +103,18 @@ public class AllowedIpAddressController(IAllowedIpAddressService allowedIpAddres
     {
         if (!ModelState.IsValid)
         {
-            var errors = ModelState.Values
+            List<string> errors = ModelState.Values
                 .SelectMany(v => v.Errors)
                 .Select(e => e.ErrorMessage)
                 .ToList();
             return Json(new { success = false, message = string.Join(", ", errors) });
         }
 
-        var result = await allowedIpAddressService.CreateAsync(request);
+        Result<IEnumerable<string>> result = await allowedIpAddressService.CreateAsync(request);
 
         if (!result.IsSuccess)
         {
-            var errorMessage = result.ErrorMessage ?? "IP adresi oluşturulurken bir hata oluştu.";
+            string errorMessage = result.ErrorMessage ?? "IP adresi oluşturulurken bir hata oluştu.";
             if (result.Data != null && result.Data.Any())
             {
                 errorMessage = string.Join(", ", result.Data);

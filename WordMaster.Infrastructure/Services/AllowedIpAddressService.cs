@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using WordMaster.Application.Persistence;
 using WordMaster.Application.Persistence.Repositories;
-using WordMaster.Application.Requests;
+using WordMaster.Application.Requests.AllowedIpAddress;
 using WordMaster.Application.Services.Abstract;
-using WordMaster.Application.ViewModels;
+using WordMaster.Application.ViewModels.AllowedIpAddress;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Results;
 
@@ -17,13 +17,13 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
 
     public async Task<List<AllowedIpAddressViewModel>> GetAllAsync()
     {
-        var cached = await cacheService.GetAsync<List<AllowedIpAddressViewModel>>(AllowedIpAddressesCacheKey);
+        List<AllowedIpAddressViewModel>? cached = await cacheService.GetAsync<List<AllowedIpAddressViewModel>>(AllowedIpAddressesCacheKey);
         if (cached != null)
         {
             return cached;
         }
 
-        var entities = await repository
+        List<AllowedIpAddress> entities = await repository
             .GetAll()
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync();
@@ -43,7 +43,7 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
 
     public async Task<Result<AllowedIpAddressViewModel>> GetByIdAsync(int id)
     {
-        var entity = await repository.GetByIdAsync(id);
+        AllowedIpAddress? entity = await repository.GetByIdAsync(id);
         if (entity == null)
         {
             return Result<AllowedIpAddressViewModel>.Failure("IP adresi bulunamadı.");
@@ -63,10 +63,10 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
 
     public async Task<Result<IEnumerable<string>>> CreateAsync(AllowedIpAddressCreateRequest request)
     {
-        var errors = new List<string>();
+        List<string> errors = new();
 
         // IP adresi zaten var mı kontrol et
-        var existing = await repository.FirstOrDefaultAsync(x => x.IpAddress == request.IpAddress);
+        AllowedIpAddress? existing = await repository.FirstOrDefaultAsync(x => x.IpAddress == request.IpAddress);
 
         if (existing != null)
         {
@@ -74,7 +74,7 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
             return new Result<IEnumerable<string>> { IsSuccess = false, ErrorMessage = "IP adresi eklenemedi.", Data = errors };
         }
 
-        var entity = new AllowedIpAddress
+        AllowedIpAddress entity = new()
         {
             IpAddress = request.IpAddress,
             Description = request.Description,
@@ -93,9 +93,9 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
 
     public async Task<Result<IEnumerable<string>>> UpdateAsync(AllowedIpAddressUpdateRequest request)
     {
-        var errors = new List<string>();
+        List<string> errors = new();
 
-        var entity = await repository.GetByIdAsTrackingAsync(request.Id);
+        AllowedIpAddress? entity = await repository.GetByIdAsTrackingAsync(request.Id);
         if (entity == null)
         {
             errors.Add("IP adresi bulunamadı.");
@@ -105,7 +105,7 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
         // IP adresi değiştiyse ve başka bir kayıtta varsa kontrol et
         if (entity.IpAddress != request.IpAddress)
         {
-            var existing = await repository
+            AllowedIpAddress? existing = await repository
                 .FirstOrDefaultAsync(x => x.IpAddress == request.IpAddress && x.Id != request.Id);
 
             if (existing != null)
@@ -130,9 +130,9 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
 
     public async Task<Result<IEnumerable<string>>> DeleteAsync(int id)
     {
-        var errors = new List<string>();
+        List<string> errors = new();
 
-        var entity = await repository.GetByIdAsTrackingAsync(id);
+        AllowedIpAddress? entity = await repository.GetByIdAsTrackingAsync(id);
         if (entity == null)
         {
             errors.Add("IP adresi bulunamadı.");
@@ -156,14 +156,14 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
         }
 
         // Cache'den aktif IP'leri kontrol et
-        var cachedActiveIps = await cacheService.GetAsync<List<string>>(AllowedIpAddressesActiveCacheKey);
+        List<string>? cachedActiveIps = await cacheService.GetAsync<List<string>>(AllowedIpAddressesActiveCacheKey);
         if (cachedActiveIps != null)
         {
             return cachedActiveIps.Contains(ipAddress);
         }
 
         // Cache'de yoksa veritabanından çek
-        var activeIps = await repository
+        List<string> activeIps = await repository
             .Where(x => x.IsActive)
             .Select(x => x.IpAddress)
             .ToListAsync();

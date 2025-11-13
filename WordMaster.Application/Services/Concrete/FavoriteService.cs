@@ -1,4 +1,6 @@
-using WordMaster.Application.Dto;
+using WordMaster.Application.Dto.Favorite;
+using WordMaster.Application.Dto.Practice;
+using WordMaster.Application.Dto.Word;
 using WordMaster.Application.Persistence;
 using WordMaster.Application.Persistence.Repositories;
 using WordMaster.Application.Services.Abstract;
@@ -15,7 +17,7 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
 
     public async Task<Result> DeleteFavoriteAsync(int favoriteId, string userId)
     {
-        var favorite = await favoriteRepository.GetByIdForUserAsync(favoriteId, userId);
+        Favorite? favorite = await favoriteRepository.GetByIdForUserAsync(favoriteId, userId);
         if (favorite == null)
         {
             return Result.Failure("Favori bulunamadı veya size ait değil.");
@@ -38,16 +40,16 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
 
     public async Task<Result<bool>> ToggleFavoriteAsync(int wordId, string userId)
     {
-        var wordExists = await wordService.GetWordForUserAsync(wordId, userId);
+        Result<Word> wordExists = await wordService.GetWordForUserAsync(wordId, userId);
         if (!wordExists.IsSuccess || wordExists.Data == null)
         {
             return Result<bool>.Failure("Kelime bulunamadı.");
         }
 
-        var existingFavorite = await favoriteRepository.GetByWordForUserAsync(wordId, userId);
+        Favorite? existingFavorite = await favoriteRepository.GetByWordForUserAsync(wordId, userId);
         if (existingFavorite == null)
         {
-            var favorite = new Favorite { WordId = wordId, UserId = userId, CreatedTime = DateTime.Now };
+            Favorite favorite = new() { WordId = wordId, UserId = userId, CreatedTime = DateTime.Now };
             await favoriteRepository.AddAsync(favorite);
             await unitOfWork.CommitAsync();
 
@@ -68,11 +70,11 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
 
     public async Task<Result<Favorite>> GetFavoriteWithWordAsync(int favoriteId, string userId)
     {
-        var cacheKey = $"favorite:{favoriteId}:user:{userId}";
-        var cachedFavoriteDto = await cacheService.GetAsync<FavoriteWithWordDto>(cacheKey);
+        string cacheKey = $"favorite:{favoriteId}:user:{userId}";
+        FavoriteWithWordDto? cachedFavoriteDto = await cacheService.GetAsync<FavoriteWithWordDto>(cacheKey);
         if (cachedFavoriteDto != null)
         {
-            var cachedFavorite = new Favorite
+            Favorite cachedFavorite = new()
             {
                 Id = cachedFavoriteDto.Id,
                 CreatedTime = cachedFavoriteDto.CreatedTime,
@@ -88,7 +90,7 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
             return Result<Favorite>.Success(cachedFavorite);
         }
 
-        var favorite = await favoriteRepository.GetFavoriteWithWordAsync(favoriteId, userId);
+        Favorite? favorite = await favoriteRepository.GetFavoriteWithWordAsync(favoriteId, userId);
         if (favorite == null)
         {
             return Result<Favorite>.Failure("Favori bulunamadı.");
@@ -113,8 +115,8 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
 
     public async Task<Result<string>> GetRandomWordFromFavoritesAsync(string userId)
     {
-        var cacheKey = $"favorites:user:{userId}";
-        var cachedFavorites = await cacheService.GetAsync<List<PracticeFavoriteCacheDto>>(cacheKey);
+        string cacheKey = $"favorites:user:{userId}";
+        List<PracticeFavoriteCacheDto>? cachedFavorites = await cacheService.GetAsync<List<PracticeFavoriteCacheDto>>(cacheKey);
 
         List<PracticeFavoriteCacheDto> practiceFavorites;
         if (cachedFavorites != null && cachedFavorites.Count > 0)
@@ -123,7 +125,7 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
         }
         else
         {
-            var favorites = await favoriteRepository.GetUserFavoritesWithWordAsync(userId);
+            List<Favorite> favorites = await favoriteRepository.GetUserFavoritesWithWordAsync(userId);
             practiceFavorites = [.. favorites.Select(f => new PracticeFavoriteCacheDto
             {
                 EnglishWord = f.Word?.EnglishWord
@@ -161,7 +163,7 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
             pageSize = 10;
         }
 
-        var (favorites, totalCount) = await favoriteRepository.GetPagedFavoritesAsync(userId, search, page, pageSize);
+        (List<Favorite>? favorites, int totalCount) = await favoriteRepository.GetPagedFavoritesAsync(userId, search, page, pageSize);
         return Result<(List<Favorite> Favorites, int TotalCount)>.Success((favorites, totalCount));
     }
 }

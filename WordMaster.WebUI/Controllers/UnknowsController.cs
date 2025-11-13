@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WordMaster.Application.Dto;
+using WordMaster.Application.Dto.Word;
 using WordMaster.Application.Services.Abstract;
-using WordMaster.Application.ViewModels;
+using WordMaster.Application.ViewModels.Unknows;
+using WordMaster.Application.ViewModels.Word;
 using WordMaster.Domain.Entities;
+using WordMaster.Domain.Results;
 using WordMaster.WebUI.Extensions;
 
 namespace WordMaster.WebUI.Controllers;
@@ -15,8 +17,8 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
     [HttpGet("")]
     public async Task<IActionResult> Index(string? search, int page = 1, int pageSize = 10)
     {
-        var userId = User.GetUserId();
-        var result = await unknowsService.GetPagedUnknowsAsync(userId!, search, page, pageSize);
+        string? userId = User.GetUserId();
+        Result<(List<Unknows> Unknows, int TotalCount)> result = await unknowsService.GetPagedUnknowsAsync(userId!, search, page, pageSize);
 
         var viewModel = new UnknowsListViewModel
         {
@@ -32,8 +34,8 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
     [HttpPost("ToggleUnknows")]
     public async Task<IActionResult> ToggleUnknows(int id)
     {
-        var userId = User.GetUserId();
-        var result = await unknowsService.ToggleUnknowsAsync(id, userId!);
+        string? userId = User.GetUserId();
+        Result<bool> result = await unknowsService.ToggleUnknowsAsync(id, userId!);
         if (!result.IsSuccess)
         {
             return Json(new { success = false, message = result.ErrorMessage ?? "İşlem başarısız." });
@@ -44,8 +46,8 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
     [HttpGet("AddUnknows")]
     public async Task<IActionResult> AddUnknows(int id)
     {
-        var userId = User.GetUserId();
-        var result = await unknowsService.ToggleUnknowsAsync(id, userId!);
+        string? userId = User.GetUserId();
+        Result<bool> result = await unknowsService.ToggleUnknowsAsync(id, userId!);
         if (!result.IsSuccess)
         {
             TempData["ErrorMessage"] = result.ErrorMessage ?? "Bilinmeyen işlemi sırasında bir sorun oluştu.";
@@ -58,8 +60,8 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
     [HttpGet("UpdateUnknows")]
     public async Task<IActionResult> UpdateUnknows(int id)
     {
-        var userId = User.GetUserId();
-        var result = await unknowsService.GetUnknowsWithWordAsync(id, userId!);
+        string? userId = User.GetUserId();
+        Result<Unknows> result = await unknowsService.GetUnknowsWithWordAsync(id, userId!);
         if (!result.IsSuccess || result.Data?.Word == null)
         {
             return NotFound();
@@ -75,8 +77,8 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
     [HttpGet("GetWord")]
     public async Task<IActionResult> GetWord(int unknowsId)
     {
-        var userId = User.GetUserId();
-        var result = await unknowsService.GetUnknowsWithWordAsync(unknowsId, userId!);
+        string? userId = User.GetUserId();
+        Result<Unknows> result = await unknowsService.GetUnknowsWithWordAsync(unknowsId, userId!);
 
         if (!result.IsSuccess || result.Data?.Word == null)
         {
@@ -103,7 +105,7 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
             return Json(new { success = false, message = "Geçersiz veri." });
         }
 
-        var userId = User.GetUserId();
+        string? userId = User.GetUserId();
         if (string.IsNullOrEmpty(userId))
         {
             return Json(new { success = false, message = "Kullanıcı bilgisi bulunamadı." });
@@ -129,13 +131,13 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
     [HttpPost("DeleteUnknows")]
     public async Task<IActionResult> DeleteUnknows(int id)
     {
-        var userId = User.GetUserId();
+        string? userId = User.GetUserId();
         if (string.IsNullOrEmpty(userId))
         {
             return Json(new { success = false, message = "Kullanıcı bilgisi bulunamadı." });
         }
 
-        var result = await unknowsService.DeleteUnknowsAsync(id, userId);
+        Result result = await unknowsService.DeleteUnknowsAsync(id, userId);
 
         if (!result.IsSuccess)
         {

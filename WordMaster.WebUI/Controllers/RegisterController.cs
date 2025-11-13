@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using WordMaster.Application.Requests;
+using WordMaster.Application.Requests.Auth;
 using WordMaster.Application.Services.Abstract;
-using WordMaster.Application.ViewModels;
+using WordMaster.Application.ViewModels.Auth;
 using WordMaster.WebUI.Extensions;
 
 namespace WordMaster.WebUI.Controllers;
@@ -22,7 +22,7 @@ public class RegisterController(IRegisterService registerService) : Controller
         {
             return View();
         }
-        var request = new RegisterRequest
+        RegisterRequest request = new()
         {
             UserName = viewModel.UserName,
             Email = viewModel.Email,

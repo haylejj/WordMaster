@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using WordMaster.Application.Persistence;
 using WordMaster.Application.Persistence.Repositories;
-using WordMaster.Application.Requests;
+using WordMaster.Application.Requests.Auth;
+using WordMaster.Application.Requests.User;
 using WordMaster.Application.Services.Abstract;
-using WordMaster.Application.ViewModels;
+using WordMaster.Application.ViewModels.Admin;
+using WordMaster.Application.ViewModels.User;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Helpers;
 using WordMaster.Domain.Results;
@@ -14,13 +16,19 @@ namespace WordMaster.Infrastructure.Services;
 
 public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, ILogHistoryService logHistoryService, IWordRepository wordRepository, IFavoriteRepository favoriteRepository, IUnknowsRepository unknowsRepository, IEmailService emailService, IUnitOfWork unitOfWork) : IUserService
 {
-    public async Task LogOutAsync() => await signInManager.SignOutAsync();
+    public async Task LogOutAsync()
+    {
+        await signInManager.SignOutAsync();
+    }
 
-    public SelectList GetGenderSelectList() => new(Enum.GetNames<Gender>());
+    public SelectList GetGenderSelectList()
+    {
+        return new(Enum.GetNames<Gender>());
+    }
 
     public async Task<Result<UserEditViewModel>> GetUserEditViewModelAsync(string username)
     {
-        var currentUser = await userManager.FindByNameAsync(username);
+        AppUser? currentUser = await userManager.FindByNameAsync(username);
 
         return currentUser == null
             ? Result<UserEditViewModel>.Failure("Kullanıcı bulunamadı.")
@@ -37,7 +45,7 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
 
     public async Task<Result<IEnumerable<IdentityError>>> EditUserAsync(UserEditRequest request, string username)
     {
-        var currentUser = await userManager.FindByNameAsync(username);
+        AppUser? currentUser = await userManager.FindByNameAsync(username);
         if (currentUser == null)
         {
             return new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Kullanıcı bulunamadı.", Data = [] };
@@ -50,7 +58,7 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
         currentUser.City = request.City;
         currentUser.Gender = request.Gender;
 
-        var updateResult = await userManager.UpdateAsync(currentUser);
+        IdentityResult updateResult = await userManager.UpdateAsync(currentUser);
         if (!updateResult.Succeeded)
         {
             return new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Güncelleme başarısız.", Data = updateResult.Errors };
@@ -65,25 +73,25 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
 
     public async Task<Result<bool>> CheckPasswordAsync(string userName, string passwordOld)
     {
-        var currentUser = await userManager.FindByNameAsync(userName);
+        AppUser? currentUser = await userManager.FindByNameAsync(userName);
         if (currentUser == null)
         {
             return Result<bool>.Failure("Kullanıcı bulunamadı.");
         }
 
-        var ok = await userManager.CheckPasswordAsync(currentUser, passwordOld);
+        bool ok = await userManager.CheckPasswordAsync(currentUser, passwordOld);
         return Result<bool>.Success(ok);
     }
 
     public async Task<Result<IEnumerable<IdentityError>>> ChangePasswordAsync(PasswordChangeRequest request, string userName)
     {
-        var currentUser = await userManager.FindByNameAsync(userName);
+        AppUser? currentUser = await userManager.FindByNameAsync(userName);
         if (currentUser == null)
         {
             return new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Kullanıcı bulunamadı.", Data = [] };
         }
 
-        var resultChangePassword = await userManager.ChangePasswordAsync(currentUser, request.PasswordOld!, request.PasswordNew!);
+        IdentityResult resultChangePassword = await userManager.ChangePasswordAsync(currentUser, request.PasswordOld!, request.PasswordNew!);
 
         if (!resultChangePassword.Succeeded)
         {
@@ -98,7 +106,7 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
 
     public async Task<List<UserViewModel>> GetUsersAsync()
     {
-        var users = await userManager.Users.ToListAsync();
+        List<AppUser> users = await userManager.Users.ToListAsync();
 
         return [.. users.Select(x => new UserViewModel { Id = x.Id, UserName = x.UserName!, Email = x.Email! })];
     }
@@ -115,26 +123,26 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
             pageSize = 10;
         }
 
-        var query = userManager.Users.AsQueryable();
+        IQueryable<AppUser> query = userManager.Users.AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(search))
         {
             query = query.Where(x => x.UserName!.Contains(search) || x.Email!.Contains(search) || x.Id.Contains(search));
         }
 
-        var totalCount = await query.CountAsync();
+        int totalCount = await query.CountAsync();
 
-        var users = await query
+        List<AppUser> users = await query
             .OrderBy(x => x.UserName)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
 
-        var usersWithRoles = new List<UserWithRolesViewModel>();
+        List<UserWithRolesViewModel> usersWithRoles = new();
 
-        foreach (var user in users)
+        foreach (AppUser? user in users)
         {
-            var roles = await userManager.GetRolesAsync(user);
+            IList<string> roles = await userManager.GetRolesAsync(user);
             usersWithRoles.Add(new UserWithRolesViewModel
             {
                 Id = user.Id,
@@ -149,13 +157,13 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
 
     public async Task<Result<UserWithRolesViewModel>> GetUserByIdAsync(string id)
     {
-        var user = await userManager.FindByIdAsync(id);
+        AppUser? user = await userManager.FindByIdAsync(id);
         if (user == null)
         {
             return Result<UserWithRolesViewModel>.Failure("Kullanıcı bulunamadı.");
         }
 
-        var roles = await userManager.GetRolesAsync(user);
+        IList<string> roles = await userManager.GetRolesAsync(user);
         var userWithRoles = new UserWithRolesViewModel
         {
             Id = user.Id,
@@ -169,7 +177,7 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
 
     public async Task<Result<UserEditViewModel>> GetUserEditViewModelByIdAsync(string id)
     {
-        var user = await userManager.FindByIdAsync(id);
+        AppUser? user = await userManager.FindByIdAsync(id);
         return user == null
             ? Result<UserEditViewModel>.Failure("Kullanıcı bulunamadı.")
             : Result<UserEditViewModel>.Success(new UserEditViewModel
@@ -185,22 +193,22 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
 
     public async Task<Result<UserDetailViewModel>> GetUserDetailAsync(string id)
     {
-        var user = await userManager.FindByIdAsync(id);
+        AppUser? user = await userManager.FindByIdAsync(id);
         if (user == null)
         {
             return Result<UserDetailViewModel>.Failure("Kullanıcı bulunamadı.");
         }
 
         // Login Statistics
-        var userLoginStats = await logHistoryService.GetUserLoginStatsAsync(id);
-        var lastLoginInfo = await logHistoryService.GetLastSuccessfulLoginAsync(id);
+        UserLoginStatsViewModel userLoginStats = await logHistoryService.GetUserLoginStatsAsync(id);
+        LastLoginInfoViewModel lastLoginInfo = await logHistoryService.GetLastSuccessfulLoginAsync(id);
 
         // Word Statistics
-        var wordCount = await wordRepository.CountAsync(x => x.UserId == id);
-        var favoriteCount = await favoriteRepository.CountAsync(x => x.UserId == id);
-        var unknowsCount = await unknowsRepository.CountAsync(x => x.UserId == id);
+        int wordCount = await wordRepository.CountAsync(x => x.UserId == id);
+        int favoriteCount = await favoriteRepository.CountAsync(x => x.UserId == id);
+        int unknowsCount = await unknowsRepository.CountAsync(x => x.UserId == id);
 
-        var lastPracticeDate = await wordRepository
+        DateTime? lastPracticeDate = await wordRepository
             .Where(x => x.UserId == id && x.LastPracticeDate != null)
             .OrderByDescending(x => x.LastPracticeDate)
             .Select(x => x.LastPracticeDate)
@@ -231,7 +239,7 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
 
     public async Task<Result<IEnumerable<IdentityError>>> UpdateUserAsync(string id, UserEditRequest request)
     {
-        var user = await userManager.FindByIdAsync(id);
+        AppUser? user = await userManager.FindByIdAsync(id);
         if (user == null)
         {
             return new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Kullanıcı bulunamadı.", Data = [] };
@@ -244,7 +252,7 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
         user.City = request.City;
         user.Gender = request.Gender;
 
-        var updateResult = await userManager.UpdateAsync(user);
+        IdentityResult updateResult = await userManager.UpdateAsync(user);
         return !updateResult.Succeeded
             ? new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Güncelleme başarısız.", Data = updateResult.Errors }
             : Result<IEnumerable<IdentityError>>.Success(null);
@@ -252,19 +260,19 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
 
     public async Task<Result<bool>> DeleteUserAsync(string id)
     {
-        var user = await userManager.FindByIdAsync(id);
+        AppUser? user = await userManager.FindByIdAsync(id);
         if (user == null)
         {
             return Result<bool>.Failure("Kullanıcı bulunamadı.");
         }
 
-        var result = await userManager.DeleteAsync(user);
+        IdentityResult result = await userManager.DeleteAsync(user);
         return !result.Succeeded ? Result<bool>.Failure("Kullanıcı silinirken bir hata oluştu.") : Result<bool>.Success(true);
     }
 
     public async Task<Result<string>> ResetUserPasswordAsync(string id)
     {
-        var user = await userManager.FindByIdAsync(id);
+        AppUser? user = await userManager.FindByIdAsync(id);
         if (user == null)
         {
             return Result<string>.Failure("Kullanıcı bulunamadı.");
@@ -276,21 +284,21 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
         }
 
         // Kriptografik olarak güvenli rastgele şifre oluştur
-        var newPassword = PasswordHelper.GenerateRandomPassword();
+        string newPassword = PasswordHelper.GenerateRandomPassword();
 
         // Transaction başlat
         await unitOfWork.BeginTransactionAsync();
         try
         {
             // Mevcut şifreyi kaldır ve yeni şifreyi ayarla
-            var removePasswordResult = await userManager.RemovePasswordAsync(user);
+            IdentityResult removePasswordResult = await userManager.RemovePasswordAsync(user);
             if (!removePasswordResult.Succeeded)
             {
                 await unitOfWork.RollbackTransactionAsync();
                 return Result<string>.Failure("Şifre sıfırlanırken bir hata oluştu.");
             }
 
-            var addPasswordResult = await userManager.AddPasswordAsync(user, newPassword);
+            IdentityResult addPasswordResult = await userManager.AddPasswordAsync(user, newPassword);
             if (!addPasswordResult.Succeeded)
             {
                 await unitOfWork.RollbackTransactionAsync();

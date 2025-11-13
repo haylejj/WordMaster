@@ -5,13 +5,13 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 using WordMaster.Application.Mapping;
-using WordMaster.Application.Validation;
+using WordMaster.Application.Validation.Auth;
 using WordMaster.Domain.Configuration;
 using WordMaster.Infrastructure.EfCore;
 using WordMaster.Infrastructure.Extensions;
 using WordMaster.WebUI.Extensions;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -55,7 +55,7 @@ builder.Services.Configure<SecurityStampValidatorOptions>(options =>
 });
 builder.Services.ConfigureApplicationCookie(options =>
 {
-    var cookieBuilder = new CookieBuilder
+    CookieBuilder cookieBuilder = new()
     {
         Name = "SecureCookie",
         HttpOnly = true,
@@ -73,7 +73,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
