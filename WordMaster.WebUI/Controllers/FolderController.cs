@@ -11,7 +11,6 @@ namespace WordMaster.WebUI.Controllers;
 [Route("/Folder")]
 public class FolderController(IFolderService folderService) : Controller
 {
-    private readonly IFolderService _folderService = folderService;
 
     [HttpGet("")]
     public async Task<IActionResult> Index()
@@ -22,7 +21,7 @@ public class FolderController(IFolderService folderService) : Controller
             return RedirectToAction("LogIn", "Login");
         }
 
-        var foldersResult = await _folderService.GetUserFoldersAsync(userId);
+        var foldersResult = await folderService.GetUserFoldersAsync(userId);
         if (!foldersResult.IsSuccess)
         {
             TempData["ErrorMessage"] = foldersResult.ErrorMessage ?? "Klasörler getirilirken hata oluştu.";
@@ -41,14 +40,14 @@ public class FolderController(IFolderService folderService) : Controller
             return RedirectToAction("LogIn", "Login");
         }
 
-        var folderResult = await _folderService.GetUserFolderAsync(id, userId);
+        var folderResult = await folderService.GetUserFolderAsync(id, userId);
         if (!folderResult.IsSuccess)
         {
             TempData["ErrorMessage"] = "Klasör bulunamadı.";
             return RedirectToAction(nameof(Index));
         }
 
-        var wordsResult = await _folderService.GetWordsInFolderAsync(id, userId);
+        var wordsResult = await folderService.GetWordsInFolderAsync(id, userId);
         if (!wordsResult.IsSuccess)
         {
             TempData["ErrorMessage"] = wordsResult.ErrorMessage ?? "Klasör kelimeleri getirilemedi.";
@@ -76,7 +75,7 @@ public class FolderController(IFolderService folderService) : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        var result = await _folderService.AddFolderAsync(name, userId);
+        var result = await folderService.AddFolderAsync(name, userId);
         if (!result.IsSuccess)
         {
             TempData["ErrorMessage"] = result.ErrorMessage ?? "İşlem başarısız.";
@@ -98,7 +97,7 @@ public class FolderController(IFolderService folderService) : Controller
             return RedirectToAction(nameof(Detail), new { id = folderId });
         }
 
-        var result = await _folderService.AddWordToFolderAsync(folderId, wordId, userId);
+        var result = await folderService.AddWordToFolderAsync(folderId, wordId, userId);
         if (!result.IsSuccess)
         {
             TempData["ErrorMessage"] = result.ErrorMessage ?? "İşlem başarısız.";
@@ -119,7 +118,7 @@ public class FolderController(IFolderService folderService) : Controller
             return RedirectToAction(nameof(Detail), new { id = folderId });
         }
 
-        var result = await _folderService.RemoveWordFromFolderAsync(folderId, wordId, userId);
+        var result = await folderService.RemoveWordFromFolderAsync(folderId, wordId, userId);
         if (!result.IsSuccess)
         {
             TempData["ErrorMessage"] = result.ErrorMessage ?? "İşlem başarısız.";
@@ -130,15 +129,14 @@ public class FolderController(IFolderService folderService) : Controller
     }
 
     [HttpGet("UserWords")]
-    public async Task<IActionResult> GetUserWords(string? term, int take = 20)
+    public async Task<IActionResult> GetUserWords()
     {
         var userId = User.GetUserId();
         if (string.IsNullOrEmpty(userId))
         {
             return Json(new { results = Array.Empty<object>() });
         }
-        // Fetch all words once (service caches per user); client will filter locally
-        var wordsResult = await _folderService.GetUserWordsAsync(userId, null, int.MaxValue);
+        var wordsResult = await folderService.GetUserWordsAsync(userId);
         if (!wordsResult.IsSuccess || wordsResult.Data == null)
         {
             return Json(new { results = Array.Empty<object>() });

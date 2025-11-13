@@ -3,22 +3,22 @@
     ViewData["Title"] = "Favorites";
     Layout = "~/Views/Shared/Main_Layout.cshtml";
 }
-<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
-<script src="~/lib/jquery/dist/jquery.min.js"></script>
-<script src="~/js/favorite/delete.js"></script>
-<script src="~/js/word/update.js"></script>
-<script src="~/js/word/toggle.js"></script>
 
+@section Scripts {
+    <script src="~/js/favorite/delete.js"></script>
+    <script src="~/js/word/update.js"></script>
+    <script src="~/js/word/toggle.js"></script>
+}
 <h1 class="text-center page-title">Favorilerim</h1>
 
 <form method="get" asp-controller="Favorite" asp-action="Index" class="row g-2 align-items-end mb-3">
     <div class="col-sm-6 col-md-6">
         <label for="search" class="form-label">Ara</label>
         <input type="text" id="search" name="search" value="@Model?.Search" class="form-control"
-            placeholder="Ýngilizce veya Türkçe ara" />
+            placeholder="ï¿½ngilizce veya Tï¿½rkï¿½e ara" />
     </div>
     <div class="col-sm-3 col-md-3">
-        <label for="pageSize" class="form-label">Sayfa baþýna</label>
+        <label for="pageSize" class="form-label">Sayfa baï¿½ï¿½na</label>
         <select id="pageSize" name="pageSize" class="form-select">
             @if (Model?.PageSize == 10)
             {
@@ -66,8 +66,8 @@
 <table class="table table-bordered table-striped table-hover">
     <thead>
         <tr>
-            <th>Ýngilizce</th>
-            <th>Türkçe</th>
+            <th>ï¿½ngilizce</th>
+            <th>Tï¿½rkï¿½e</th>
             <th></th>
             <th></th>
             <th></th>
@@ -78,7 +78,7 @@
         {
             <tr>
                 <td colspan="5" class="text-center">
-                    <p class="text-muted mt-3 mb-3">Veri bulunmamaktadýr.</p>
+                    <p class="text-muted mt-3 mb-3">Veri bulunmamaktadï¿½r.</p>
                 </td>
             </tr>
         }
@@ -100,7 +100,7 @@
                     </td>
                     <td class="text-center">
                         <button type="button" class="btn btn-warning btn-sm text-dark text-nowrap"
-                            onclick="openUpdateModal(@item.Id, event)">Güncelle</button>
+                            onclick="openUpdateModal(@item.Id, event)">Gï¿½ncelle</button>
                     </td>
                     <td class="text-center">
                         <button type="button" class="btn btn-danger btn-sm text-white text-nowrap"
@@ -115,7 +115,7 @@
 @if (Model != null && Model.TotalPages > 1)
 {
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
-        <div class="text-muted">Toplam @Model.TotalCount kayýt</div>
+        <div class="text-muted">Toplam @Model.TotalCount kayï¿½t</div>
         <nav>
             <ul class="pagination mb-0">
                 @{
@@ -126,7 +126,7 @@
                 }
                 <li class="page-item @prevDisabled">
                     <a class="page-link"
-                        href="@Url.Action("", "Favorite", new { search = Model.Search, page = currentPage - 1, pageSize = Model.PageSize })">«</a>
+                        href="@Url.Action("", "Favorite", new { search = Model.Search, page = currentPage - 1, pageSize = Model.PageSize })">ï¿½</a>
                 </li>
                 @for (int p = 1; p <= Model.TotalPages; p++)
                 {
@@ -138,7 +138,7 @@
                 }
                 <li class="page-item @nextDisabled">
                     <a class="page-link"
-                        href="@Url.Action("", "Favorite", new { search = Model.Search, page = currentPage + 1, pageSize = Model.PageSize })">»</a>
+                        href="@Url.Action("", "Favorite", new { search = Model.Search, page = currentPage + 1, pageSize = Model.PageSize })">ï¿½</a>
                 </li>
             </ul>
         </nav>

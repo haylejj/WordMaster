@@ -6,14 +6,6 @@
 
 <link rel="stylesheet" href="~/css/admin-user.css" asp-append-version="true" />
 
-<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
-<script src="~/lib/jquery/dist/jquery.min.js"></script>
-<script src="~/js/admin/user/update.js"></script>
-<script src="~/js/admin/user/delete.js"></script>
-<script src="~/js/admin/user/detail.js"></script>
-<script src="~/js/admin/user/updateRoles.js"></script>
-<script src="~/js/admin/user/resetPassword.js"></script>
-
 <h1 class="text-center page-title">Kullanıcılar</h1>
 
 <form method="get" asp-area="Admin" asp-controller="User" asp-action="Index" class="row g-2 align-items-end mb-3">
@@ -98,7 +90,7 @@
         </tr>
     </thead>
     <tbody>
-            @if (Model == null || Model.Users == null || Model.Users.Count == 0)
+        @if (Model == null || Model.Users == null || Model.Users.Count == 0)
         {
             <tr>
                 <td colspan="8" class="text-center">
@@ -233,6 +225,14 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="~/js/admin/user/update.js"></script>
+    <script src="~/js/admin/user/delete.js"></script>
+    <script src="~/js/admin/user/detail.js"></script>
+    <script src="~/js/admin/user/updateRoles.js"></script>
+    <script src="~/js/admin/user/resetPassword.js"></script>
+}
 
 <!-- Detail Modal -->
 <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">

@@ -1,7 +1,7 @@
 $(function () {
     const $select = $('#selectWord');
     // Fetch once, then initialize Select2 for local search
-    $.get('/Folder/UserWords', { take: 100000 }, function (data) {
+    $.get('/Folder/UserWords', function (data) {
         const items = (data && data.results) ? data.results : [];
         let optionsHtml = '<option value=\"\">Kelime seçin...</option>';
         for (let i = 0; i < items.length; i++) {
@@ -9,13 +9,17 @@ $(function () {
         }
         $select.html(optionsHtml);
 
-        $select.select2({
-            placeholder: 'Kelime seçin...',
-            allowClear: true,
-            width: 'resolve',
-            minimumInputLength: 0,
-            minimumResultsForSearch: 0
-        });
+        if ($.fn && $.fn.select2) {
+            $select.select2({
+                placeholder: 'Kelime seçin...',
+                allowClear: true,
+                width: 'resolve',
+                minimumInputLength: 0,
+                minimumResultsForSearch: 0
+            });
+        } else {
+            console.warn('Select2 yüklenemedi; arama devre dışı.');
+        }
     }, 'json');
 });
 
