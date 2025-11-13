@@ -1,0 +1,88 @@
+@model PracticeFolderViewModel
+@using System.Text.Json
+
+@{
+    Layout = "~/Views/Shared/Main_Layout.cshtml";
+    ViewData["Title"] = $"{Model.FolderName} - Pratik";
+
+    var jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+    var practicePayload = JsonSerializer.Serialize(new
+    {
+        folderId = Model.FolderId,
+        folderName = Model.FolderName,
+        words = Model.Words
+    }, jsonOptions);
+}
+
+<link rel="stylesheet" href="~/css/practice-folder.css" asp-append-version="true" />
+
+<div class="practice-folder-wrapper">
+    <div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h2 class="mb-0">@Model.FolderName</h2>
+        <span class="badge bg-secondary fs-6" id="practiceProgress">@((Model.Words.Count > 0) ? $"1 / {Model.Words.Count}" : "0 / 0")</span>
+    </div>
+    <div class="card-body">
+        <div class="text-center mb-4">
+            <span class="text-muted d-block mb-2">İngilizce Kelime</span>
+            <h3 id="practiceEnglishWord" class="fw-semibold display-6 fs-2">
+                @(Model.Words.FirstOrDefault()?.EnglishWord ?? string.Empty)
+            </h3>
+        </div>
+        <div class="mb-3">
+            <label for="practiceTurkishInput" class="form-label">Türkçe Karşılık</label>
+            <input type="text" id="practiceTurkishInput" class="form-control form-control-lg"
+                placeholder="Cevabınızı yazın" autocomplete="off" />
+        </div>
+        <div id="practiceStatus" class="alert d-none mt-3" role="alert">
+            <strong id="practiceStatusTitle"></strong>
+            <span id="practiceStatusMessage" class="ms-1"></span>
+        </div>
+        <div class="d-flex justify-content-center gap-3 mt-4 flex-wrap">
+            <button type="button" id="practiceCheckButton" class="btn btn-primary btn-lg px-4">Cevabı Kontrol Et</button>
+            <button type="button" id="practiceDontKnowButton"
+                class="btn btn-outline-secondary btn-lg px-4">Bilmiyorum</button>
+        </div>
+    </div>
+</div>
+</div>
+
+<div class="modal fade" id="practiceSummaryModal" tabindex="-1" aria-labelledby="practiceSummaryLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="practiceSummaryLabel">@Model.FolderName - Pratik Sonucu</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex gap-3 flex-wrap mb-3">
+                    <span class="badge bg-success fs-6 py-2 px-3">Doğru: <span id="summaryCorrectCount"></span></span>
+                    <span class="badge bg-danger fs-6 py-2 px-3">Yanlış: <span id="summaryIncorrectCount"></span></span>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <h6>Doğru Yanıtlananlar</h6>
+                        <ul class="list-group" id="summaryCorrectList"></ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Yanlış Yanıtlananlar</h6>
+                        <ul class="list-group" id="summaryIncorrectList"></ul>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                <a class="btn btn-outline-primary" asp-controller="Folder" asp-action="Detail"
+                    asp-route-id="@Model.FolderId">Klasöre Dön</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        window.practiceFolderData = @Html.Raw(practicePayload);
+    </script>
+    <script src="~/js/practice-folder/index.js" asp-append-version="true"></script>
+}
+
