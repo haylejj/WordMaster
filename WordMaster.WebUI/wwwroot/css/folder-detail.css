@@ -1,0 +1,103 @@
+.flip-card {
+    perspective: 1000px;
+    cursor: pointer;
+}
+
+.flip-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+}
+
+.flip-card.flipped .flip-card-inner {
+    transform: rotateY(180deg);
+}
+
+.flip-card-front,
+.flip-card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    top: 0;
+    left: 0;
+}
+
+.flip-card-back {
+    transform: rotateY(180deg);
+}
+
+.card-actions {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    display: flex;
+    gap: 6px;
+}
+
+.btn-icon {
+    padding: 2px 6px;
+    font-size: 0.8rem;
+    line-height: 1;
+}
+
+/* Flashcard sizing */
+.flash-card {
+    min-height: 180px;
+}
+
+.flash-card .card-body {
+    padding: 1.25rem 1rem;
+}
+
+.flash-card h5 {
+    font-size: 1.25rem;
+}
+
+/* Select2 styling */
+#selectWord+.select2-container--default .select2-selection--single {
+    min-height: 44px;
+    border: 1px solid #ced4da;
+    border-radius: 10px;
+    padding: 6px 12px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+}
+
+#selectWord+.select2-container--default .select2-selection--single:hover {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.15rem rgba(0, 123, 255, 0.15);
+}
+
+#selectWord+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #495057;
+    font-weight: 500;
+    padding-left: 0;
+}
+
+#selectWord+.select2-container--default .select2-selection--single .select2-selection__placeholder {
+    color: #6c757d;
+    font-weight: 400;
+}
+
+#selectWord+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 100%;
+    right: 10px;
+    transition: transform 0.2s ease;
+}
+
+#selectWord+.select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b {
+    transform: rotate(180deg);
+}
+
+.select2-container--default .select2-results>.select2-results__options {
+    border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+    background-color: #0d6efd;
+    color: #fff;
+}

@@ -1,3 +1,4 @@
+using WordMaster.Application.Dto;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Results;
 
@@ -13,7 +14,7 @@ public interface IFolderService
     Task<Result> AddWordToFolderAsync(int folderId, int wordId, string userId);
     Task<Result> RemoveWordFromFolderAsync(int folderId, int wordId, string userId);
 
-    Task<Result<List<Word>>> GetUserWordsAsync(string userId, string? search, int take);
+    Task<Result<List<WordLookupDto>>> GetUserWordsAsync(string userId);
 }
 
 

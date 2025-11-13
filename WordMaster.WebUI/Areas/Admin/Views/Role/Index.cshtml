@@ -6,13 +6,6 @@
 
 <link rel="stylesheet" href="~/css/admin-role.css" asp-append-version="true" />
 
-<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
-<script src="~/lib/jquery/dist/jquery.min.js"></script>
-<script src="~/js/admin/role/create.js"></script>
-<script src="~/js/admin/role/update.js"></script>
-<script src="~/js/admin/role/delete.js"></script>
-
-
 @if (TempData["SuccessMessage"] != null)
 {
     <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -31,6 +24,12 @@
 <div class="mb-3">
     <button type="button" class="btn btn-success" onclick="openCreateModal()">Yeni Rol Ekle</button>
 </div>
+
+@section Scripts {
+    <script src="~/js/admin/role/create.js"></script>
+    <script src="~/js/admin/role/update.js"></script>
+    <script src="~/js/admin/role/delete.js"></script>
+}
 
 <table class="table table-bordered table-striped table-hover admin-role-table">
     <thead>

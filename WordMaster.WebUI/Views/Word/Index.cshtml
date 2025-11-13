@@ -3,12 +3,6 @@
     ViewData["Title"] = "Index";
     Layout = "~/Views/Shared/Main_Layout.cshtml";
 }
-<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
-<script src="~/lib/jquery/dist/jquery.min.js"></script>
-<script src="~/js/word/delete.js"></script>
-<script src="~/js/word/update.js"></script>
-<script src="~/js/word/toggle.js"></script>
-
 <h1 class="text-center page-title">Kelimelerim</h1>
 
 <form method="get" asp-controller="Word" asp-action="Index" class="row g-2 align-items-end mb-3">
@@ -194,3 +188,9 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="~/js/word/delete.js"></script>
+    <script src="~/js/word/update.js"></script>
+    <script src="~/js/word/toggle.js"></script>
+}

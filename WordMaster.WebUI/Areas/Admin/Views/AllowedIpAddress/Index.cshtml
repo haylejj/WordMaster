@@ -6,12 +6,6 @@
 
 <link rel="stylesheet" href="~/css/admin-allowedipaddress.css" asp-append-version="true" />
 
-<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
-<script src="~/lib/jquery/dist/jquery.min.js"></script>
-<script src="~/js/admin/allowedipaddress/create.js"></script>
-<script src="~/js/admin/allowedipaddress/update.js"></script>
-<script src="~/js/admin/allowedipaddress/delete.js"></script>
-
 @if (TempData["SuccessMessage"] != null)
 {
     <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -30,6 +24,12 @@
 <div class="mb-3">
     <button type="button" class="btn btn-success" onclick="openCreateModal()">Yeni IP Adresi Ekle</button>
 </div>
+
+@section Scripts {
+    <script src="~/js/admin/allowedipaddress/create.js"></script>
+    <script src="~/js/admin/allowedipaddress/update.js"></script>
+    <script src="~/js/admin/allowedipaddress/delete.js"></script>
+}
 
 <table class="table table-bordered table-striped table-hover admin-allowedipaddress-table">
     <thead>
