@@ -16,10 +16,10 @@
     <div class="col-sm-6 col-md-6">
         <label for="search" class="form-label">Ara</label>
         <input type="text" id="search" name="search" value="@Model?.Search" class="form-control"
-            placeholder="�ngilizce veya T�rk�e ara" />
+               placeholder="İngilizce veya Türkçe ara" />
     </div>
     <div class="col-sm-3 col-md-3">
-        <label for="pageSize" class="form-label">Sayfa ba��na</label>
+        <label for="pageSize" class="form-label">Sayfa başına</label>
         <select id="pageSize" name="pageSize" class="form-select">
             @if (Model?.PageSize == 10)
             {
@@ -67,8 +67,8 @@
 <table class="table table-bordered table-striped table-hover">
     <thead>
         <tr>
-            <th>�ngilizce</th>
-            <th>T�rk�e</th>
+            <th>İngilizce</th>
+            <th>Türkçe</th>
             <th></th>
             <th></th>
             <th></th>
@@ -79,7 +79,7 @@
         {
             <tr>
                 <td colspan="5" class="text-center">
-                    <p class="text-muted mt-3 mb-3">Veri bulunmamaktad�r.</p>
+                    <p class="text-muted mt-3 mb-3">Veri bulunmamaktadır.</p>
                 </td>
             </tr>
         }
@@ -101,7 +101,7 @@
                     </td>
                     <td class="text-center">
                         <button type="button" class="btn btn-warning btn-sm text-dark text-nowrap"
-                            onclick="openUpdateModal(@item.Id, event)">G�ncelle</button>
+                            onclick="openUpdateModal(@item.Id, event)">Güncelle</button>
                     </td>
                     <td class="text-center">
                         <button type="button" class="btn btn-danger btn-sm text-white text-nowrap"
