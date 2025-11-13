@@ -1,9 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WordMaster.Application.Services.Abstract;
+using WordMaster.Application.ViewModels.Folder;
 using WordMaster.Domain.Entities;
+using WordMaster.Domain.Results;
 using WordMaster.WebUI.Extensions;
-using WordMaster.WebUI.Models;
 
 namespace WordMaster.WebUI.Controllers;
 
@@ -15,13 +16,13 @@ public class FolderController(IFolderService folderService) : Controller
     [HttpGet("")]
     public async Task<IActionResult> Index()
     {
-        var userId = User.GetUserId();
+        string? userId = User.GetUserId();
         if (string.IsNullOrEmpty(userId))
         {
             return RedirectToAction("LogIn", "Login");
         }
 
-        var foldersResult = await folderService.GetUserFoldersAsync(userId);
+        Result<List<Folder>> foldersResult = await folderService.GetUserFoldersAsync(userId);
         if (!foldersResult.IsSuccess)
         {
             TempData["ErrorMessage"] = foldersResult.ErrorMessage ?? "Klasörler getirilirken hata oluştu.";
@@ -34,20 +35,20 @@ public class FolderController(IFolderService folderService) : Controller
     [HttpGet("{id:int}")]
     public async Task<IActionResult> Detail(int id)
     {
-        var userId = User.GetUserId();
+        string? userId = User.GetUserId();
         if (string.IsNullOrEmpty(userId))
         {
             return RedirectToAction("LogIn", "Login");
         }
 
-        var folderResult = await folderService.GetUserFolderAsync(id, userId);
+        Result<Folder> folderResult = await folderService.GetUserFolderAsync(id, userId);
         if (!folderResult.IsSuccess)
         {
             TempData["ErrorMessage"] = "Klasör bulunamadı.";
             return RedirectToAction(nameof(Index));
         }
 
-        var wordsResult = await folderService.GetWordsInFolderAsync(id, userId);
+        Result<List<Word>> wordsResult = await folderService.GetWordsInFolderAsync(id, userId);
         if (!wordsResult.IsSuccess)
         {
             TempData["ErrorMessage"] = wordsResult.ErrorMessage ?? "Klasör kelimeleri getirilemedi.";
@@ -68,14 +69,14 @@ public class FolderController(IFolderService folderService) : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Add(string name)
     {
-        var userId = User.GetUserId();
+        string? userId = User.GetUserId();
         if (string.IsNullOrEmpty(userId))
         {
             TempData["ErrorMessage"] = "Kullanıcı oturumu bulunamadı.";
             return RedirectToAction(nameof(Index));
         }
 
-        var result = await folderService.AddFolderAsync(name, userId);
+        Result result = await folderService.AddFolderAsync(name, userId);
         if (!result.IsSuccess)
         {
             TempData["ErrorMessage"] = result.ErrorMessage ?? "İşlem başarısız.";
@@ -90,14 +91,14 @@ public class FolderController(IFolderService folderService) : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AddWord(int folderId, int wordId)
     {
-        var userId = User.GetUserId();
+        string? userId = User.GetUserId();
         if (string.IsNullOrEmpty(userId))
         {
             TempData["ErrorMessage"] = "Kullanıcı oturumu bulunamadı.";
             return RedirectToAction(nameof(Detail), new { id = folderId });
         }
 
-        var result = await folderService.AddWordToFolderAsync(folderId, wordId, userId);
+        Result result = await folderService.AddWordToFolderAsync(folderId, wordId, userId);
         if (!result.IsSuccess)
         {
             TempData["ErrorMessage"] = result.ErrorMessage ?? "İşlem başarısız.";
@@ -111,14 +112,14 @@ public class FolderController(IFolderService folderService) : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> RemoveWord(int folderId, int wordId)
     {
-        var userId = User.GetUserId();
+        string? userId = User.GetUserId();
         if (string.IsNullOrEmpty(userId))
         {
             TempData["ErrorMessage"] = "Kullanıcı oturumu bulunamadı.";
             return RedirectToAction(nameof(Detail), new { id = folderId });
         }
 
-        var result = await folderService.RemoveWordFromFolderAsync(folderId, wordId, userId);
+        Result result = await folderService.RemoveWordFromFolderAsync(folderId, wordId, userId);
         if (!result.IsSuccess)
         {
             TempData["ErrorMessage"] = result.ErrorMessage ?? "İşlem başarısız.";
@@ -131,7 +132,7 @@ public class FolderController(IFolderService folderService) : Controller
     [HttpGet("UserWords")]
     public async Task<IActionResult> GetUserWords()
     {
-        var userId = User.GetUserId();
+        string? userId = User.GetUserId();
         if (string.IsNullOrEmpty(userId))
         {
             return Json(new { results = Array.Empty<object>() });

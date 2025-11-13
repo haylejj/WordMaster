@@ -15,14 +15,14 @@ public class RedisCacheService(IConnectionMultiplexer redis) : ICacheService
 
     public async Task<T?> GetAsync<T>(string key)
     {
-        var value = await _database.StringGetAsync(key);
+        RedisValue value = await _database.StringGetAsync(key);
 
         return !value.HasValue ? default : JsonSerializer.Deserialize<T>(value!, jsonSerializerOptions);
     }
 
     public async Task SetAsync<T>(string key, T value, TimeSpan? expiration = null)
     {
-        var serializedValue = JsonSerializer.Serialize(value, jsonSerializerOptions);
+        string serializedValue = JsonSerializer.Serialize(value, jsonSerializerOptions);
 
         if (expiration.HasValue)
         {
@@ -46,8 +46,8 @@ public class RedisCacheService(IConnectionMultiplexer redis) : ICacheService
 
     public async Task ClearAsync()
     {
-        var server = redis.GetServer(redis.GetEndPoints().First());
-        await foreach (var key in server.KeysAsync())
+        IServer server = redis.GetServer(redis.GetEndPoints().First());
+        await foreach (RedisKey key in server.KeysAsync())
         {
             await _database.KeyDeleteAsync(key);
         }

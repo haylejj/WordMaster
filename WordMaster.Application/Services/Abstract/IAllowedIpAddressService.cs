@@ -1,5 +1,5 @@
-using WordMaster.Application.Requests;
-using WordMaster.Application.ViewModels;
+using WordMaster.Application.Requests.AllowedIpAddress;
+using WordMaster.Application.ViewModels.AllowedIpAddress;
 using WordMaster.Domain.Results;
 
 namespace WordMaster.Application.Services.Abstract;

@@ -38,7 +38,7 @@ public class FavoriteRepository(AppDbContext context) : GenericRepository<Favori
 
     public async Task<(List<Favorite> Favorites, int TotalCount)> GetPagedFavoritesAsync(string userId, string? search, int page, int pageSize)
     {
-        var query = _context.Favorites
+        IQueryable<Favorite> query = _context.Favorites
             .Include(x => x.Word)
             .Where(x => x.UserId == userId)
             .AsQueryable();
@@ -48,8 +48,8 @@ public class FavoriteRepository(AppDbContext context) : GenericRepository<Favori
             query = query.Where(x => x.Word!.EnglishWord!.Contains(search) || x.Word!.TurkishWord!.Contains(search));
         }
 
-        var totalCount = await query.CountAsync();
-        var favorites = await query
+        int totalCount = await query.CountAsync();
+        List<Favorite> favorites = await query
             .OrderBy(x => x.CreatedTime)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)

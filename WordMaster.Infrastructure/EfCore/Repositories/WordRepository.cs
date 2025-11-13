@@ -35,7 +35,7 @@ public class WordRepository(AppDbContext context) : GenericRepository<Word>(cont
 
     public async Task<(List<Word> Words, int TotalCount)> GetPagedWordsAsync(string userId, string? search, int page, int pageSize)
     {
-        var query = _context.Words
+        IQueryable<Word> query = _context.Words
             .Include(x => x.Favorite)
             .Include(x => x.Unknows)
             .Where(x => x.UserId == userId)
@@ -46,8 +46,8 @@ public class WordRepository(AppDbContext context) : GenericRepository<Word>(cont
             query = query.Where(x => x.EnglishWord!.Contains(search) || x.TurkishWord!.Contains(search));
         }
 
-        var totalCount = await query.CountAsync();
-        var words = await query
+        int totalCount = await query.CountAsync();
+        List<Word> words = await query
             .OrderBy(x => x.CreatedTime)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)

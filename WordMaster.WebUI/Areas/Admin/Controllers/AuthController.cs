@@ -1,10 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using WordMaster.Application.Requests;
+using WordMaster.Application.Requests.Auth;
 using WordMaster.Application.Services.Abstract;
-using WordMaster.Application.ViewModels;
+using WordMaster.Application.ViewModels.Auth;
 using WordMaster.Domain.Entities;
+using WordMaster.Domain.Results;
 using WordMaster.WebUI.Extensions;
 
 namespace WordMaster.WebUI.Areas.Admin.Controllers;
@@ -31,13 +32,13 @@ public class AuthController(ILoginService loginService, UserManager<AppUser> use
             return View(viewModel);
         }
 
-        var userResult = await loginService.FindByEmailAsync(viewModel.Email!);
-        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        Result<AppUser> userResult = await loginService.FindByEmailAsync(viewModel.Email!);
+        string? ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
 
         // IP adresi kontrolü
         if (!string.IsNullOrWhiteSpace(ipAddress))
         {
-            var isIpAllowed = await allowedIpAddressService.IsIpAllowedAsync(ipAddress);
+            bool isIpAllowed = await allowedIpAddressService.IsIpAllowedAsync(ipAddress);
             if (!isIpAllowed)
             {
                 ModelState.AddModelErrorList(new List<string> { "Bu IP adresinden admin paneline giriş yapma yetkiniz yok." });
@@ -54,7 +55,7 @@ public class AuthController(ILoginService loginService, UserManager<AppUser> use
         }
 
         // Admin rol kontrolü
-        var isAdmin = await userManager.IsInRoleAsync(userResult.Data, "admin");
+        bool isAdmin = await userManager.IsInRoleAsync(userResult.Data, "admin");
         if (!isAdmin)
         {
             ModelState.AddModelErrorList(new List<string> { "Bu panele erişim yetkiniz yok." });
@@ -69,7 +70,7 @@ public class AuthController(ILoginService loginService, UserManager<AppUser> use
             RememberMe = viewModel.RememberMe
         };
 
-        var login = await loginService.LoginAsync(request, userResult.Data);
+        Result login = await loginService.LoginAsync(request, userResult.Data);
         if (!login.IsSuccess)
         {
             ModelState.AddModelErrorList(new List<string> { "Email veya şifre yanlış" });

@@ -2,7 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using WordMaster.Application.Persistence;
 using WordMaster.Application.Persistence.Repositories;
 using WordMaster.Application.Services.Abstract;
-using WordMaster.Application.ViewModels;
+using WordMaster.Application.ViewModels.Admin;
+using WordMaster.Application.ViewModels.User;
 using WordMaster.Domain.Entities;
 
 namespace WordMaster.Application.Services.Concrete;
@@ -11,7 +12,7 @@ public class LogHistoryService(ILogHistoryRepository logHistoryRepository, IUnit
 {
     public async Task RecordAsync(string? appUserId, string? email, string? ipAddress, bool isSuccessful, string source)
     {
-        var log = new LogHistory
+        LogHistory log = new()
         {
             AppUserId = string.IsNullOrWhiteSpace(appUserId) ? null : appUserId,
             Email = string.IsNullOrWhiteSpace(email) ? null : email,
@@ -27,10 +28,10 @@ public class LogHistoryService(ILogHistoryRepository logHistoryRepository, IUnit
 
     public async Task<UserLoginStatsViewModel> GetUserLoginStatsAsync(string userId)
     {
-        var totalLogins = await logHistoryRepository.CountAsync(x => x.AppUserId == userId);
+        int totalLogins = await logHistoryRepository.CountAsync(x => x.AppUserId == userId);
 
-        var successfulLogins = await logHistoryRepository.CountAsync(x => x.AppUserId == userId && x.IsSuccessful);
-        var failedLogins = totalLogins - successfulLogins;
+        int successfulLogins = await logHistoryRepository.CountAsync(x => x.AppUserId == userId && x.IsSuccessful);
+        int failedLogins = totalLogins - successfulLogins;
 
         return new UserLoginStatsViewModel
         {
@@ -42,7 +43,7 @@ public class LogHistoryService(ILogHistoryRepository logHistoryRepository, IUnit
 
     public async Task<LastLoginInfoViewModel> GetLastSuccessfulLoginAsync(string userId)
     {
-        var lastLogin = await logHistoryRepository.GetLastSuccessfulLoginAsync(userId);
+        LogHistory? lastLogin = await logHistoryRepository.GetLastSuccessfulLoginAsync(userId);
 
         return lastLogin == null
             ? new LastLoginInfoViewModel
@@ -59,11 +60,11 @@ public class LogHistoryService(ILogHistoryRepository logHistoryRepository, IUnit
 
     public async Task<LoginStatisticsViewModel> GetLoginStatisticsAsync()
     {
-        var totalLogins = await logHistoryRepository.CountAsync();
-        var successfulLogins = await logHistoryRepository.CountAsync(x => x.IsSuccessful);
-        var failedLogins = await logHistoryRepository.CountAsync(x => !x.IsSuccessful);
+        int totalLogins = await logHistoryRepository.CountAsync();
+        int successfulLogins = await logHistoryRepository.CountAsync(x => x.IsSuccessful);
+        int failedLogins = await logHistoryRepository.CountAsync(x => !x.IsSuccessful);
 
-        var startDate = DateTime.UtcNow.Date.AddDays(-6);
+        DateTime startDate = DateTime.UtcNow.Date.AddDays(-6);
 
         var dailyStatsQuery = await logHistoryRepository
             .Where(x => x.AttemptedAt >= startDate)
@@ -76,7 +77,7 @@ public class LogHistoryService(ILogHistoryRepository logHistoryRepository, IUnit
             })
             .ToListAsync();
 
-        var dailyLookup = dailyStatsQuery.ToDictionary(
+        Dictionary<DateOnly, DailyLoginStatViewModel> dailyLookup = dailyStatsQuery.ToDictionary(
             k => DateOnly.FromDateTime(k.Date),
             v => new DailyLoginStatViewModel
             {
@@ -85,11 +86,11 @@ public class LogHistoryService(ILogHistoryRepository logHistoryRepository, IUnit
                 FailCount = v.Fail
             });
 
-        var dailyStats = new List<DailyLoginStatViewModel>(7);
+        List<DailyLoginStatViewModel> dailyStats = new(7);
         for (int i = 0; i < 7; i++)
         {
-            var date = DateOnly.FromDateTime(startDate.AddDays(i));
-            if (!dailyLookup.TryGetValue(date, out var value))
+            DateOnly date = DateOnly.FromDateTime(startDate.AddDays(i));
+            if (!dailyLookup.TryGetValue(date, out DailyLoginStatViewModel? value))
             {
                 value = new DailyLoginStatViewModel
                 {

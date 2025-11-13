@@ -1,6 +1,6 @@
 
 using Microsoft.AspNetCore.Identity;
-using WordMaster.Application.Requests;
+using WordMaster.Application.Requests.Auth;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Results;
@@ -11,7 +11,7 @@ public class RegisterService(UserManager<AppUser> userManager) : IRegisterServic
 {
     public async Task<Result<IEnumerable<IdentityError>>> RegisterAsync(RegisterRequest request)
     {
-        var result = await userManager.CreateAsync(new AppUser() { UserName = request.UserName, Email = request.Email, PhoneNumber = request.Phone }, request.Password!);
+        IdentityResult result = await userManager.CreateAsync(new AppUser() { UserName = request.UserName, Email = request.Email, PhoneNumber = request.Phone }, request.Password!);
 
         if (!result.Succeeded)
         {
@@ -19,7 +19,7 @@ public class RegisterService(UserManager<AppUser> userManager) : IRegisterServic
         }
         else
         {
-            var user = await userManager.FindByNameAsync(request.UserName!);
+            AppUser? user = await userManager.FindByNameAsync(request.UserName!);
             if (user == null)
             {
                 return new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Kullanıcı bulunamadı.", Data = null };

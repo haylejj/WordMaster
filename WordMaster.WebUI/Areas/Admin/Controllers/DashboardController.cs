@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WordMaster.Application.Services.Abstract;
+using WordMaster.Application.ViewModels.Admin;
 
 namespace WordMaster.WebUI.Areas.Admin.Controllers;
 
@@ -12,7 +13,7 @@ public class DashboardController(IAdminDashboardService adminDashboardService) :
     [HttpGet("")]
     public async Task<IActionResult> Index()
     {
-        var model = await adminDashboardService.GetDashboardAsync();
+        AdminDashboardViewModel model = await adminDashboardService.GetDashboardAsync();
         return View(model);
     }
 }

@@ -1,4 +1,6 @@
-using WordMaster.Application.Dto;
+using WordMaster.Application.Dto.Practice;
+using WordMaster.Application.Dto.Unknows;
+using WordMaster.Application.Dto.Word;
 using WordMaster.Application.Persistence;
 using WordMaster.Application.Persistence.Repositories;
 using WordMaster.Application.Services.Abstract;
@@ -15,7 +17,7 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
 
     public async Task<Result> DeleteUnknowsAsync(int unknowsId, string userId)
     {
-        var unknow = await unknowsRepository.GetByIdForUserAsync(unknowsId, userId);
+        Unknows? unknow = await unknowsRepository.GetByIdForUserAsync(unknowsId, userId);
         if (unknow == null)
         {
             return Result.Failure("Bilinmeyen kelime bulunamadı veya size ait değil.");
@@ -33,8 +35,8 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
 
     public async Task<Result<string>> GetRandomWordFromUnknowsAsync(string userId)
     {
-        var cacheKey = $"unknows:user:{userId}";
-        var cachedUnknows = await cacheService.GetAsync<List<PracticeUnknowsCacheDto>>(cacheKey);
+        string cacheKey = $"unknows:user:{userId}";
+        List<PracticeUnknowsCacheDto>? cachedUnknows = await cacheService.GetAsync<List<PracticeUnknowsCacheDto>>(cacheKey);
 
         List<PracticeUnknowsCacheDto> practiceUnknows;
         if (cachedUnknows != null && cachedUnknows.Count > 0)
@@ -43,7 +45,7 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
         }
         else
         {
-            var unknows = await unknowsRepository.GetUserUnknowsWithWordAsync(userId);
+            List<Unknows> unknows = await unknowsRepository.GetUserUnknowsWithWordAsync(userId);
             practiceUnknows = unknows.Select(u => new PracticeUnknowsCacheDto
             {
                 EnglishWord = u.Word?.EnglishWord
@@ -76,16 +78,16 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
 
     public async Task<Result<bool>> ToggleUnknowsAsync(int wordId, string userId)
     {
-        var wordExists = await wordService.GetWordForUserAsync(wordId, userId);
+        Result<Word> wordExists = await wordService.GetWordForUserAsync(wordId, userId);
         if (!wordExists.IsSuccess || wordExists.Data == null)
         {
             return Result<bool>.Failure("Kelime bulunamadı.");
         }
 
-        var existingUnknow = await unknowsRepository.GetByWordForUserAsync(wordId, userId);
+        Unknows? existingUnknow = await unknowsRepository.GetByWordForUserAsync(wordId, userId);
         if (existingUnknow == null)
         {
-            var unknow = new Unknows { WordId = wordId, UserId = userId, CreatedTime = DateTime.Now };
+            Unknows unknow = new() { WordId = wordId, UserId = userId, CreatedTime = DateTime.Now };
             await unknowsRepository.AddAsync(unknow);
             await unitOfWork.CommitAsync();
 
@@ -106,11 +108,11 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
 
     public async Task<Result<Unknows>> GetUnknowsWithWordAsync(int unknowsId, string userId)
     {
-        var cacheKey = $"unknows:{unknowsId}:user:{userId}";
-        var cachedUnknowDto = await cacheService.GetAsync<UnknowsWithWordDto>(cacheKey);
+        string cacheKey = $"unknows:{unknowsId}:user:{userId}";
+        UnknowsWithWordDto? cachedUnknowDto = await cacheService.GetAsync<UnknowsWithWordDto>(cacheKey);
         if (cachedUnknowDto != null)
         {
-            var cachedUnknow = new Unknows
+            Unknows cachedUnknow = new()
             {
                 Id = cachedUnknowDto.Id,
                 CreatedTime = cachedUnknowDto.CreatedTime,
@@ -126,7 +128,7 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
             return Result<Unknows>.Success(cachedUnknow);
         }
 
-        var unknow = await unknowsRepository.GetUnknowsWithWordAsync(unknowsId, userId);
+        Unknows? unknow = await unknowsRepository.GetUnknowsWithWordAsync(unknowsId, userId);
         if (unknow == null)
         {
             return Result<Unknows>.Failure("Kayıt bulunamadı.");
@@ -161,7 +163,7 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
             pageSize = 10;
         }
 
-        var (items, totalCount) = await unknowsRepository.GetPagedUnknowsAsync(userId, search, page, pageSize);
+        (List<Unknows>? items, int totalCount) = await unknowsRepository.GetPagedUnknowsAsync(userId, search, page, pageSize);
         return Result<(List<Unknows> Unknows, int TotalCount)>.Success((items, totalCount));
     }
 }

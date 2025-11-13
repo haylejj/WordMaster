@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using WordMaster.Application.Persistence.Repositories;
 using WordMaster.Application.Services.Abstract;
-using WordMaster.Application.ViewModels;
+using WordMaster.Application.ViewModels.Admin;
 using WordMaster.Domain.Entities;
 
 namespace WordMaster.Infrastructure.Services;
@@ -11,10 +11,10 @@ public class AdminDashboardService(IWordRepository wordRepository, IFavoriteRepo
 {
     public async Task<AdminDashboardViewModel> GetDashboardAsync()
     {
-        var totalWordsTask = await wordRepository.CountAsync();
-        var totalFavoritesTask = await favoriteRepository.CountAsync();
-        var totalUnknowsTask = await unknowsRepository.CountAsync();
-        var totalUsersTask = await userManager.Users.CountAsync();
+        int totalWordsTask = await wordRepository.CountAsync();
+        int totalFavoritesTask = await favoriteRepository.CountAsync();
+        int totalUnknowsTask = await unknowsRepository.CountAsync();
+        int totalUsersTask = await userManager.Users.CountAsync();
 
         var loginStatistics = await logHistoryService.GetLoginStatisticsAsync();
 

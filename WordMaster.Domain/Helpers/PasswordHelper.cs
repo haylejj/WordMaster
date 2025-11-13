@@ -15,10 +15,10 @@ public static class PasswordHelper
     public static string GenerateRandomPassword()
     {
         // Kriptografik olarak güvenli rastgele sayı üretici kullan
-        using var rng = RandomNumberGenerator.Create();
+        using RandomNumberGenerator rng = RandomNumberGenerator.Create();
 
-        var passwordChars = new char[8];
-        var allChars = Letters + Numbers;
+        char[] passwordChars = new char[8];
+        string allChars = Letters + Numbers;
 
         // En az 1 harf garantisi için 1 harf ekle
         passwordChars[0] = GetRandomChar(rng, Letters);
@@ -43,9 +43,9 @@ public static class PasswordHelper
     /// </summary>
     private static char GetRandomChar(RandomNumberGenerator rng, string chars)
     {
-        var randomBytes = new byte[4];
+        byte[] randomBytes = new byte[4];
         rng.GetBytes(randomBytes);
-        var randomValue = BitConverter.ToUInt32(randomBytes, 0);
+        uint randomValue = BitConverter.ToUInt32(randomBytes, 0);
         return chars[(int)(randomValue % (uint)chars.Length)];
     }
 
@@ -56,9 +56,9 @@ public static class PasswordHelper
     {
         for (int i = array.Length - 1; i > 0; i--)
         {
-            var randomBytes = new byte[4];
+            byte[] randomBytes = new byte[4];
             rng.GetBytes(randomBytes);
-            var randomValue = BitConverter.ToUInt32(randomBytes, 0);
+            uint randomValue = BitConverter.ToUInt32(randomBytes, 0);
             int j = (int)(randomValue % (uint)(i + 1));
 
             (array[i], array[j]) = (array[j], array[i]);

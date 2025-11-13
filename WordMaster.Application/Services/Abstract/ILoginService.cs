@@ -1,4 +1,4 @@
-using WordMaster.Application.Requests;
+using WordMaster.Application.Requests.Auth;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Results;
 

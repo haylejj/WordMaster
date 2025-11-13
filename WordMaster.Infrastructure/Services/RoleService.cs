@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using WordMaster.Application.Requests;
+using WordMaster.Application.Requests.Role;
 using WordMaster.Application.Services.Abstract;
-using WordMaster.Application.ViewModels;
+using WordMaster.Application.ViewModels.Role;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Results;
 
@@ -15,13 +15,13 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
 
     public async Task<List<RoleViewModel>> GetRoleListAsync()
     {
-        var cachedRoles = await cacheService.GetAsync<List<RoleViewModel>>(RolesCacheKey);
+        List<RoleViewModel>? cachedRoles = await cacheService.GetAsync<List<RoleViewModel>>(RolesCacheKey);
         if (cachedRoles != null)
         {
             return cachedRoles;
         }
 
-        var roles = await roleManager.Roles.AsNoTracking().ToListAsync();
+        List<AppRole> roles = await roleManager.Roles.AsNoTracking().ToListAsync();
         var roleViewModel = roles.Select(x => new RoleViewModel() { Id = x.Id, Name = x.Name! }).ToList();
 
         await cacheService.SetAsync(RolesCacheKey, roleViewModel, RolesCacheExpiration);
@@ -29,7 +29,7 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
     }
     public async Task<Result<IEnumerable<IdentityError>>> CreateRoleAsync(RoleCreateRequest request)
     {
-        var result = await roleManager.CreateAsync(new AppRole() { Name = request.Name });
+        IdentityResult result = await roleManager.CreateAsync(new AppRole() { Name = request.Name });
 
         if (result.Succeeded)
         {
@@ -42,7 +42,7 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
     }
     public async Task<Result<RoleUpdateViewModel>> FindByIdReturnRoleUpdateViewModelAsync(string id)
     {
-        var role = await roleManager.FindByIdAsync(id);
+        AppRole? role = await roleManager.FindByIdAsync(id);
         if (role == null)
         {
             return Result<RoleUpdateViewModel>.Failure("Rol bulunamadı.");
@@ -53,13 +53,13 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
 
     public async Task<Result<IEnumerable<IdentityError>>> UpdateRoleAsync(RoleUpdateRequest request)
     {
-        var role = await roleManager.FindByIdAsync(request.Id);
+        AppRole? role = await roleManager.FindByIdAsync(request.Id);
         if (role == null)
         {
             return new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Rol bulunamadı.", Data = null };
         }
         role.Name = request.Name;
-        var result = await roleManager.UpdateAsync(role);
+        IdentityResult result = await roleManager.UpdateAsync(role);
 
         if (result.Succeeded)
         {
@@ -72,13 +72,13 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
     }
     public async Task<Result<IEnumerable<IdentityError>>> DeleteRoleAsync(string id)
     {
-        var role = await roleManager.FindByIdAsync(id);
+        AppRole? role = await roleManager.FindByIdAsync(id);
         if (role == null)
         {
             return new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Rol bulunamadı.", Data = null };
         }
 
-        var result = await roleManager.DeleteAsync(role);
+        IdentityResult result = await roleManager.DeleteAsync(role);
 
         if (result.Succeeded)
         {
@@ -92,19 +92,19 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
 
     public async Task<List<AssignToRoleViewModel>> GetRoleByIdReturnAssignToRoleAsync(string id)
     {
-        var user = await userManager.FindByIdAsync(id);
+        AppUser? user = await userManager.FindByIdAsync(id);
         if (user == null)
         {
             return [];
         }
 
-        var roles = await roleManager.Roles.ToListAsync();
+        List<AppRole> roles = await roleManager.Roles.ToListAsync();
 
-        var roleViewModel = new List<AssignToRoleViewModel>();
+        List<AssignToRoleViewModel> roleViewModel = new();
 
-        var userRoles = await userManager.GetRolesAsync(user);
+        IList<string> userRoles = await userManager.GetRolesAsync(user);
 
-        foreach (var role in roles)
+        foreach (AppRole? role in roles)
         {
             var assignToRoleViewModel = new AssignToRoleViewModel() { Id = role.Id, Name = role.Name! };
             if (userRoles.Contains(role.Name!))
@@ -118,17 +118,17 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
     }
     public async Task AssignRoleAsync(string id, List<AssignToRoleViewModel> request)
     {
-        var user = await userManager.FindByIdAsync(id);
+        AppUser? user = await userManager.FindByIdAsync(id);
         if (user == null)
         {
             return;
         }
 
-        var userRoles = await userManager.GetRolesAsync(user);
+        IList<string> userRoles = await userManager.GetRolesAsync(user);
 
-        foreach (var role in request)
+        foreach (AssignToRoleViewModel role in request)
         {
-            var isInRole = userRoles.Contains(role.Name);
+            bool isInRole = userRoles.Contains(role.Name);
 
             if (role.Exist && !isInRole)
             {

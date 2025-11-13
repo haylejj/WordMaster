@@ -1,9 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Linq;
 using WordMaster.Application.Services.Abstract;
+using WordMaster.Application.ViewModels.Practice;
+using WordMaster.Domain.Entities;
+using WordMaster.Domain.Results;
 using WordMaster.WebUI.Extensions;
-using WordMaster.WebUI.Models;
 
 namespace WordMaster.WebUI.Controllers;
 
@@ -14,7 +15,7 @@ public class PracticeFolderController(IFolderService folderService, IWordService
     [HttpGet("", Name = "PracticeFolderIndex")]
     public async Task<IActionResult> Index(int folderId)
     {
-        var userId = User.GetUserId();
+        string? userId = User.GetUserId();
         if (string.IsNullOrEmpty(userId))
         {
             return RedirectToAction("LogIn", "Login");
@@ -26,21 +27,21 @@ public class PracticeFolderController(IFolderService folderService, IWordService
             return RedirectToAction("Index", "Folder");
         }
 
-        var folderResult = await folderService.GetUserFolderAsync(folderId, userId);
+        Result<Folder> folderResult = await folderService.GetUserFolderAsync(folderId, userId);
         if (!folderResult.IsSuccess || folderResult.Data == null)
         {
             TempData["ErrorMessage"] = folderResult.ErrorMessage ?? "Klasör bulunamadı.";
             return RedirectToAction("Index", "Folder");
         }
 
-        var wordsResult = await folderService.GetWordsInFolderAsync(folderId, userId);
+        Result<List<Word>> wordsResult = await folderService.GetWordsInFolderAsync(folderId, userId);
         if (!wordsResult.IsSuccess || wordsResult.Data == null)
         {
             TempData["ErrorMessage"] = wordsResult.ErrorMessage ?? "Bu klasörde pratik yapılacak kelime yok.";
             return RedirectToAction("Detail", "Folder", new { id = folderId });
         }
 
-        var words = wordsResult.Data
+        List<PracticeFolderWordViewModel> words = wordsResult.Data
             .Where(w => w != null && !string.IsNullOrWhiteSpace(w.EnglishWord))
             .OrderBy(w => w!.EnglishWord)
             .Select(w => new PracticeFolderWordViewModel
@@ -57,7 +58,7 @@ public class PracticeFolderController(IFolderService folderService, IWordService
             return RedirectToAction("Detail", "Folder", new { id = folderId });
         }
 
-        var viewModel = new PracticeFolderViewModel
+        PracticeFolderViewModel viewModel = new()
         {
             FolderId = folderId,
             FolderName = folderResult.Data.Name ?? string.Empty,
@@ -77,14 +78,14 @@ public class PracticeFolderController(IFolderService folderService, IWordService
             return BadRequest(new { success = false, errorMessage = "Geçersiz kelime bilgisi." });
         }
 
-        var userId = User.GetUserId();
+        string? userId = User.GetUserId();
         if (string.IsNullOrEmpty(userId))
         {
             return Unauthorized(new { success = false, errorMessage = "Oturum bulunamadı." });
         }
 
-        var turkishWord = request.TurkishWord ?? string.Empty;
-        var result = await wordService.CheckTranslationAndUpdateAsync(userId, turkishWord, request.EnglishWord);
+        string turkishWord = request.TurkishWord ?? string.Empty;
+        Result<bool> result = await wordService.CheckTranslationAndUpdateAsync(userId, turkishWord, request.EnglishWord);
 
         if (!result.IsSuccess)
         {

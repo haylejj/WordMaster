@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using WordMaster.Application.Requests;
+using WordMaster.Application.Requests.Auth;
 using WordMaster.Application.Services.Abstract;
-using WordMaster.Application.ViewModels;
+using WordMaster.Application.ViewModels.Auth;
 using WordMaster.Domain.Entities;
 using WordMaster.WebUI.Extensions;
 
@@ -25,9 +25,9 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
         {
             return View(viewModel);
         }
-        returnUrl = returnUrl ?? Url.Action("Index", "Word");
+        returnUrl ??= Url.Action("Index", "Word");
 
-        var request = new LoginRequest
+        LoginRequest request = new()
         {
             Email = viewModel.Email,
             Password = viewModel.Password,
@@ -35,7 +35,7 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
         };
 
         var userResult = await loginService.FindByEmailAsync(request.Email!);
-        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        string? ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
 
         if (!userResult.IsSuccess || userResult.Data == null)
         {
@@ -69,7 +69,7 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
         {
             return View();
         }
-        var request = new ForgetPasswordRequest
+        ForgetPasswordRequest request = new()
         {
             Email = viewModel.Email
         };
@@ -82,7 +82,7 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
 
         var passwordResetToken = await loginService.GeneratePasswordResetTokenAsync(user.Data.Id);// Şimdi biz özel token ürettik. Şifre değiştirmede kullanılacak 
 
-        var passwordResetLink = Url.Action("ResetPassword", null, new { userId = user.Data.Id, token = passwordResetToken.Data }, HttpContext.Request.Scheme); // bu linkin ömrünü program.cs de belirliycez.
+        string passwordResetLink = Url.Action("ResetPassword", null, new { userId = user.Data.Id, token = passwordResetToken.Data }, HttpContext.Request.Scheme); // bu linkin ömrünü program.cs de belirliycez.
         //Örnek link
         // https://localhost:7289?userId=12213&token=aasdfasdfsdf
 
@@ -108,19 +108,19 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
         {
             return View();
         }
-        var userId = TempData["userId"];
-        var token = TempData["token"];
+        object? userId = TempData["userId"];
+        object? token = TempData["token"];
         if (userId == null || token == null)
         {
             throw new Exception("Bir hata meydana geldi");
         }
-        var hasUser = await userManager.FindByIdAsync(userId.ToString()!);
+        AppUser? hasUser = await userManager.FindByIdAsync(userId.ToString()!);
         if (hasUser == null)
         {
             ModelState.AddModelErrorList(new List<string>() { "Kullanıcı bulunamamıştır." });
             return View();
         }
-        var request = new ResetPasswordRequest
+        ResetPasswordRequest request = new()
         {
             Password = viewModel.Password,
             PasswordConfirm = viewModel.PasswordConfirm
@@ -132,7 +132,7 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
         }
         else
         {
-            ModelState.AddModelErrorList(result.Errors.Select(x => x.Description).ToList());
+            ModelState.AddModelErrorList([.. result.Errors.Select(x => x.Description)]);
             return View();
         }
         return RedirectToAction(nameof(ResetPassword));
