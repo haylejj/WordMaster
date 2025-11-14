@@ -145,6 +145,62 @@ public class FolderController(IFolderService folderService) : Controller
         var results = wordsResult.Data.Select(w => new { id = w.Id, text = w.EnglishWord ?? string.Empty });
         return Json(new { results });
     }
+
+    [HttpGet("GetFolder")]
+    public async Task<IActionResult> GetFolder(int id)
+    {
+        string? userId = User.GetUserId();
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Json(new { success = false, message = "Kullanıcı oturumu bulunamadı." });
+        }
+
+        Result<Folder> folderResult = await folderService.GetUserFolderAsync(id, userId);
+        if (!folderResult.IsSuccess || folderResult.Data == null)
+        {
+            return Json(new { success = false, message = folderResult.ErrorMessage ?? "Klasör bulunamadı." });
+        }
+
+        return Json(new { success = true, folder = new { id = folderResult.Data.Id, name = folderResult.Data.Name } });
+    }
+
+    [HttpPost("Update")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Update(int id, string name)
+    {
+        string? userId = User.GetUserId();
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Json(new { success = false, message = "Kullanıcı oturumu bulunamadı." });
+        }
+
+        Result result = await folderService.UpdateFolderAsync(id, name, userId);
+        if (!result.IsSuccess)
+        {
+            return Json(new { success = false, message = result.ErrorMessage ?? "Güncelleme başarısız." });
+        }
+
+        return Json(new { success = true, message = "Klasör güncellendi." });
+    }
+
+    [HttpPost("Delete")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(int id)
+    {
+        string? userId = User.GetUserId();
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Json(new { success = false, message = "Kullanıcı oturumu bulunamadı." });
+        }
+
+        Result result = await folderService.DeleteFolderAsync(id, userId);
+        if (!result.IsSuccess)
+        {
+            return Json(new { success = false, message = result.ErrorMessage ?? "Silme başarısız." });
+        }
+
+        return Json(new { success = true, message = "Klasör silindi." });
+    }
 }
 
 
