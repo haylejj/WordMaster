@@ -57,6 +57,44 @@ public class FolderService(
         return Result.Success();
     }
 
+    public async Task<Result> UpdateFolderAsync(int folderId, string name, string userId)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return Result.Failure("Klasör adı gereklidir.");
+        }
+
+        Folder? folder = await folderRepository.GetUserFolderAsync(folderId, userId);
+        if (folder == null)
+        {
+            return Result.Failure("Klasör bulunamadı.");
+        }
+
+        bool exists = await folderRepository.AnyAsync(f => f.UserId == userId && f.Name == name.Trim() && f.Id != folderId);
+        if (exists)
+        {
+            return Result.Failure("Bu isimde bir klasör zaten mevcut.");
+        }
+
+        folder.Name = name.Trim();
+        folderRepository.Update(folder);
+        await unitOfWork.CommitAsync();
+        return Result.Success();
+    }
+
+    public async Task<Result> DeleteFolderAsync(int folderId, string userId)
+    {
+        Folder? folder = await folderRepository.GetUserFolderAsync(folderId, userId);
+        if (folder == null)
+        {
+            return Result.Failure("Klasör bulunamadı.");
+        }
+
+        folderRepository.Remove(folder);
+        await unitOfWork.CommitAsync();
+        return Result.Success();
+    }
+
     public async Task<Result<List<Word>>> GetWordsInFolderAsync(int folderId, string userId)
     {
         // Ensure folder belongs to user
