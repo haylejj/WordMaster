@@ -4,12 +4,17 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
+using System.Text;
 using WordMaster.Application.Mapping;
 using WordMaster.Application.Validation;
 using WordMaster.Domain.Configuration;
 using WordMaster.Infrastructure.EfCore;
 using WordMaster.Infrastructure.Extensions;
 using WordMaster.WebUI.Extensions;
+
+// Set default encoding to UTF-8 to handle Turkish characters correctly
+Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+Console.OutputEncoding = Encoding.UTF8;
 
 var builder = WebApplication.CreateBuilder(args);
 

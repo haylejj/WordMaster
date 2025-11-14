@@ -1,0 +1,31 @@
+<!-- Update Modal -->
+<div class="modal fade" id="updateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Kelime Güncelle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="updateWordForm">
+                    <input type="hidden" id="updateWordId" name="Id" />
+                    <div class="mb-3">
+                        <label for="updateEnglishWord" class="form-label">English:</label>
+                        <input type="text" class="form-control" id="updateEnglishWord" name="EnglishWord" required
+                            maxlength="30" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="updateTurkishWord" class="form-label">Turkish:</label>
+                        <input type="text" class="form-control" id="updateTurkishWord" name="TurkishWord" required
+                            maxlength="60" />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-primary" onclick="updateWord()">Güncelle</button>
+            </div>
+        </div>
+    </div>
+</div>
+

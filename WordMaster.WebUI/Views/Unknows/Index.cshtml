@@ -6,7 +6,7 @@
 
 @section Scripts {
     <script src="~/js/unknows/delete.js"></script>
-    <script src="~/js/word/update.js"></script>
+    <script src="~/js/unknows/update.js"></script>
     <script src="~/js/word/toggle.js"></script>
 }
 <h1 class="text-center page-title">Bilinmeyenler</h1>
@@ -15,10 +15,10 @@
     <div class="col-sm-6 col-md-6">
         <label for="search" class="form-label">Ara</label>
         <input type="text" id="search" name="search" value="@Model?.Search" class="form-control"
-            placeholder="�ngilizce veya T�rk�e ara" />
+            placeholder="İngilizce veya Türkçe ara" />
     </div>
     <div class="col-sm-3 col-md-3">
-        <label for="pageSize" class="form-label">Sayfa ba��na</label>
+        <label for="pageSize" class="form-label">Sayfa başına</label>
         <select id="pageSize" name="pageSize" class="form-select">
             @if (Model?.PageSize == 10)
             {
@@ -66,8 +66,8 @@
 <table class="table table-bordered table-striped table-hover">
     <thead>
         <tr>
-            <th>�ngilizce</th>
-            <th>T�rk�e</th>
+            <th>İngilizce</th>
+            <th>Türkçe</th>
             <th></th>
             <th></th>
             <th></th>
@@ -78,7 +78,7 @@
         {
             <tr>
                 <td colspan="5" class="text-center">
-                    <p class="text-muted mt-3 mb-3">Veri bulunmamaktad�r.</p>
+                    <p class="text-muted mt-3 mb-3">Veri bulunmamaktadır.</p>
                 </td>
             </tr>
         }
@@ -100,7 +100,7 @@
                     </td>
                     <td class="text-center">
                         <button type="button" class="btn btn-warning btn-sm text-dark text-nowrap"
-                            onclick="openUpdateModal(@item.Id, event)">G�ncelle</button>
+                            onclick="openUpdateModal(@item.Id, event)">Güncelle</button>
                     </td>
                     <td class="text-center">
                         <button type="button" class="btn btn-danger btn-sm text-white text-nowrap"
@@ -115,7 +115,7 @@
 @if (Model != null && Model.TotalPages > 1)
 {
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
-        <div class="text-muted">Toplam @Model.TotalCount kay�t</div>
+        <div class="text-muted">Toplam @Model.TotalCount kayıt</div>
         <nav>
             <ul class="pagination mb-0">
                 @{
@@ -126,7 +126,7 @@
                 }
                 <li class="page-item @prevDisabled">
                     <a class="page-link"
-                        href="@Url.Action("", "Unknows", new { search = Model.Search, page = currentPage - 1, pageSize = Model.PageSize })">�</a>
+                        href="@Url.Action("", "Unknows", new { search = Model.Search, page = currentPage - 1, pageSize = Model.PageSize })">&laquo;</a>
                 </li>
                 @for (int p = 1; p <= Model.TotalPages; p++)
                 {
@@ -138,9 +138,11 @@
                 }
                 <li class="page-item @nextDisabled">
                     <a class="page-link"
-                        href="@Url.Action("", "Unknows", new { search = Model.Search, page = currentPage + 1, pageSize = Model.PageSize })">�</a>
+                        href="@Url.Action("", "Unknows", new { search = Model.Search, page = currentPage + 1, pageSize = Model.PageSize })">&raquo;</a>
                 </li>
             </ul>
         </nav>
     </div>
 }
+
+@await Html.PartialAsync("_UpdateWordModal")

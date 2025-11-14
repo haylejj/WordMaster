@@ -1,12 +1,12 @@
 // Unknows Update Functionality
 
-function openUpdateModal(unknowsId, event) {
+function openUpdateModal(wordId, event) {
     event.preventDefault();
 
     $.ajax({
         url: '/Unknows/GetWord',
         type: 'GET',
-        data: { unknowsId: unknowsId },
+        data: { unknowsId: wordId },
         success: function (response) {
             if (response.success) {
                 $('#updateWordId').val(response.word.id);

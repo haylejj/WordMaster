@@ -21,15 +21,15 @@
 }
 <script>
     $('#btn2').click(function (event) {
-        event.preventDefault(); // Formun otomatik submit olmas�n� engeller
+        event.preventDefault(); // Formun otomatik submit olmasını engeller
 
         swal({
-            title: "Ba�ar�l�",
-            text: "Kelime ba�ar�yla g�ncellendi!",
+            title: "Başarılı",
+            text: "Kelime başarıyla güncellendi!",
             icon: "success",
             button: "Tamam",
         }).then(function () {
-            $('form').submit(); // Formun submit i�lemini ger�ekle�tirir
+            $('form').submit(); // Formun submit işlemini gerçekleştirir
         });
     });
 </script>

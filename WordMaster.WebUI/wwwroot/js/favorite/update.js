@@ -1,12 +1,12 @@
 // Favorite Update Functionality
 
-function openUpdateModal(favoriteId, event) {
+function openUpdateModal(wordId, event) {
     event.preventDefault();
 
     $.ajax({
         url: '/Favorite/GetWord',
         type: 'GET',
-        data: { favoriteId: favoriteId },
+        data: { favoriteId: wordId },
         success: function (response) {
             if (response.success) {
                 $('#updateWordId').val(response.word.id);
