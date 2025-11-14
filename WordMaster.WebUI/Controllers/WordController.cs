@@ -1,9 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WordMaster.Application.Dto;
+using WordMaster.Application.Dto.Word;
 using WordMaster.Application.Services.Abstract;
-using WordMaster.Application.ViewModels;
+using WordMaster.Application.ViewModels.Word;
 using WordMaster.Domain.Entities;
+using WordMaster.Domain.Results;
 using WordMaster.WebUI.Extensions;
 
 namespace WordMaster.WebUI.Controllers;
@@ -15,9 +16,9 @@ public class WordController(IWordService wordService) : Controller
     [HttpGet("")]
     public async Task<IActionResult> Index(string? search, int page = 1, int pageSize = 10)
     {
-        var userId = User.GetUserId();
-        var pageResult = await wordService.GetPagedWordsAsync(userId!, search, page, pageSize);
-        var (words, totalCount) = pageResult.IsSuccess ? pageResult.Data : (new List<Word>(), 0);
+        string? userId = User.GetUserId();
+        Result<(List<Word> Words, int TotalCount)> pageResult = await wordService.GetPagedWordsAsync(userId!, search, page, pageSize);
+        (List<Word>? words, int totalCount) = pageResult.IsSuccess ? pageResult.Data : (new List<Word>(), 0);
 
         var viewModel = new WordListViewModel
         {
@@ -43,7 +44,7 @@ public class WordController(IWordService wordService) : Controller
             return View(viewModel);
         }
 
-        var userId = User.GetUserId();
+        string? userId = User.GetUserId();
         if (string.IsNullOrEmpty(userId))
         {
             ModelState.AddModelError("", "Kullanıcı bilgisi bulunamadı.");
@@ -71,13 +72,13 @@ public class WordController(IWordService wordService) : Controller
     [HttpPost("DeleteWord")]
     public async Task<IActionResult> DeleteWord(int id)
     {
-        var userId = User.GetUserId();
+        string? userId = User.GetUserId();
         if (string.IsNullOrEmpty(userId))
         {
             return Json(new { success = false, message = "Kullanıcı bilgisi bulunamadı." });
         }
 
-        var result = await wordService.DeleteWordAsync(id, userId);
+        Result result = await wordService.DeleteWordAsync(id, userId);
 
         if (!result.IsSuccess)
         {
@@ -90,8 +91,8 @@ public class WordController(IWordService wordService) : Controller
     [HttpGet("GetWord")]
     public async Task<IActionResult> GetWord(int id)
     {
-        var userId = User.GetUserId();
-        var result = await wordService.GetWordForUserAsync(id, userId!);
+        string? userId = User.GetUserId();
+        Result<Word> result = await wordService.GetWordForUserAsync(id, userId!);
 
         if (!result.IsSuccess || result.Data == null)
         {
@@ -118,7 +119,7 @@ public class WordController(IWordService wordService) : Controller
             return Json(new { success = false, message = "Geçersiz veri." });
         }
 
-        var userId = User.GetUserId();
+        string? userId = User.GetUserId();
         if (string.IsNullOrEmpty(userId))
         {
             return Json(new { success = false, message = "Kullanıcı bilgisi bulunamadı." });

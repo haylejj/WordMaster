@@ -38,7 +38,7 @@ public class UnknowsRepository(AppDbContext context) : GenericRepository<Unknows
 
     public async Task<(List<Unknows> Unknows, int TotalCount)> GetPagedUnknowsAsync(string userId, string? search, int page, int pageSize)
     {
-        var query = _context.Unknows
+        IQueryable<Unknows> query = _context.Unknows
             .Include(x => x.Word)
             .Where(x => x.UserId == userId)
             .AsQueryable();
@@ -48,8 +48,8 @@ public class UnknowsRepository(AppDbContext context) : GenericRepository<Unknows
             query = query.Where(x => x.Word!.EnglishWord!.Contains(search) || x.Word!.TurkishWord!.Contains(search));
         }
 
-        var totalCount = await query.CountAsync();
-        var items = await query
+        int totalCount = await query.CountAsync();
+        List<Unknows> items = await query
             .OrderBy(x => x.CreatedTime)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)

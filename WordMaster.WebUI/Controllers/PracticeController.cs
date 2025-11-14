@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WordMaster.Application.Services.Abstract;
-using WordMaster.Application.ViewModels;
+using WordMaster.Application.ViewModels.Practice;
+using WordMaster.Domain.Results;
 using WordMaster.WebUI.Extensions;
 
 namespace WordMaster.WebUI.Controllers;
@@ -14,10 +15,10 @@ public class PracticeController(IWordService wordService) : Controller
     [HttpGet("Index")]
     public async Task<IActionResult> Index()
     {
-        var userId = User.GetUserId();
+        string? userId = User.GetUserId();
         if (userId == null) return Unauthorized();
 
-        var word = await wordService.GetRandomWordAsync(userId);
+        Result<string> word = await wordService.GetRandomWordAsync(userId);
         var viewModel = new PracticeViewModel
         {
             EnglishWord = word.IsSuccess && word.Data != null ? word.Data : string.Empty,
@@ -30,18 +31,18 @@ public class PracticeController(IWordService wordService) : Controller
     [HttpGet("CheckTranslation")]
     public async Task<IActionResult> CheckTranslation(string turkishWord, string englishWord)
     {
-        var userId = User.GetUserId();
+        string? userId = User.GetUserId();
         if (userId == null) return Json(new { isCorrect = false });
-        var result = await wordService.CheckTranslationAndUpdateAsync(userId, turkishWord, englishWord);
+        Result<bool> result = await wordService.CheckTranslationAndUpdateAsync(userId, turkishWord, englishWord);
         return Json(new { isCorrect = result.Data });
     }
 
     [HttpGet("GetNewEnglishWord")]
     public async Task<IActionResult> GetNewEnglishWord()
     {
-        var userId = User.GetUserId();
+        string? userId = User.GetUserId();
         if (userId == null) return Content(string.Empty);
-        var word = await wordService.GetRandomWordAsync(userId);
+        Result<string> word = await wordService.GetRandomWordAsync(userId);
         return Content(word.IsSuccess && word.Data != null ? word.Data : string.Empty);
     }
 }

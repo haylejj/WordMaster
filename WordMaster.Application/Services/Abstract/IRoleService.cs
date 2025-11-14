@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity;
-using WordMaster.Application.Requests;
-using WordMaster.Application.ViewModels;
+using WordMaster.Application.Requests.Role;
+using WordMaster.Application.ViewModels.Role;
 using WordMaster.Domain.Results;
 
 namespace WordMaster.Application.Services.Abstract;

@@ -9,7 +9,7 @@ public class MailHogEmailService(IOptions<MailHogSettings> settings) : IEmailSer
 {
     public async Task SendResetPasswordLinkToEmailAsync(string resetEmailLink, string toEmail)
     {
-        var smtpClient = new SmtpClient
+        SmtpClient smtpClient = new()
         {
             Host = settings.Value.Host,
             DeliveryMethod = SmtpDeliveryMethod.Network,
@@ -34,7 +34,7 @@ public class MailHogEmailService(IOptions<MailHogSettings> settings) : IEmailSer
 
     public async Task SendPasswordToEmailAsync(string password, string toEmail, string userName)
     {
-        var smtpClient = new SmtpClient
+        SmtpClient smtpClient = new()
         {
             Host = settings.Value.Host,
             DeliveryMethod = SmtpDeliveryMethod.Network,

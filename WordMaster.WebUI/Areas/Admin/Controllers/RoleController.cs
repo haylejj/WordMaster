@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using WordMaster.Application.Requests;
+using WordMaster.Application.Requests.Role;
 using WordMaster.Application.Services.Abstract;
-using WordMaster.Application.ViewModels;
+using WordMaster.Application.ViewModels.Role;
+using WordMaster.Domain.Results;
 
 namespace WordMaster.WebUI.Areas.Admin.Controllers;
 
@@ -14,7 +16,7 @@ public class RoleController(IRoleService roleService) : Controller
     [HttpGet("")]
     public async Task<IActionResult> Index()
     {
-        var roles = await roleService.GetRoleListAsync();
+        List<RoleViewModel> roles = await roleService.GetRoleListAsync();
         var viewModel = new RoleListViewModel
         {
             Roles = roles
@@ -30,14 +32,14 @@ public class RoleController(IRoleService roleService) : Controller
             return Json(new { success = false, message = "Rol ID gerekli." });
         }
 
-        var result = await roleService.FindByIdReturnRoleUpdateViewModelAsync(id);
+        Result<RoleUpdateViewModel> result = await roleService.FindByIdReturnRoleUpdateViewModelAsync(id);
 
         if (!result.IsSuccess || result.Data == null)
         {
             return Json(new { success = false, message = "Rol bulunamadı." });
         }
 
-        var role = result.Data;
+        RoleUpdateViewModel role = result.Data;
 
         return Json(new
         {
@@ -55,18 +57,18 @@ public class RoleController(IRoleService roleService) : Controller
     {
         if (!ModelState.IsValid)
         {
-            var errors = ModelState.Values
+            List<string> errors = ModelState.Values
                 .SelectMany(v => v.Errors)
                 .Select(e => e.ErrorMessage)
                 .ToList();
             return Json(new { success = false, message = string.Join(", ", errors) });
         }
 
-        var result = await roleService.UpdateRoleAsync(request);
+        Result<IEnumerable<IdentityError>> result = await roleService.UpdateRoleAsync(request);
 
         if (!result.IsSuccess)
         {
-            var errorMessage = result.ErrorMessage ?? "Rol güncellenirken bir hata oluştu.";
+            string errorMessage = result.ErrorMessage ?? "Rol güncellenirken bir hata oluştu.";
             if (result.Data != null && result.Data.Any())
             {
                 errorMessage = string.Join(", ", result.Data.Select(e => e.Description));
@@ -80,11 +82,11 @@ public class RoleController(IRoleService roleService) : Controller
     [HttpPost("DeleteRole")]
     public async Task<IActionResult> DeleteRole(string id)
     {
-        var result = await roleService.DeleteRoleAsync(id);
+        Result<IEnumerable<IdentityError>> result = await roleService.DeleteRoleAsync(id);
 
         if (!result.IsSuccess)
         {
-            var errorMessage = result.ErrorMessage ?? "Rol silinirken bir hata oluştu.";
+            string errorMessage = result.ErrorMessage ?? "Rol silinirken bir hata oluştu.";
             if (result.Data != null && result.Data.Any())
             {
                 errorMessage = string.Join(", ", result.Data.Select(e => e.Description));
@@ -100,18 +102,18 @@ public class RoleController(IRoleService roleService) : Controller
     {
         if (!ModelState.IsValid)
         {
-            var errors = ModelState.Values
+            List<string> errors = ModelState.Values
                 .SelectMany(v => v.Errors)
                 .Select(e => e.ErrorMessage)
                 .ToList();
             return Json(new { success = false, message = string.Join(", ", errors) });
         }
 
-        var result = await roleService.CreateRoleAsync(request);
+        Result<IEnumerable<IdentityError>> result = await roleService.CreateRoleAsync(request);
 
         if (!result.IsSuccess)
         {
-            var errorMessage = result.ErrorMessage ?? "Rol oluşturulurken bir hata oluştu.";
+            string errorMessage = result.ErrorMessage ?? "Rol oluşturulurken bir hata oluştu.";
             if (result.Data != null && result.Data.Any())
             {
                 errorMessage = string.Join(", ", result.Data.Select(e => e.Description));

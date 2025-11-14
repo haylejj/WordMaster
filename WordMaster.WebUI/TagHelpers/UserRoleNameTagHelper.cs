@@ -11,11 +11,11 @@ public class UserRoleNameTagHelper(UserManager<AppUser> userManager) : TagHelper
 
     public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
     {
-        var user = await userManager.FindByIdAsync(UserId);
+        AppUser? user = await userManager.FindByIdAsync(UserId);
 
-        var userRoles = await userManager.GetRolesAsync(user!);
+        IList<string> userRoles = await userManager.GetRolesAsync(user!);
 
-        var stringBuilder = new StringBuilder();
+        StringBuilder stringBuilder = new();
 
         userRoles.ToList().ForEach(x =>
         {

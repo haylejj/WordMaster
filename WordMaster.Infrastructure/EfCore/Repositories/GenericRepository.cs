@@ -38,7 +38,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
 
     public virtual async Task<T?> GetByIdAsTrackingAsync(int id)
     {
-        var entity = await _dbSet.FindAsync(id);
+        T? entity = await _dbSet.FindAsync(id);
         if (entity != null)
         {
             _context.Entry(entity).State = EntityState.Modified;

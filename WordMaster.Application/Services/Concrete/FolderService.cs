@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using WordMaster.Application.Dto;
+using WordMaster.Application.Dto.Word;
 using WordMaster.Application.Persistence;
 using WordMaster.Application.Persistence.Repositories;
 using WordMaster.Application.Services.Abstract;
@@ -20,13 +20,13 @@ public class FolderService(
 
     public async Task<Result<List<Folder>>> GetUserFoldersAsync(string userId)
     {
-        var folders = await folderRepository.GetUserFoldersAsync(userId);
+        List<Folder> folders = await folderRepository.GetUserFoldersAsync(userId);
         return Result<List<Folder>>.Success(folders);
     }
 
     public async Task<Result<Folder>> GetUserFolderAsync(int folderId, string userId)
     {
-        var folder = await folderRepository.GetUserFolderAsync(folderId, userId);
+        Folder? folder = await folderRepository.GetUserFolderAsync(folderId, userId);
         return folder == null
             ? Result<Folder>.Failure("Klasör bulunamadı.")
             : Result<Folder>.Success(folder);
@@ -39,13 +39,13 @@ public class FolderService(
             return Result.Failure("Klasör adı gereklidir.");
         }
 
-        var exists = await folderRepository.AnyAsync(f => f.UserId == userId && f.Name == name.Trim());
+        bool exists = await folderRepository.AnyAsync(f => f.UserId == userId && f.Name == name.Trim());
         if (exists)
         {
             return Result.Failure("Bu isimde bir klasör zaten mevcut.");
         }
 
-        var folder = new Folder
+        Folder folder = new()
         {
             Name = name.Trim(),
             UserId = userId,
@@ -57,28 +57,66 @@ public class FolderService(
         return Result.Success();
     }
 
+    public async Task<Result> UpdateFolderAsync(int folderId, string name, string userId)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return Result.Failure("Klasör adı gereklidir.");
+        }
+
+        Folder? folder = await folderRepository.GetUserFolderAsync(folderId, userId);
+        if (folder == null)
+        {
+            return Result.Failure("Klasör bulunamadı.");
+        }
+
+        bool exists = await folderRepository.AnyAsync(f => f.UserId == userId && f.Name == name.Trim() && f.Id != folderId);
+        if (exists)
+        {
+            return Result.Failure("Bu isimde bir klasör zaten mevcut.");
+        }
+
+        folder.Name = name.Trim();
+        folderRepository.Update(folder);
+        await unitOfWork.CommitAsync();
+        return Result.Success();
+    }
+
+    public async Task<Result> DeleteFolderAsync(int folderId, string userId)
+    {
+        Folder? folder = await folderRepository.GetUserFolderAsync(folderId, userId);
+        if (folder == null)
+        {
+            return Result.Failure("Klasör bulunamadı.");
+        }
+
+        folderRepository.Remove(folder);
+        await unitOfWork.CommitAsync();
+        return Result.Success();
+    }
+
     public async Task<Result<List<Word>>> GetWordsInFolderAsync(int folderId, string userId)
     {
         // Ensure folder belongs to user
-        var folder = await folderRepository.GetUserFolderAsync(folderId, userId);
+        Folder? folder = await folderRepository.GetUserFolderAsync(folderId, userId);
         if (folder == null)
         {
             return Result<List<Word>>.Failure("Klasör bulunamadı.");
         }
-        var words = await wordFolderRepository.GetWordsInFolderAsync(folderId);
+        List<Word> words = await wordFolderRepository.GetWordsInFolderAsync(folderId);
         return Result<List<Word>>.Success(words);
     }
 
     public async Task<Result> AddWordToFolderAsync(int folderId, int wordId, string userId)
     {
-        var folderExists = await folderRepository.AnyAsync(f => f.Id == folderId && f.UserId == userId);
-        var wordExists = await wordRepository.AnyAsync(w => w.Id == wordId && w.UserId == userId);
+        bool folderExists = await folderRepository.AnyAsync(f => f.Id == folderId && f.UserId == userId);
+        bool wordExists = await wordRepository.AnyAsync(w => w.Id == wordId && w.UserId == userId);
         if (!folderExists || !wordExists)
         {
             return Result.Failure("Klasör veya kelime bulunamadı.");
         }
 
-        var linkExists = await wordFolderRepository.LinkExistsAsync(folderId, wordId);
+        bool linkExists = await wordFolderRepository.LinkExistsAsync(folderId, wordId);
         if (linkExists)
         {
             return Result.Failure("Kelime zaten bu klasörde.");
@@ -91,13 +129,13 @@ public class FolderService(
 
     public async Task<Result> RemoveWordFromFolderAsync(int folderId, int wordId, string userId)
     {
-        var folderExists = await folderRepository.AnyAsync(f => f.Id == folderId && f.UserId == userId);
+        bool folderExists = await folderRepository.AnyAsync(f => f.Id == folderId && f.UserId == userId);
         if (!folderExists)
         {
             return Result.Failure("Klasör bulunamadı.");
         }
 
-        var link = await wordFolderRepository.GetLinkAsync(folderId, wordId);
+        WordFolder? link = await wordFolderRepository.GetLinkAsync(folderId, wordId);
         if (link == null)
         {
             return Result.Failure("Kelime bu klasörde değil.");
@@ -111,14 +149,14 @@ public class FolderService(
     public async Task<Result<List<WordLookupDto>>> GetUserWordsAsync(string userId)
     {
         // Cache all user's words for dropdown usage; client will filter locally
-        var cacheKey = $"dropdown_words:user:{userId}";
-        var cached = await cacheService.GetAsync<List<WordLookupDto>>(cacheKey);
+        string cacheKey = $"dropdown_words:user:{userId}";
+        List<WordLookupDto>? cached = await cacheService.GetAsync<List<WordLookupDto>>(cacheKey);
         if (cached != null && cached.Count > 0)
         {
             return Result<List<WordLookupDto>>.Success(cached);
         }
 
-        var words = await wordRepository
+        List<WordLookupDto> words = await wordRepository
             .Where(x => x.UserId == userId)
             .OrderBy(x => x.EnglishWord)
             .Select(x => new WordLookupDto

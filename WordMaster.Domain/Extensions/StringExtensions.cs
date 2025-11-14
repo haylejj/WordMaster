@@ -22,7 +22,7 @@ public static class StringExtensions
         if (string.IsNullOrWhiteSpace(word))
             return string.Empty;
 
-        var turkishCulture = new CultureInfo("tr-TR");
+        CultureInfo turkishCulture = new("tr-TR");
         return word.Trim().ToLower(turkishCulture);
     }
 }

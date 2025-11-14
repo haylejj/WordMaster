@@ -1,8 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using WordMaster.Application.Requests;
+using WordMaster.Application.Requests.Auth;
+using WordMaster.Application.Requests.User;
 using WordMaster.Application.Services.Abstract;
-using WordMaster.Application.ViewModels;
+using WordMaster.Application.ViewModels.Auth;
+using WordMaster.Application.ViewModels.User;
+using WordMaster.Domain.Results;
 using WordMaster.WebUI.Extensions;
 
 namespace WordMaster.WebUI.Controllers;
@@ -18,7 +22,7 @@ public class MemberController(IUserService userService) : Controller
     public async Task<IActionResult> UserEdit()
     {
         ViewBag.genderList = userService.GetGenderSelectList();
-        var vm = await userService.GetUserEditViewModelAsync(User.Identity!.Name!);
+        Result<UserEditViewModel> vm = await userService.GetUserEditViewModelAsync(User.Identity!.Name!);
         return View(vm.Data);
     }
     [HttpPost]
@@ -28,7 +32,7 @@ public class MemberController(IUserService userService) : Controller
         {
             return View();
         }
-        var edit = await userService.EditUserAsync(request, User.Identity!.Name!);
+        Result<IEnumerable<IdentityError>> edit = await userService.EditUserAsync(request, User.Identity!.Name!);
         if (!edit.IsSuccess)
         {
             ModelState.AddModelErrorList(edit.Data!.Select(x => x.Description).ToList());
@@ -53,13 +57,13 @@ public class MemberController(IUserService userService) : Controller
             PasswordNew = viewModel.PasswordNew,
             PasswordConfirm = viewModel.PasswordConfirm
         };
-        var check = await userService.CheckPasswordAsync(User.Identity!.Name!, request.PasswordOld!);
+        Result<bool> check = await userService.CheckPasswordAsync(User.Identity!.Name!, request.PasswordOld!);
         if (!check.Data)
         {
             ModelState.AddModelError(string.Empty, "Mevcut �ifrenizi yanl�� girdiniz.");
             return View();
         }
-        var change = await userService.ChangePasswordAsync(request, User.Identity!.Name!);
+        Result<IEnumerable<IdentityError>> change = await userService.ChangePasswordAsync(request, User.Identity!.Name!);
         if (!change.IsSuccess)
         {
             ModelState.AddModelErrorList(change.Data!.Select(x => x.Description).ToList());

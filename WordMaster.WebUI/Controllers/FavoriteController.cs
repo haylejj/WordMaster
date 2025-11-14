@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WordMaster.Application.Dto;
+using WordMaster.Application.Dto.Word;
 using WordMaster.Application.Services.Abstract;
-using WordMaster.Application.ViewModels;
+using WordMaster.Application.ViewModels.Favorite;
+using WordMaster.Application.ViewModels.Word;
+using WordMaster.Domain.Entities;
+using WordMaster.Domain.Results;
 using WordMaster.WebUI.Extensions;
 
 namespace WordMaster.WebUI.Controllers;
@@ -14,8 +17,8 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
     [HttpGet("")]
     public async Task<IActionResult> Index(string? search, int page = 1, int pageSize = 10)
     {
-        var userId = User.GetUserId();
-        var result = await favoriteService.GetPagedFavoritesAsync(userId!, search, page, pageSize);
+        string? userId = User.GetUserId();
+        Result<(List<Favorite> Favorites, int TotalCount)> result = await favoriteService.GetPagedFavoritesAsync(userId!, search, page, pageSize);
 
         var viewModel = new FavoriteListViewModel
         {
@@ -31,8 +34,8 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
     [HttpPost("ToggleFavorite")]
     public async Task<IActionResult> ToggleFavorite(int id)
     {
-        var userId = User.GetUserId();
-        var result = await favoriteService.ToggleFavoriteAsync(id, userId!);
+        string? userId = User.GetUserId();
+        Result<bool> result = await favoriteService.ToggleFavoriteAsync(id, userId!);
         if (!result.IsSuccess)
         {
             return Json(new { success = false, message = result.ErrorMessage ?? "İşlem başarısız." });
@@ -43,8 +46,8 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
     [HttpGet("AddFavorite")]
     public async Task<IActionResult> AddFavorite(int id)
     {
-        var userId = User.GetUserId();
-        var result = await favoriteService.ToggleFavoriteAsync(id, userId!);
+        string? userId = User.GetUserId();
+        Result<bool> result = await favoriteService.ToggleFavoriteAsync(id, userId!);
         if (!result.IsSuccess)
         {
             TempData["ErrorMessage"] = result.ErrorMessage ?? "Favori işlemi sırasında bir sorun oluştu.";
@@ -56,8 +59,8 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
     [HttpGet("UpdateFavorite")]
     public async Task<IActionResult> UpdateFavorite(int id)
     {
-        var userId = User.GetUserId();
-        var result = await favoriteService.GetFavoriteWithWordAsync(id, userId!);
+        string? userId = User.GetUserId();
+        Result<Favorite> result = await favoriteService.GetFavoriteWithWordAsync(id, userId!);
         if (!result.IsSuccess || result.Data?.Word == null)
         {
             return NotFound();
@@ -102,7 +105,7 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
             return Json(new { success = false, message = "Geçersiz veri." });
         }
 
-        var userId = User.GetUserId();
+        string? userId = User.GetUserId();
         if (string.IsNullOrEmpty(userId))
         {
             return Json(new { success = false, message = "Kullanıcı bilgisi bulunamadı." });
@@ -128,13 +131,13 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
     [HttpPost("DeleteFavorite")]
     public async Task<IActionResult> DeleteFavorite(int id)
     {
-        var userId = User.GetUserId();
+        string? userId = User.GetUserId();
         if (string.IsNullOrEmpty(userId))
         {
             return Json(new { success = false, message = "Kullanıcı bilgisi bulunamadı." });
         }
 
-        var result = await favoriteService.DeleteFavoriteAsync(id, userId);
+        Result result = await favoriteService.DeleteFavoriteAsync(id, userId);
 
         if (!result.IsSuccess)
         {

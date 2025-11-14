@@ -1,4 +1,5 @@
-using WordMaster.Application.ViewModels;
+using WordMaster.Application.ViewModels.Admin;
+using WordMaster.Application.ViewModels.User;
 
 namespace WordMaster.Application.Services.Abstract;
 

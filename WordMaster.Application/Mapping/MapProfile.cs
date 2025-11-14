@@ -1,5 +1,7 @@
 using AutoMapper;
-using WordMaster.Application.Dto;
+using WordMaster.Application.Dto.Favorite;
+using WordMaster.Application.Dto.Unknows;
+using WordMaster.Application.Dto.Word;
 using WordMaster.Domain.Entities;
 
 namespace WordMaster.Application.Mapping;
