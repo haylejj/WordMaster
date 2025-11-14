@@ -76,10 +76,11 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
     [HttpGet("GetWord")]
     public async Task<IActionResult> GetWord(int favoriteId)
     {
-        string? userId = User.GetUserId();
-        Result<Favorite> result = await favoriteService.GetFavoriteWithWordAsync(favoriteId, userId!);
+        var userId = User.GetUserId();
+        // favoriteId aslında Word Id olarak gönderiliyor, bu yüzden WordService kullanıyoruz
+        var result = await wordService.GetWordForUserAsync(favoriteId, userId!);
 
-        if (!result.IsSuccess || result.Data?.Word == null)
+        if (!result.IsSuccess || result.Data == null)
         {
             return Json(new { success = false, message = "Kelime bulunamadı." });
         }
@@ -89,9 +90,9 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
             success = true,
             word = new
             {
-                id = result.Data.Word.Id,
-                englishWord = result.Data.Word.EnglishWord,
-                turkishWord = result.Data.Word.TurkishWord
+                id = result.Data.Id,
+                englishWord = result.Data.EnglishWord,
+                turkishWord = result.Data.TurkishWord
             }
         });
     }

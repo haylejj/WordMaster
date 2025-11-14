@@ -7,7 +7,7 @@
 
 @section Scripts {
     <script src="~/js/favorite/delete.js"></script>
-    <script src="~/js/word/update.js"></script>
+    <script src="~/js/favorite/update.js"></script>
     <script src="~/js/word/toggle.js"></script>
 }
 <h1 class="text-center page-title">Favorilerim</h1>
@@ -16,7 +16,7 @@
     <div class="col-sm-6 col-md-6">
         <label for="search" class="form-label">Ara</label>
         <input type="text" id="search" name="search" value="@Model?.Search" class="form-control"
-               placeholder="İngilizce veya Türkçe ara" />
+            placeholder="İngilizce veya Türkçe ara" />
     </div>
     <div class="col-sm-3 col-md-3">
         <label for="pageSize" class="form-label">Sayfa başına</label>
@@ -116,7 +116,7 @@
 @if (Model != null && Model.TotalPages > 1)
 {
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
-        <div class="text-muted">Toplam @Model.TotalCount kay�t</div>
+        <div class="text-muted">Toplam @Model.TotalCount kayıt</div>
         <nav>
             <ul class="pagination mb-0">
                 @{
@@ -127,7 +127,7 @@
                 }
                 <li class="page-item @prevDisabled">
                     <a class="page-link"
-                        href="@Url.Action("", "Favorite", new { search = Model.Search, page = currentPage - 1, pageSize = Model.PageSize })">�</a>
+                        href="@Url.Action("", "Favorite", new { search = Model.Search, page = currentPage - 1, pageSize = Model.PageSize })">&laquo;</a>
                 </li>
                 @for (int p = 1; p <= Model.TotalPages; p++)
                 {
@@ -139,11 +139,11 @@
                 }
                 <li class="page-item @nextDisabled">
                     <a class="page-link"
-                        href="@Url.Action("", "Favorite", new { search = Model.Search, page = currentPage + 1, pageSize = Model.PageSize })">�</a>
+                        href="@Url.Action("", "Favorite", new { search = Model.Search, page = currentPage + 1, pageSize = Model.PageSize })">&raquo;</a>
                 </li>
             </ul>
         </nav>
     </div>
 }
 
-@await Html.PartialAsync("~/Views/Shared/_UpdateWordModal.cshtml")
+@await Html.PartialAsync("_UpdateWordModal")

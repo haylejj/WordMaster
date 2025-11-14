@@ -14,7 +14,7 @@
     <div class="col-md-8 offset-md-2 col-lg-6 offset-lg-3">
         <div class="card shadow-sm">
             <div class="card-header bg-dark text-white">
-                <h5 class="mb-0"><i class="fas fa-user-edit me-2"></i>Profil Bilgilerini Güncelle</h5>
+                <h5 class="mb-0"><i class="fas fa-user-edit me-2"></i>Profil Bilgilerini GÃ¼ncelle</h5>
             </div>
             <div class="card-body">
                 @if (TempData["SuccessMessage"] != null)
@@ -25,10 +25,10 @@
                 }
                 <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
                 <form asp-controller="Member" asp-action="UserEdit" method="post" enctype="multipart/form-data">
-                    @*bu post bir file nesnesi aldýðý için ecntype ý belirmemiz lazm*@
+                    @*bu post bir file nesnesi aldÄ±ÄŸÄ± iÃ§in ecntype Ä± belirmemiz lazÄ±m*@
 
                     <div class="row mb-3">
-                        <label class="col-md-4 col-form-label" for="UserName">Kullanýcý Adý</label>
+                        <label class="col-md-4 col-form-label" for="UserName">KullanÄ±cÄ± AdÄ±</label>
                         <div class="col-md-8">
                             <input asp-for="UserName" class="form-control">
                             <span class="text-danger" asp-validation-for="UserName"></span>
@@ -49,14 +49,14 @@
                         </div>
                     </div>
                     <div class="row mb-3">
-                        <label class="col-md-4 col-form-label" for="BirthDate">Doðum Tarihi</label>
+                        <label class="col-md-4 col-form-label" for="BirthDate">DoÄŸum Tarihi</label>
                         <div class="col-md-8">
                             <input asp-for="BirthDate" class="form-control" type="date">
                             <span class="text-danger" asp-validation-for="BirthDate"></span>
                         </div>
                     </div>
                     <div class="row mb-3">
-                        <label class="col-md-4 col-form-label" for="City">Þehir</label>
+                        <label class="col-md-4 col-form-label" for="City">Åžehir</label>
                         <div class="col-md-8">
                             <input asp-for="City" class="form-control">
                             <span class="text-danger" asp-validation-for="City"></span>
@@ -66,13 +66,13 @@
                         <label class="col-md-4 col-form-label" for="Gender">Cinsiyet</label>
                         <div class="col-md-8">
                             <select class="form-control" asp-for="Gender" asp-items="ViewBag.genderList">
-                                <option value="">Cinsiyet Seçiniz</option>
+                                <option value="">Cinsiyet SeÃ§iniz</option>
                             </select>
                             <span class="text-danger" asp-validation-for="Gender"></span>
                         </div>
                     </div>
                     <div class="row mb-3">
-                        <label class="col-md-4 col-form-label" for="Picture">Profil Fotoðrafý</label>
+                        <label class="col-md-4 col-form-label" for="Picture">Profil FotoÄŸrafÄ±</label>
                         <div class="col-md-8">
                             <input asp-for="Picture" type="file" class="form-control" />
                             <span class="text-danger" asp-validation-for="Picture"></span>
@@ -81,7 +81,7 @@
                     <div class="row mb-3">
                         <div class="col-md-8 offset-md-4">
                             <button type="submit" class="btn btn-warning text-dark fw-bold"><i
-                                    class="fas fa-save me-2"></i>Güncelle</button>
+                                    class="fas fa-save me-2"></i>GÃ¼ncelle</button>
                         </div>
                     </div>
                 </form>

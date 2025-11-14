@@ -7,7 +7,7 @@
 
 @section Scripts {
     <script src="~/js/unknows/delete.js"></script>
-    <script src="~/js/word/update.js"></script>
+    <script src="~/js/unknows/update.js"></script>
     <script src="~/js/word/toggle.js"></script>
 }
 <h1 class="text-center page-title">Bilinmeyenler</h1>
@@ -116,7 +116,7 @@
 @if (Model != null && Model.TotalPages > 1)
 {
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
-        <div class="text-muted">Toplam @Model.TotalCount kay�t</div>
+        <div class="text-muted">Toplam @Model.TotalCount kayıt</div>
         <nav>
             <ul class="pagination mb-0">
                 @{
@@ -127,7 +127,7 @@
                 }
                 <li class="page-item @prevDisabled">
                     <a class="page-link"
-                        href="@Url.Action("", "Unknows", new { search = Model.Search, page = currentPage - 1, pageSize = Model.PageSize })">�</a>
+                        href="@Url.Action("", "Unknows", new { search = Model.Search, page = currentPage - 1, pageSize = Model.PageSize })">&laquo;</a>
                 </li>
                 @for (int p = 1; p <= Model.TotalPages; p++)
                 {
@@ -139,11 +139,11 @@
                 }
                 <li class="page-item @nextDisabled">
                     <a class="page-link"
-                        href="@Url.Action("", "Unknows", new { search = Model.Search, page = currentPage + 1, pageSize = Model.PageSize })">�</a>
+                        href="@Url.Action("", "Unknows", new { search = Model.Search, page = currentPage + 1, pageSize = Model.PageSize })">&raquo;</a>
                 </li>
             </ul>
         </nav>
     </div>
 }
 
-@await Html.PartialAsync("~/Views/Shared/_UpdateWordModal.cshtml")
+@await Html.PartialAsync("_UpdateWordModal")

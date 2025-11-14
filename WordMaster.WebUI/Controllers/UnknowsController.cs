@@ -77,10 +77,11 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
     [HttpGet("GetWord")]
     public async Task<IActionResult> GetWord(int unknowsId)
     {
-        string? userId = User.GetUserId();
-        Result<Unknows> result = await unknowsService.GetUnknowsWithWordAsync(unknowsId, userId!);
+        var userId = User.GetUserId();
+        // unknowsId aslında Word Id olarak gönderiliyor, bu yüzden WordService kullanıyoruz
+        var result = await wordService.GetWordForUserAsync(unknowsId, userId!);
 
-        if (!result.IsSuccess || result.Data?.Word == null)
+        if (!result.IsSuccess || result.Data == null)
         {
             return Json(new { success = false, message = "Kelime bulunamadı." });
         }
@@ -90,9 +91,9 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
             success = true,
             word = new
             {
-                id = result.Data.Word.Id,
-                englishWord = result.Data.Word.EnglishWord,
-                turkishWord = result.Data.Word.TurkishWord
+                id = result.Data.Id,
+                englishWord = result.Data.EnglishWord,
+                turkishWord = result.Data.TurkishWord
             }
         });
     }
