@@ -20,7 +20,9 @@ public static class StringExtensions
     public static string NormalizeTurkishWord(this string? word)
     {
         if (string.IsNullOrWhiteSpace(word))
+        {
             return string.Empty;
+        }
 
         CultureInfo turkishCulture = new("tr-TR");
         return word.Trim().ToLower(turkishCulture);

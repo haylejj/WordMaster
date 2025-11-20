@@ -96,7 +96,7 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
             return Result<Favorite>.Failure("Favori bulunamadı.");
         }
 
-        var favoriteDto = new FavoriteWithWordDto
+        FavoriteWithWordDto favoriteDto = new()
         {
             Id = favorite.Id,
             CreatedTime = favorite.CreatedTime,

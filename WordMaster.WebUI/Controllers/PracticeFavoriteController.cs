@@ -16,10 +16,13 @@ public class PracticeFavoriteController(IFavoriteService favoriteService) : Cont
     public async Task<IActionResult> Index()
     {
         string? userId = User.GetUserId();
-        if (userId == null) return Unauthorized();
+        if (userId == null)
+        {
+            return Unauthorized();
+        }
 
         Result<string> word = await favoriteService.GetRandomWordFromFavoritesAsync(userId);
-        var viewModel = new PracticeViewModel
+        PracticeViewModel viewModel = new()
         {
             EnglishWord = word.IsSuccess && word.Data != null ? word.Data : string.Empty,
             ErrorMessage = word.IsSuccess ? null : word.ErrorMessage
@@ -32,7 +35,11 @@ public class PracticeFavoriteController(IFavoriteService favoriteService) : Cont
     public async Task<IActionResult> CheckTranslation(string turkishWord, string englishWord)
     {
         string? userId = User.GetUserId();
-        if (userId == null) return Json(new { isCorrect = false });
+        if (userId == null)
+        {
+            return Json(new { isCorrect = false });
+        }
+
         Result<bool> result = await favoriteService.CheckTranslationAndUpdateAsync(userId, turkishWord, englishWord);
         return Json(new { isCorrect = result.Data });
     }
@@ -41,7 +48,11 @@ public class PracticeFavoriteController(IFavoriteService favoriteService) : Cont
     public async Task<IActionResult> GetNewEnglishWord()
     {
         string? userId = User.GetUserId();
-        if (userId == null) return Content(string.Empty);
+        if (userId == null)
+        {
+            return Content(string.Empty);
+        }
+
         Result<string> word = await favoriteService.GetRandomWordFromFavoritesAsync(userId);
         return Content(word.IsSuccess && word.Data != null ? word.Data : string.Empty);
     }

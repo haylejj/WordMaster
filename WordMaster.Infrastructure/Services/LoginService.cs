@@ -21,7 +21,11 @@ public class LoginService(UserManager<AppUser> userManager, SignInManager<AppUse
     public async Task<Result<string>> GeneratePasswordResetTokenAsync(string userId)
     {
         AppUser? user = await userManager.FindByIdAsync(userId);
-        if (user == null) return Result<string>.Failure("Kullanıcı bulunamadı.");
+        if (user == null)
+        {
+            return Result<string>.Failure("Kullanıcı bulunamadı.");
+        }
+
         string token = await userManager.GeneratePasswordResetTokenAsync(user);
         return Result<string>.Success(token);
 

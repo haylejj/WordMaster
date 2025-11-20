@@ -20,7 +20,7 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
         string? userId = User.GetUserId();
         Result<(List<Unknows> Unknows, int TotalCount)> result = await unknowsService.GetPagedUnknowsAsync(userId!, search, page, pageSize);
 
-        var viewModel = new UnknowsListViewModel
+        UnknowsListViewModel viewModel = new()
         {
             Words = result.IsSuccess ? result.Data.Unknows.Where(x => x.Word != null).Select(x => x.Word!).ToList() : new List<Word>(),
             Page = page,
@@ -66,7 +66,7 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
         {
             return NotFound();
         }
-        var viewModel = new WordViewModel
+        WordViewModel viewModel = new()
         {
             Id = result.Data.Word.Id,
             EnglishWord = result.Data.Word.EnglishWord,
@@ -77,9 +77,9 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
     [HttpGet("GetWord")]
     public async Task<IActionResult> GetWord(int unknowsId)
     {
-        var userId = User.GetUserId();
+        string? userId = User.GetUserId();
         // unknowsId aslında Word Id olarak gönderiliyor, bu yüzden WordService kullanıyoruz
-        var result = await wordService.GetWordForUserAsync(unknowsId, userId!);
+        Result<Word> result = await wordService.GetWordForUserAsync(unknowsId, userId!);
 
         if (!result.IsSuccess || result.Data == null)
         {
@@ -112,14 +112,14 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
             return Json(new { success = false, message = "Kullanıcı bilgisi bulunamadı." });
         }
 
-        var wordDto = new WordDto
+        WordDto wordDto = new()
         {
             Id = viewModel.Id,
             EnglishWord = viewModel.EnglishWord,
             TurkishWord = viewModel.TurkishWord
         };
 
-        var updateResult = await wordService.UpdateWordAsync(wordDto.Id, wordDto, userId);
+        Result updateResult = await wordService.UpdateWordAsync(wordDto.Id, wordDto, userId);
 
         if (!updateResult.IsSuccess)
         {

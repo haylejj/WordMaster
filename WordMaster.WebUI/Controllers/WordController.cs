@@ -20,7 +20,7 @@ public class WordController(IWordService wordService) : Controller
         Result<(List<Word> Words, int TotalCount)> pageResult = await wordService.GetPagedWordsAsync(userId!, search, page, pageSize);
         (List<Word>? words, int totalCount) = pageResult.IsSuccess ? pageResult.Data : (new List<Word>(), 0);
 
-        var viewModel = new WordListViewModel
+        WordListViewModel viewModel = new()
         {
             Words = words,
             Page = page,
@@ -51,14 +51,14 @@ public class WordController(IWordService wordService) : Controller
             return View(viewModel);
         }
 
-        var wordDto = new WordDto
+        WordDto wordDto = new()
         {
             Id = viewModel.Id,
             EnglishWord = viewModel.EnglishWord,
             TurkishWord = viewModel.TurkishWord
         };
 
-        var result = await wordService.AddWordAsync(wordDto, userId);
+        Result result = await wordService.AddWordAsync(wordDto, userId);
 
         if (!result.IsSuccess)
         {
@@ -125,14 +125,14 @@ public class WordController(IWordService wordService) : Controller
             return Json(new { success = false, message = "Kullanıcı bilgisi bulunamadı." });
         }
 
-        var wordDto = new WordDto
+        WordDto wordDto = new()
         {
             Id = viewModel.Id,
             EnglishWord = viewModel.EnglishWord,
             TurkishWord = viewModel.TurkishWord
         };
 
-        var result = await wordService.UpdateWordAsync(wordDto.Id, wordDto, userId);
+        Result result = await wordService.UpdateWordAsync(wordDto.Id, wordDto, userId);
 
         if (!result.IsSuccess)
         {

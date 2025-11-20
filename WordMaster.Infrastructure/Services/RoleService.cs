@@ -22,7 +22,7 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
         }
 
         List<AppRole> roles = await roleManager.Roles.AsNoTracking().ToListAsync();
-        var roleViewModel = roles.Select(x => new RoleViewModel() { Id = x.Id, Name = x.Name! }).ToList();
+        List<RoleViewModel> roleViewModel = roles.Select(x => new RoleViewModel() { Id = x.Id, Name = x.Name! }).ToList();
 
         await cacheService.SetAsync(RolesCacheKey, roleViewModel, RolesCacheExpiration);
         return roleViewModel;
@@ -47,7 +47,7 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
         {
             return Result<RoleUpdateViewModel>.Failure("Rol bulunamadı.");
         }
-        var roleUpdateViewModel = new RoleUpdateViewModel() { Id = role.Id, Name = role.Name! };
+        RoleUpdateViewModel roleUpdateViewModel = new() { Id = role.Id, Name = role.Name! };
         return Result<RoleUpdateViewModel>.Success(roleUpdateViewModel);
     }
 
@@ -106,7 +106,7 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
 
         foreach (AppRole? role in roles)
         {
-            var assignToRoleViewModel = new AssignToRoleViewModel() { Id = role.Id, Name = role.Name! };
+            AssignToRoleViewModel assignToRoleViewModel = new() { Id = role.Id, Name = role.Name! };
             if (userRoles.Contains(role.Name!))
             {
                 assignToRoleViewModel.Exist = true;

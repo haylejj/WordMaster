@@ -57,6 +57,7 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
         currentUser.BirthDate = request.BirthDate;
         currentUser.City = request.City;
         currentUser.Gender = request.Gender;
+        // Removed Picture assignment since it's being removed from the form
 
         IdentityResult updateResult = await userManager.UpdateAsync(currentUser);
         if (!updateResult.Succeeded)
@@ -164,7 +165,7 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
         }
 
         IList<string> roles = await userManager.GetRolesAsync(user);
-        var userWithRoles = new UserWithRolesViewModel
+        UserWithRolesViewModel userWithRoles = new()
         {
             Id = user.Id,
             UserName = user.UserName!,
@@ -214,7 +215,7 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
             .Select(x => x.LastPracticeDate)
             .FirstOrDefaultAsync();
 
-        var detail = new UserDetailViewModel
+        UserDetailViewModel detail = new()
         {
             Id = user.Id,
             UserName = user.UserName!,

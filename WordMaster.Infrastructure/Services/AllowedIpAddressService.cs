@@ -28,7 +28,7 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync();
 
-        var viewModels = entities.Select(x => new AllowedIpAddressViewModel
+        List<AllowedIpAddressViewModel> viewModels = entities.Select(x => new AllowedIpAddressViewModel
         {
             Id = x.Id,
             IpAddress = x.IpAddress,
@@ -49,7 +49,7 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
             return Result<AllowedIpAddressViewModel>.Failure("IP adresi bulunamadı.");
         }
 
-        var viewModel = new AllowedIpAddressViewModel
+        AllowedIpAddressViewModel viewModel = new()
         {
             Id = entity.Id,
             IpAddress = entity.IpAddress,

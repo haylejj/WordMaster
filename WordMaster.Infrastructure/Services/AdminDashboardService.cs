@@ -16,7 +16,7 @@ public class AdminDashboardService(IWordRepository wordRepository, IFavoriteRepo
         int totalUnknowsTask = await unknowsRepository.CountAsync();
         int totalUsersTask = await userManager.Users.CountAsync();
 
-        var loginStatistics = await logHistoryService.GetLoginStatisticsAsync();
+        LoginStatisticsViewModel loginStatistics = await logHistoryService.GetLoginStatisticsAsync();
 
         return new AdminDashboardViewModel
         {

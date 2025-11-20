@@ -4,6 +4,7 @@ using WordMaster.Application.Requests.Auth;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Application.ViewModels.Auth;
 using WordMaster.Domain.Entities;
+using WordMaster.Domain.Results;
 using WordMaster.WebUI.Extensions;
 
 namespace WordMaster.WebUI.Controllers;
@@ -21,7 +22,15 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
     [HttpPost("")]
     public async Task<IActionResult> Login(LoginViewModel viewModel, string? returnUrl = null)
     {
-        if (!ModelState.IsValid) // bir hata var ise validate de
+        // 6 karakterden kısa şifre girilirse DB kontrolüne gitmeden direk hata dön
+        if (viewModel.Password?.Length < 6)
+        {
+            ModelState.Remove("Password");
+            ModelState.AddModelErrorList(new List<string>() { "Email veya şifre yanlış" });
+            return View(viewModel);
+        }
+
+        if (!ModelState.IsValid)
         {
             return View(viewModel);
         }
@@ -34,7 +43,7 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
             RememberMe = viewModel.RememberMe
         };
 
-        var userResult = await loginService.FindByEmailAsync(request.Email!);
+        Result<AppUser> userResult = await loginService.FindByEmailAsync(request.Email!);
         string? ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
 
         if (!userResult.IsSuccess || userResult.Data == null)
@@ -44,45 +53,48 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
             return View(viewModel);
         }
 
-        var login = await loginService.LoginAsync(request, userResult.Data);
+        Result login = await loginService.LoginAsync(request, userResult.Data);
 
         await logHistoryService.RecordAsync(userResult.Data.Id, request.Email, ipAddress, login.IsSuccess, "UserLogin");
 
         if (login.IsSuccess)
         {
-            return Redirect(returnUrl!);
+            return !string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl) ? Redirect(returnUrl) : RedirectToAction("Index", "Word");
         }
 
         ModelState.AddModelErrorList(new List<string> { "Email veya şifre yanlış" });
         return View(viewModel);
     }
-    [HttpGet("ForgetPassword")]
+    [HttpGet("/ForgetPassword")]
     public IActionResult ForgetPassword()
     {
         return View();
     }
 
-    [HttpPost("ForgetPassword")]
+    [HttpPost("/ForgetPassword")]
     public async Task<IActionResult> ForgetPassword(ForgetPasswordViewModel viewModel)
     {
         if (!ModelState.IsValid)
         {
             return View();
         }
+
         ForgetPasswordRequest request = new()
         {
             Email = viewModel.Email
         };
-        var user = await loginService.FindByEmailAsync(request.Email!);
+        Result<AppUser> user = await loginService.FindByEmailAsync(request.Email!);
         if (!user.IsSuccess || user.Data == null)
         {
-            ModelState.AddModelError(string.Empty, "Bu email adresine sahip kullanıcı bulunamamıştır.");
-            return View();
+            // Güvenlik gereği, kullanıcı bulunamasa bile sanki işlem başarılıymış gibi mesaj dönüyoruz.
+            // Böylece kötü niyetli kişiler sistemde hangi emailin kayıtlı olduğunu anlayamaz.
+            TempData["success"] = "Eğer böyle bir kullanıcı varsa, şifre yenileme linki e-posta adresinize gönderilmiştir.";
+            return RedirectToAction(nameof(ForgetPassword));
         }
 
-        var passwordResetToken = await loginService.GeneratePasswordResetTokenAsync(user.Data.Id);// Şimdi biz özel token ürettik. Şifre değiştirmede kullanılacak 
+        Result<string> passwordResetToken = await loginService.GeneratePasswordResetTokenAsync(user.Data.Id);// Şimdi biz özel token ürettik. Şifre değiştirmede kullanılacak 
 
-        string passwordResetLink = Url.Action("ResetPassword", null, new { userId = user.Data.Id, token = passwordResetToken.Data }, HttpContext.Request.Scheme); // bu linkin ömrünü program.cs de belirliycez.
+        string passwordResetLink = Url.Action("ResetPassword", null, new { userId = user.Data.Id, token = passwordResetToken.Data }, HttpContext.Request.Scheme)!; // bu linkin ömrünü program.cs de belirliycez.
         //Örnek link
         // https://localhost:7289?userId=12213&token=aasdfasdfsdf
 
@@ -93,7 +105,7 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
 
         return RedirectToAction(nameof(ForgetPassword));
     }
-    [HttpGet("ResetPassword")]
+    [HttpGet("/ResetPassword")]
     public IActionResult ResetPassword(string userId, string token)
     {
         TempData["userId"] = userId;
@@ -101,7 +113,7 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
         return View();
     }
 
-    [HttpPost("ResetPassword")]
+    [HttpPost("/ResetPassword")]
     public async Task<IActionResult> ResetPassword(ResetPasswordViewModel viewModel)
     {
         if (!ModelState.IsValid)
@@ -125,7 +137,7 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
             Password = viewModel.Password,
             PasswordConfirm = viewModel.PasswordConfirm
         };
-        var result = await userManager.ResetPasswordAsync(hasUser, token!.ToString()!, request.Password!);
+        IdentityResult result = await userManager.ResetPasswordAsync(hasUser, token!.ToString()!, request.Password!);
         if (result.Succeeded)
         {
             TempData["SuccessMessage"] = "Şifreniz başarıyla yenilenmiştir.";
