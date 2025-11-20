@@ -2,9 +2,9 @@ name: Audit
 
 on:
   push:
-    branches: [ main, feature/* ]
+    branches: [feature/*]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   codeql-analysis:
@@ -26,7 +26,7 @@ jobs:
       - name: Setup .NET 9 SDK
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: "9.0.x"
           cache: true
           cache-dependency-path: |
             WordMaster.Domain/packages.lock.json
@@ -54,7 +54,7 @@ jobs:
       - name: Setup .NET 9 SDK
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: "9.0.x"
           cache: true
           cache-dependency-path: |
             WordMaster.Domain/packages.lock.json
