@@ -20,7 +20,9 @@ public class AllowedIpAddressCreateRequestValidator : AbstractValidator<AllowedI
     private bool BeValidIpAddress(string? ipAddress)
     {
         if (string.IsNullOrWhiteSpace(ipAddress))
+        {
             return false;
+        }
 
         // IPAddress.TryParse hem IPv4 hem IPv6'yı doğrular
         return IPAddress.TryParse(ipAddress, out IPAddress? parsedAddress) &&

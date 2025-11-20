@@ -18,7 +18,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
     public async Task<Result<Word>> GetWordForUserAsync(int id, string userId)
     {
         string cacheKey = $"word:{id}:user:{userId}";
-        var cachedWordDto = await cacheService.GetAsync<WordDto>(cacheKey);
+        WordDto? cachedWordDto = await cacheService.GetAsync<WordDto>(cacheKey);
         if (cachedWordDto != null)
         {
             Word cachedWord = new()
@@ -36,7 +36,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
             return Result<Word>.Failure("Kelime bulunamadı.");
         }
 
-        var wordDto = new WordDto
+        WordDto wordDto = new()
         {
             Id = word.Id,
             EnglishWord = word.EnglishWord,
@@ -56,7 +56,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
             return Result.Failure("İngilizce kelime boş olamaz.");
         }
 
-        var isDuplicate = await IsWordDuplicateAsync(wordDto.EnglishWord, userId);
+        Result<bool> isDuplicate = await IsWordDuplicateAsync(wordDto.EnglishWord, userId);
         if (isDuplicate.Data == true)
         {
             return Result.Failure("Bu kelime zaten sözlüğünüzde mevcut.");

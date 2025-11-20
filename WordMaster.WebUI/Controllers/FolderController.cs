@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WordMaster.Application.Dto.Word;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Application.ViewModels.Folder;
 using WordMaster.Domain.Entities;
@@ -55,7 +56,7 @@ public class FolderController(IFolderService folderService) : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        var vm = new FolderDetailViewModel
+        FolderDetailViewModel vm = new()
         {
             FolderId = folderResult.Data!.Id,
             FolderName = folderResult.Data!.Name,
@@ -137,7 +138,7 @@ public class FolderController(IFolderService folderService) : Controller
         {
             return Json(new { results = Array.Empty<object>() });
         }
-        var wordsResult = await folderService.GetUserWordsAsync(userId);
+        Result<List<WordLookupDto>> wordsResult = await folderService.GetUserWordsAsync(userId);
         if (!wordsResult.IsSuccess || wordsResult.Data == null)
         {
             return Json(new { results = Array.Empty<object>() });

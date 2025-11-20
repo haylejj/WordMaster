@@ -165,7 +165,7 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
         }
 
         IList<string> roles = await userManager.GetRolesAsync(user);
-        var userWithRoles = new UserWithRolesViewModel
+        UserWithRolesViewModel userWithRoles = new()
         {
             Id = user.Id,
             UserName = user.UserName!,
@@ -215,7 +215,7 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
             .Select(x => x.LastPracticeDate)
             .FirstOrDefaultAsync();
 
-        var detail = new UserDetailViewModel
+        UserDetailViewModel detail = new()
         {
             Id = user.Id,
             UserName = user.UserName!,

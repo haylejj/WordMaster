@@ -16,7 +16,7 @@ public class AllowedIpAddressController(IAllowedIpAddressService allowedIpAddres
     public async Task<IActionResult> Index()
     {
         List<AllowedIpAddressViewModel> allowedIpAddresses = await allowedIpAddressService.GetAllAsync();
-        var viewModel = new AllowedIpAddressListViewModel
+        AllowedIpAddressListViewModel viewModel = new()
         {
             AllowedIpAddresses = allowedIpAddresses
         };

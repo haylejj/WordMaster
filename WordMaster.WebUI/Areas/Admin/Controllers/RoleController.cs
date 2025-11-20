@@ -17,7 +17,7 @@ public class RoleController(IRoleService roleService) : Controller
     public async Task<IActionResult> Index()
     {
         List<RoleViewModel> roles = await roleService.GetRoleListAsync();
-        var viewModel = new RoleListViewModel
+        RoleListViewModel viewModel = new()
         {
             Roles = roles
         };

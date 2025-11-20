@@ -1,7 +1,9 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using WordMaster.Application.Requests.Auth;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Application.ViewModels.Auth;
+using WordMaster.Domain.Results;
 using WordMaster.WebUI.Extensions;
 
 namespace WordMaster.WebUI.Controllers;
@@ -30,7 +32,7 @@ public class RegisterController(IRegisterService registerService) : Controller
             PasswordConfirm = viewModel.PasswordConfirm,
             Phone = viewModel.Phone
         };
-        var result = await registerService.RegisterAsync(request);
+        Result<IEnumerable<IdentityError>> result = await registerService.RegisterAsync(request);
 
         if (!result.IsSuccess)
         {

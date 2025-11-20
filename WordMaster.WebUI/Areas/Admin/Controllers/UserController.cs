@@ -20,7 +20,7 @@ public class UserController(IUserService userService, IRoleService roleService) 
         Result<(List<UserWithRolesViewModel> Users, int TotalCount)> pageResult = await userService.GetPagedUsersAsync(search, page, pageSize);
         (List<UserWithRolesViewModel>? users, int totalCount) = pageResult.IsSuccess ? pageResult.Data : (new List<UserWithRolesViewModel>(), 0);
 
-        var viewModel = new UserListViewModel
+        UserListViewModel viewModel = new()
         {
             Users = users,
             Page = page,
@@ -48,14 +48,14 @@ public class UserController(IUserService userService, IRoleService roleService) 
         }
 
         UserEditViewModel user = result.Data;
-        var birthDateStr = user.BirthDate?.ToString("yyyy-MM-dd") ?? "";
+        string birthDateStr = user.BirthDate?.ToString("yyyy-MM-dd") ?? "";
 
         return Json(new
         {
             success = true,
             user = new
             {
-                id = id,
+                id,
                 userName = user.UserName,
                 email = user.Email,
                 phone = user.Phone ?? "",
@@ -78,7 +78,7 @@ public class UserController(IUserService userService, IRoleService roleService) 
             return Json(new { success = false, message = string.Join(", ", errors) });
         }
 
-        var userEditRequest = new UserEditRequest
+        UserEditRequest userEditRequest = new()
         {
             UserName = request.UserName,
             Email = request.Email,
@@ -198,7 +198,7 @@ public class UserController(IUserService userService, IRoleService roleService) 
             return Json(new { success = false, message = "Rol bilgisi gerekli." });
         }
 
-        var assignToRoleViewModels = request.Roles.Select(r => new AssignToRoleViewModel
+        List<AssignToRoleViewModel> assignToRoleViewModels = request.Roles.Select(r => new AssignToRoleViewModel
         {
             Id = r.Id,
             Name = r.Name,

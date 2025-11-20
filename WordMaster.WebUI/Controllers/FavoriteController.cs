@@ -20,7 +20,7 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
         string? userId = User.GetUserId();
         Result<(List<Favorite> Favorites, int TotalCount)> result = await favoriteService.GetPagedFavoritesAsync(userId!, search, page, pageSize);
 
-        var viewModel = new FavoriteListViewModel
+        FavoriteListViewModel viewModel = new()
         {
             Words = result.IsSuccess ? [.. result.Data.Favorites.Where(x => x.Word != null).Select(x => x.Word!)] : [],
             Page = page,
@@ -65,7 +65,7 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
         {
             return NotFound();
         }
-        var viewModel = new WordViewModel
+        WordViewModel viewModel = new()
         {
             Id = result.Data.Word.Id,
             EnglishWord = result.Data.Word.EnglishWord,
@@ -76,9 +76,9 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
     [HttpGet("GetWord")]
     public async Task<IActionResult> GetWord(int favoriteId)
     {
-        var userId = User.GetUserId();
+        string? userId = User.GetUserId();
         // favoriteId aslında Word Id olarak gönderiliyor, bu yüzden WordService kullanıyoruz
-        var result = await wordService.GetWordForUserAsync(favoriteId, userId!);
+        Result<Word> result = await wordService.GetWordForUserAsync(favoriteId, userId!);
 
         if (!result.IsSuccess || result.Data == null)
         {
@@ -111,14 +111,14 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
             return Json(new { success = false, message = "Kullanıcı bilgisi bulunamadı." });
         }
 
-        var wordDto = new WordDto
+        WordDto wordDto = new()
         {
             Id = viewModel.Id,
             EnglishWord = viewModel.EnglishWord,
             TurkishWord = viewModel.TurkishWord
         };
 
-        var updateResult = await wordService.UpdateWordAsync(wordDto.Id, wordDto, userId);
+        Result updateResult = await wordService.UpdateWordAsync(wordDto.Id, wordDto, userId);
 
         if (!updateResult.IsSuccess)
         {

@@ -18,7 +18,7 @@
 
     <div class="mb-3">
         <label class="form-label" asp-for="UserName">Kullanıcı Adı</label>
-        <input asp-for="UserName" class="form-control" placeholder="kullaniciadi" />
+        <input asp-for="UserName" class="form-control"  />
         <span asp-validation-for="UserName" class="text-danger small"></span>
     </div>
 
@@ -38,7 +38,7 @@
         <div class="col-md-6 mb-3">
             <label class="form-label" asp-for="Password">Şifre</label>
             <div class="input-group">
-                <input asp-for="Password" class="form-control" type="password" placeholder="••••••••" />
+                <input asp-for="Password" class="form-control" type="password" />
                 <button class="btn btn-toggle-password" type="button">
                     <i class="fas fa-eye"></i>
                 </button>
@@ -48,7 +48,7 @@
         <div class="col-md-6 mb-3">
             <label class="form-label" asp-for="PasswordConfirm">Şifre Tekrar</label>
             <div class="input-group">
-                <input asp-for="PasswordConfirm" class="form-control" type="password" placeholder="••••••••" />
+                <input asp-for="PasswordConfirm" class="form-control" type="password" />
                 <button class="btn btn-toggle-password" type="button">
                     <i class="fas fa-eye"></i>
                 </button>

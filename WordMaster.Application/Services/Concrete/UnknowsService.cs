@@ -134,7 +134,7 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
             return Result<Unknows>.Failure("Kayıt bulunamadı.");
         }
 
-        var unknowDto = new UnknowsWithWordDto
+        UnknowsWithWordDto unknowDto = new()
         {
             Id = unknow.Id,
             CreatedTime = unknow.CreatedTime,

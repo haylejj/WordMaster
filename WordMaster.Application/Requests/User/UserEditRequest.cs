@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Http;
 using WordMaster.Domain.Entities;
 
 namespace WordMaster.Application.Requests.User;

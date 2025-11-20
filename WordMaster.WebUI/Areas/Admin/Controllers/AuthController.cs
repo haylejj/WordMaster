@@ -63,7 +63,7 @@ public class AuthController(ILoginService loginService, UserManager<AppUser> use
             return View(viewModel);
         }
 
-        var request = new LoginRequest
+        LoginRequest request = new()
         {
             Email = viewModel.Email,
             Password = viewModel.Password,
