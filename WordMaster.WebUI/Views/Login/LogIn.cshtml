@@ -1,189 +1,49 @@
 @using WordMaster.Application.ViewModels.Auth
 @model LoginViewModel
 @{
-    Layout = null;
+    Layout = "_AuthLayout";
+    ViewData["Title"] = "Giriş Yap";
 }
-<link href="\lib\bootstrap\dist\css\bootstrap.css" rel="stylesheet" />
 
-<style>
-    html,
-    body {
-        height: 100%;
-        margin: 0;
-        padding: 0;
-        background-color: #f8f9fa;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    }
-
-    .auth-container {
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-    }
-
-    .auth-card {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
-        border: none;
-        max-width: 450px;
-        width: 100%;
-    }
-
-    .auth-card .card-body {
-        padding: 2.5rem;
-    }
-
-    .auth-card h2 {
-        color: #2c3e50;
-        font-weight: 600;
-        margin-bottom: 2rem;
-        font-size: 1.75rem;
-    }
-
-    .form-label {
-        font-weight: 500;
-        color: #495057;
-        margin-bottom: 0.5rem;
-        font-size: 0.9rem;
-    }
-
-    .form-control {
-        border: 1px solid #dee2e6;
-        border-radius: 8px;
-        padding: 0.75rem 1rem;
-        transition: all 0.3s ease;
-        font-size: 0.95rem;
-    }
-
-    .form-control:focus {
-        border-color: #007bff;
-        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15);
-        outline: none;
-    }
-
-    .form-group {
-        margin-bottom: 1.25rem;
-    }
-
-    .form-check {
-        display: flex;
-        align-items: center;
-        margin-bottom: 1rem;
-    }
-
-    .form-check-input {
-        margin-right: 0.5rem;
-        cursor: pointer;
-    }
-
-    .form-check-label {
-        margin-left: 0;
-        cursor: pointer;
-        color: #495057;
-        font-size: 0.9rem;
-    }
-
-    .btn {
-        border-radius: 8px;
-        padding: 0.75rem 1.5rem;
-        font-weight: 500;
-        transition: all 0.3s ease;
-        border-width: 1.5px;
-    }
-
-    .btn-outline-secondary {
-        color: #6c757d;
-        border-color: #6c757d;
-        background-color: transparent;
-    }
-
-    .btn-outline-secondary:hover {
-        background-color: #6c757d;
-        border-color: #6c757d;
-        color: white;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    .btn-outline-secondary:active {
-        transform: translateY(0);
-    }
-
-    .btn-sm {
-        padding: 0.5rem 1rem;
-        font-size: 0.875rem;
-    }
-
-    .text-danger {
-        font-size: 0.875rem;
-        margin-top: 0.25rem;
-    }
-
-    .alert {
-        border-radius: 8px;
-        border: none;
-        margin-bottom: 1.5rem;
-    }
-
-    a {
-        color: #007bff;
-        text-decoration: none;
-        transition: color 0.3s ease;
-    }
-
-    a:hover {
-        color: #0056b3;
-        text-decoration: underline;
-    }
-
-    .float-end {
-        font-size: 0.875rem;
-    }
-
-    .w-100 {
-        width: 100%;
-    }
-</style>
-
-
-<div class="auth-container">
-    <div class="card auth-card">
-        <div class="card-body">
-            <h2 class="text-uppercase text-center">Login</h2>
-
-            <form asp-controller="Login" asp-action="Login" asp-route-returnUrl="@Context.Request.Query["returnUrl"]"
-                method="post">
-                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-                <div class="form-group">
-                    <label class="form-label" for="Email" asp-for="Email"></label>
-                    <input asp-for="Email" class="form-control" type="email" />
-                    <span asp-validation-for="Email" class="text-danger"></span>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="Password" asp-for="Password"></label>
-                    <input asp-for="Password" class="form-control" type="password" />
-                    <span asp-validation-for="Password" class="text-danger"></span>
-                </div>
-                <div class="form-group">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="form-check">
-                            <input asp-for="RememberMe" class="form-check-input" type="checkbox" />
-                            <label class="form-check-label" for="RememberMe" asp-for="RememberMe"></label>
-                        </div>
-                        <a asp-controller="Login" asp-action="ForgetPassword">Şifremi Unuttum</a>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <button class="btn btn-outline-secondary w-100" type="submit">Login</button>
-                </div>
-            </form>
-        </div>
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
-</div>
+}
 
-<script src="~/lib/jquery/dist/jquery.min.js"></script>
-<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-<partial name="_ValidationScriptsPartial" />
+<form asp-controller="Login" asp-action="Login" asp-route-returnUrl="@Context.Request.Query["returnUrl"]" method="post">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+    <div class="mb-3">
+        <label class="form-label" asp-for="Email">Email Adresi</label>
+        <input asp-for="Email" class="form-control" type="email" placeholder="ornek@email.com" />
+        <span asp-validation-for="Email" class="text-danger small"></span>
+    </div>
+
+    <div class="mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+            <label class="form-label mb-0" asp-for="Password">Şifre</label>
+            <a href="/ForgetPassword" class="small text-decoration-none" style="color: #667eea;">Şifremi Unuttum</a>
+        </div>
+        <div class="input-group">
+            <input asp-for="Password" class="form-control" type="password" placeholder="••••••••" />
+            <button class="btn btn-toggle-password" type="button">
+                <i class="fas fa-eye"></i>
+            </button>
+        </div>
+        <span asp-validation-for="Password" class="text-danger small"></span>
+    </div>
+
+    <div class="mb-4 form-check">
+        <input asp-for="RememberMe" class="form-check-input" type="checkbox" />
+        <label class="form-check-label small text-muted" asp-for="RememberMe">Beni Hatırla</label>
+    </div>
+
+    <button class="btn btn-primary w-100 mb-3" type="submit">Giriş Yap</button>
+
+    <div class="auth-footer">
+        Hesabınız yok mu? <a href="/Register">Kayıt Ol</a>
+    </div>
+</form>

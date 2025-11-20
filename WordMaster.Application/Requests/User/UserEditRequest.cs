@@ -10,7 +10,6 @@ public class UserEditRequest
     public string? Phone { get; set; }
     public DateTime? BirthDate { get; set; }
     public string? City { get; set; }
-    public IFormFile? Picture { get; set; }
     public Gender? Gender { get; set; }
 }
 

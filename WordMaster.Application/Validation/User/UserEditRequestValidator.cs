@@ -1,5 +1,4 @@
 using FluentValidation;
-using Microsoft.AspNetCore.Http;
 using WordMaster.Application.Requests.User;
 
 namespace WordMaster.Application.Validation.User;
@@ -21,18 +20,6 @@ public class UserEditRequestValidator : AbstractValidator<UserEditRequest>
         RuleFor(x => x.Gender)
             .NotNull().WithMessage("Cinsiyet alanı boş bırakılamaz");
 
-        RuleFor(x => x.Picture)
-            .Must(BeValidImageFile).When(x => x.Picture != null)
-            .WithMessage("Geçerli bir resim dosyası seçiniz (JPG, PNG, GIF)");
-    }
-
-    private bool BeValidImageFile(IFormFile? file)
-    {
-        if (file == null) return true;
-
-        string[] allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
-        string extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-        return allowedExtensions.Contains(extension);
     }
 }
 

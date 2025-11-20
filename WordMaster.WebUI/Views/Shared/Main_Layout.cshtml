@@ -25,7 +25,7 @@
 <body>
     <div class="body-inner d-flex flex-column min-vh-100">
         <header id="header" class="header-one">
-            <div class="site-navigation bg-dark">
+            <div class="site-navigation">
                 <div class="container">
                     <nav class="navbar navbar-expand-lg navbar-dark">
                         <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
@@ -71,14 +71,14 @@
                                             <i class="fas fa-user"></i> @(User.Identity?.Name?.ToUpper() ?? "USER")
                                         </a>
                                         <ul class="dropdown-menu dropdown-menu-end">
-                                            <li><a class="dropdown-item" href="/Member/UserEdit"><i
+                                            <li><a class="dropdown-item" asp-action="UpdateProfile" asp-controller="Profile"><i
                                                         class="fas fa-user-edit me-2"></i>Update Your Profile</a></li>
-                                            <li><a class="dropdown-item" href="/Member/PasswordChange"><i
+                                            <li><a class="dropdown-item" asp-action="PasswordChange" asp-controller="Profile"><i
                                                         class="fas fa-key me-2"></i>Password Change</a></li>
                                             <li>
                                                 <hr class="dropdown-divider">
                                             </li>
-                                            <li><a class="dropdown-item text-danger" href="/Member/LogOut"><i
+                                            <li><a class="dropdown-item text-danger" href="/Logout"><i
                                                         class="fas fa-sign-out-alt me-2"></i>Log Out</a></li>
                                         </ul>
                                     </li>
@@ -93,15 +93,14 @@
                                             <i class="fas fa-user"></i> @(User.Identity?.Name?.ToUpper() ?? "USER")
                                         </a>
                                         <ul class="dropdown-menu dropdown-menu-end">
-                                            <li><a class="dropdown-item" asp-action="UserEdit" asp-controller="Member"><i
+                                            <li><a class="dropdown-item" asp-action="UpdateProfile" asp-controller="Profile"><i
                                                         class="fas fa-user-edit me-2"></i>Update Your Profile</a></li>
-                                            <li><a class="dropdown-item" href="/Member/PasswordChange"><i
+                                            <li><a class="dropdown-item" asp-action="PasswordChange" asp-controller="Profile"><i
                                                         class="fas fa-key me-2"></i>Password Change</a></li>
                                             <li>
                                                 <hr class="dropdown-divider">
                                             </li>
-                                            <li><a class="dropdown-item text-danger" asp-action="LogOut"
-                                                    asp-controller="Member"><i class="fas fa-sign-out-alt me-2"></i>Log
+                                            <li><a class="dropdown-item text-danger" href="/Logout"><i class="fas fa-sign-out-alt me-2"></i>Log
                                                     Out</a></li>
                                         </ul>
                                     </li>

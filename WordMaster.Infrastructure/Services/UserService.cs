@@ -57,6 +57,7 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
         currentUser.BirthDate = request.BirthDate;
         currentUser.City = request.City;
         currentUser.Gender = request.Gender;
+        // Removed Picture assignment since it's being removed from the form
 
         IdentityResult updateResult = await userManager.UpdateAsync(currentUser);
         if (!updateResult.Succeeded)

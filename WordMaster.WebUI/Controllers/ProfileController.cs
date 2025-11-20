@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using WordMaster.Application.Requests.Auth;
 using WordMaster.Application.Requests.User;
 using WordMaster.Application.Services.Abstract;
-using WordMaster.Application.ViewModels.Auth;
 using WordMaster.Application.ViewModels.User;
 using WordMaster.Domain.Results;
 using WordMaster.WebUI.Extensions;
@@ -12,22 +11,28 @@ using WordMaster.WebUI.Extensions;
 namespace WordMaster.WebUI.Controllers;
 
 [Authorize]
-public class MemberController(IUserService userService) : Controller
+public class ProfileController(IUserService userService) : Controller
 {
+    [Route("Logout")]
     public async Task<IActionResult> LogOut()
     {
         await userService.LogOutAsync();
         return RedirectToAction("Login", "Login");
     }
-    public async Task<IActionResult> UserEdit()
+
+    [Route("Profile/Update")]
+    public async Task<IActionResult> UpdateProfile()
     {
         ViewBag.genderList = userService.GetGenderSelectList();
         Result<UserEditViewModel> vm = await userService.GetUserEditViewModelAsync(User.Identity!.Name!);
         return View(vm.Data);
     }
+
     [HttpPost]
-    public async Task<IActionResult> UserEdit(UserEditRequest request)
+    [Route("Profile/Update")]
+    public async Task<IActionResult> UpdateProfile(UserEditRequest request)
     {
+        ViewBag.genderList = userService.GetGenderSelectList();
         if (!ModelState.IsValid)
         {
             return View();
@@ -37,30 +42,24 @@ public class MemberController(IUserService userService) : Controller
         {
             ModelState.AddModelErrorList(edit.Data!.Select(x => x.Description).ToList());
         }
-        TempData["SuccessMessage"] = "G�ncelleme i�lemi ba�ar�l�.";
-        return RedirectToAction(nameof(UserEdit));
+        TempData["SuccessMessage"] = "Güncelleme işlemi başarılı.";
+        return RedirectToAction(nameof(UpdateProfile));
     }
     public IActionResult PasswordChange()
     {
         return View();
     }
     [HttpPost]
-    public async Task<IActionResult> PasswordChange(PasswordChangeViewModel viewModel)
+    public async Task<IActionResult> PasswordChange(PasswordChangeRequest request)
     {
         if (!ModelState.IsValid)
         {
             return View();
         }
-        var request = new PasswordChangeRequest
-        {
-            PasswordOld = viewModel.PasswordOld,
-            PasswordNew = viewModel.PasswordNew,
-            PasswordConfirm = viewModel.PasswordConfirm
-        };
         Result<bool> check = await userService.CheckPasswordAsync(User.Identity!.Name!, request.PasswordOld!);
         if (!check.Data)
         {
-            ModelState.AddModelError(string.Empty, "Mevcut �ifrenizi yanl�� girdiniz.");
+            ModelState.AddModelError(string.Empty, "Mevcut Şifrenizi yanlış girdiniz.");
             return View();
         }
         Result<IEnumerable<IdentityError>> change = await userService.ChangePasswordAsync(request, User.Identity!.Name!);
@@ -69,7 +68,7 @@ public class MemberController(IUserService userService) : Controller
             ModelState.AddModelErrorList(change.Data!.Select(x => x.Description).ToList());
             return View();
         }
-        TempData["SuccessMessage"] = "�ifreniz ba�ar�yla de�i�tirilmi�tir.";
+        TempData["SuccessMessage"] = "Şifreniz başarıyla değiştirilmiştir.";
 
         return View();
     }
@@ -77,7 +76,7 @@ public class MemberController(IUserService userService) : Controller
     {
         string message = string.Empty;
 
-        message = "Bu sayfay� g�rmeye yetkiniz yoktur.Yetki almak i�in y�neticinizle g�r��ebilirsiniz.";
+        message = "Bu sayfayı görmeye yetkiniz yoktur.Yetki almak için yöneticinizle görüşebilirsiniz.";
         ViewBag.message = message;
         return View();
     }
