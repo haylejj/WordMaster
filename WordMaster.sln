@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.7.34018.315
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11217.181 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WordMaster.Domain", "WordMaster.Domain\WordMaster.Domain.csproj", "{5DDB8A24-A696-4C3E-AB0C-E2924641C33A}"
 EndProject
@@ -10,6 +10,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WordMaster.Application", "WordMaster.Application\WordMaster.Application.csproj", "{00590ECA-DD47-47DB-BF8A-5DD1FA375BB5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WordMaster.WebUI", "WordMaster.WebUI\WordMaster.WebUI.csproj", "{03FABD7A-8335-47A8-AD31-19A61B432DE9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WordMaster.API", "WordMaster.API\WordMaster.API.csproj", "{F641B96B-B6D1-44D8-9B0D-C92353E91160}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{03FABD7A-8335-47A8-AD31-19A61B432DE9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{03FABD7A-8335-47A8-AD31-19A61B432DE9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{03FABD7A-8335-47A8-AD31-19A61B432DE9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F641B96B-B6D1-44D8-9B0D-C92353E91160}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F641B96B-B6D1-44D8-9B0D-C92353E91160}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F641B96B-B6D1-44D8-9B0D-C92353E91160}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F641B96B-B6D1-44D8-9B0D-C92353E91160}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
