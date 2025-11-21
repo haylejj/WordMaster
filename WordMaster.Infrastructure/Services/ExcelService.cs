@@ -2,7 +2,7 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.EntityFrameworkCore.Storage;
 using System.Globalization;
-using WordMaster.Application.Dto.Word;
+using System.Text.RegularExpressions;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Extensions;
@@ -23,40 +23,67 @@ public class ExcelService(AppDbContext context) : IExcelService
                 HasHeaderRecord = true,
                 Delimiter = ",",
                 MissingFieldFound = null,
-                HeaderValidated = null
+                HeaderValidated = null,
+                BadDataFound = null
             };
 
             using CsvReader csv = new(reader, config);
 
-            List<WordImportDto> records = new();
-            try
+            // Başlığı oku
+            if (!await csv.ReadAsync() || !csv.ReadHeader())
             {
-                records = csv.GetRecords<WordImportDto>().ToList();
-            }
-            catch (Exception ex)
-            {
-                return Result.Failure($"CSV ayrıştırma hatası: {ex.Message}. Lütfen başlıkların WORD ve MEANING olduğundan ve virgül ile ayrıldığından emin olun.");
+                return Result.Failure("Dosya boş veya başlık satırı okunamadı.");
             }
 
-            if (records == null || records.Count == 0)
+            string[]? headers = csv.HeaderRecord;
+            if (headers == null)
             {
-                return Result.Failure("Dosya boş veya okunamadı.");
+                return Result.Failure("Başlıklar okunamadı.");
+            }
+
+            // WORD ve MEANING sütunlarını dinamik olarak bul
+            // Önce tam eşleşme ara, yoksa içerik kontrolü yap
+            string? wordHeader = headers.FirstOrDefault(h => h.Trim().Equals("WORD", StringComparison.OrdinalIgnoreCase));
+            string? meaningHeader = headers.FirstOrDefault(h => h.Trim().Equals("MEANING", StringComparison.OrdinalIgnoreCase));
+
+            wordHeader ??= headers.FirstOrDefault(h => h.Trim().Contains("WORD", StringComparison.OrdinalIgnoreCase));
+
+            meaningHeader ??= headers.FirstOrDefault(h => h.Trim().Contains("MEANING", StringComparison.OrdinalIgnoreCase));
+
+            if (string.IsNullOrEmpty(wordHeader) || string.IsNullOrEmpty(meaningHeader))
+            {
+                return Result.Failure("CSV dosyasında 'WORD' ve 'MEANING' sütunları bulunamadı (veya bunları içeren sütunlar).");
             }
 
             List<Word> wordsToAdd = new();
             DateTime now = DateTime.UtcNow;
 
-            foreach (WordImportDto record in records)
+            while (await csv.ReadAsync())
             {
-                if (string.IsNullOrWhiteSpace(record.WORD) || string.IsNullOrWhiteSpace(record.MEANING))
+                string? wordVal = csv.GetField(wordHeader);
+                string? meaningVal = csv.GetField(meaningHeader);
+
+                if (string.IsNullOrWhiteSpace(wordVal) || string.IsNullOrWhiteSpace(meaningVal))
+                {
+                    continue;
+                }
+
+                // Kelime ve anlamı temizle
+                string cleanWord = wordVal.Trim().Trim('"').NormalizeEnglishWord();
+
+                // Virgülleri boşluk yap, sonra birden fazla boşluğu tek boşluğa indir
+                string tempMeaning = meaningVal.Trim().Trim('"').Replace(",", " ");
+                string cleanMeaning = Regex.Replace(tempMeaning, @"\s+", " ").NormalizeTurkishWord();
+
+                if (string.IsNullOrWhiteSpace(cleanWord) || string.IsNullOrWhiteSpace(cleanMeaning))
                 {
                     continue;
                 }
 
                 wordsToAdd.Add(new Word
                 {
-                    EnglishWord = record.WORD.NormalizeEnglishWord(),
-                    TurkishWord = record.MEANING.NormalizeTurkishWord(),
+                    EnglishWord = cleanWord,
+                    TurkishWord = cleanMeaning,
                     UserId = userId,
                     CreatedTime = now,
                     IsLastAnswerCorrect = null,
@@ -67,7 +94,7 @@ public class ExcelService(AppDbContext context) : IExcelService
                 });
             }
 
-            if (wordsToAdd.Count==0)
+            if (wordsToAdd.Count == 0)
             {
                 return Result.Failure("Eklenecek geçerli kelime bulunamadı.");
             }
