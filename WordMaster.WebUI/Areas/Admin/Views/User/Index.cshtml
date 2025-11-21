@@ -11,13 +11,13 @@
 
 <form method="get" asp-area="Admin" asp-controller="User" asp-action="Index" class="row g-2 align-items-end mb-3">
     <div class="col-sm-6 col-md-6">
-        <label for="search" class="form-label">Ara</label>
-        <input type="text" id="search" name="search" value="@Model?.Search" class="form-control"
+        <label for="search" class="admin-form-label">Ara</label>
+        <input type="text" id="search" name="search" value="@Model?.Search" class="admin-form-control"
             placeholder="Kullanıcı adı, email veya ID ara" />
     </div>
     <div class="col-sm-3 col-md-3">
-        <label for="pageSize" class="form-label">Sayfa başına</label>
-        <select id="pageSize" name="pageSize" class="form-select">
+        <label for="pageSize" class="admin-form-label">Sayfa başına</label>
+        <select id="pageSize" name="pageSize" class="admin-form-control">
             @if (Model?.PageSize == 10)
             {
                 <option value="10" selected>10</option>
@@ -55,9 +55,9 @@
     <input type="hidden" name="page" value="1" />
     <div class="col-sm-3 col-md-3">
         <div class="d-flex gap-2">
-            <button type="submit" class="btn btn-primary flex-fill">Uygula</button>
+            <button type="submit" class="btn-admin-primary flex-fill">Uygula</button>
             <a href="@Url.Action("Index", "User", new { area = "Admin" })"
-                class="btn btn-outline-secondary flex-fill">Filtreyi Temizle</a>
+                class="btn-admin-secondary flex-fill text-center text-decoration-none">Filtreyi Temizle</a>
         </div>
     </div>
 </form>
@@ -77,79 +77,84 @@
     </div>
 }
 
-<table class="table table-bordered table-striped table-hover admin-user-table">
-    <thead>
-        <tr>
-            <th>Kullanıcı Adı</th>
-            <th>Email</th>
-            <th>Roller</th>
-            <th></th>
-            <th></th>
-            <th></th>
-            <th></th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @if (Model == null || Model.Users == null || Model.Users.Count == 0)
-        {
+<div class="admin-table-container">
+    <table class="admin-table">
+        <thead>
             <tr>
-                <td colspan="8" class="text-center">
-                    <p class="text-muted mt-3 mb-3">Veri bulunmamaktadır.</p>
-                </td>
+                <th>Kullanıcı Adı</th>
+                <th>Email</th>
+                <th>Roller</th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
             </tr>
-        }
-        else
-        {
-            @foreach (var item in Model.Users)
+        </thead>
+        <tbody>
+            @if (Model == null || Model.Users == null || Model.Users.Count == 0)
             {
                 <tr>
-                    <td>@item.UserName</td>
-                    <td>@item.Email</td>
-                    <td>
-                        @if (item.Roles != null && item.Roles.Any())
-                        {
-                            @foreach (var role in item.Roles)
-                            {
-                                <span class="badge bg-primary me-1">@role</span>
-                            }
-                        }
-                        else
-                        {
-                            <span class="text-muted">Rol yok</span>
-                        }
-                    </td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-info btn-sm text-white text-nowrap"
-                            onclick="openDetailModal('@item.Id', event)">Detay</button>
-                    </td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-warning btn-sm text-dark text-nowrap"
-                            onclick="openUpdateModal('@item.Id', event)">Güncelle</button>
-                    </td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-danger btn-sm text-white text-nowrap"
-                            onclick="deleteUser('@item.Id', event)">Sil</button>
-                    </td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-success btn-sm text-white text-nowrap"
-                            onclick="openUpdateRolesModal('@item.Id', event)">Rolleri Güncelle</button>
-                    </td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-secondary btn-sm text-white text-nowrap"
-                            onclick="resetPassword('@item.Id', event)">Şifre Sıfırla</button>
+                    <td colspan="8" class="text-center">
+                        <p class="text-muted mt-3 mb-3">Veri bulunmamaktadır.</p>
                     </td>
                 </tr>
             }
-        }
-    </tbody>
-</table>
+            else
+            {
+                @foreach (var item in Model.Users)
+                {
+                    <tr>
+                        <td>@item.UserName</td>
+                        <td>@item.Email</td>
+                        <td>
+                            @if (item.Roles != null && item.Roles.Any())
+                            {
+                                @foreach (var role in item.Roles)
+                                {
+                                    <span class="badge bg-danger me-1">@role</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">Rol yok</span>
+                            }
+                        </td>
+                        <td class="text-center">
+                            <button type="button" class="btn-admin-action btn-admin-edit"
+                                onclick="openDetailModal('@item.Id', event)" title="Detay"><i class="fas fa-eye"></i></button>
+                        </td>
+                        <td class="text-center">
+                            <button type="button" class="btn-admin-action btn-admin-edit"
+                                onclick="openUpdateModal('@item.Id', event)" title="Güncelle"><i
+                                    class="fas fa-edit"></i></button>
+                        </td>
+                        <td class="text-center">
+                            <button type="button" class="btn-admin-action btn-admin-delete"
+                                onclick="deleteUser('@item.Id', event)" title="Sil"><i class="fas fa-trash"></i></button>
+                        </td>
+                        <td class="text-center">
+                            <button type="button" class="btn-admin-action btn-admin-edit"
+                                onclick="openUpdateRolesModal('@item.Id', event)" title="Rolleri Güncelle"><i
+                                    class="fas fa-user-tag"></i></button>
+                        </td>
+                        <td class="text-center">
+                            <button type="button" class="btn-admin-action btn-admin-secondary"
+                                onclick="resetPassword('@item.Id', event)" title="Şifre Sıfırla"><i
+                                    class="fas fa-key"></i></button>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
 
 @if (Model != null && Model.TotalPages > 1)
 {
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
         <div class="text-muted">Toplam @Model.TotalCount kayıt</div>
-        <nav>
+        <nav class="admin-pagination">
             <ul class="pagination mb-0">
                 @{
                     var currentPage = Model.Page <= 0 ? 1 : Model.Page;
@@ -181,37 +186,38 @@
 <!-- Update Modal -->
 <div class="modal fade" id="updateModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Kullanıcı Güncelle</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-content admin-modal-content">
+            <div class="modal-header admin-modal-header">
+                <h5 class="modal-title admin-modal-title">Kullanıcı Güncelle</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body admin-modal-body">
                 <form id="updateUserForm">
                     <input type="hidden" id="updateUserId" name="Id" />
                     <div class="mb-3">
-                        <label for="updateUserName" class="form-label fw-bold">Kullanıcı Adı:</label>
-                        <input type="text" class="form-control" id="updateUserName" name="UserName" required />
+                        <label for="updateUserName" class="admin-form-label">Kullanıcı Adı:</label>
+                        <input type="text" class="admin-form-control" id="updateUserName" name="UserName" required />
                     </div>
                     <div class="mb-3">
-                        <label for="updateEmail" class="form-label fw-bold">Email:</label>
-                        <input type="email" class="form-control" id="updateEmail" name="Email" required />
+                        <label for="updateEmail" class="admin-form-label">Email:</label>
+                        <input type="email" class="admin-form-control" id="updateEmail" name="Email" required />
                     </div>
                     <div class="mb-3">
-                        <label for="updatePhone" class="form-label fw-bold">Telefon:</label>
-                        <input type="text" class="form-control" id="updatePhone" name="Phone" />
+                        <label for="updatePhone" class="admin-form-label">Telefon:</label>
+                        <input type="text" class="admin-form-control" id="updatePhone" name="Phone" />
                     </div>
                     <div class="mb-3">
-                        <label for="updateCity" class="form-label fw-bold">Şehir:</label>
-                        <input type="text" class="form-control" id="updateCity" name="City" />
+                        <label for="updateCity" class="admin-form-label">Şehir:</label>
+                        <input type="text" class="admin-form-control" id="updateCity" name="City" />
                     </div>
                     <div class="mb-3">
-                        <label for="updateBirthDate" class="form-label fw-bold">Doğum Tarihi:</label>
-                        <input type="date" class="form-control" id="updateBirthDate" name="BirthDate" />
+                        <label for="updateBirthDate" class="admin-form-label">Doğum Tarihi:</label>
+                        <input type="date" class="admin-form-control" id="updateBirthDate" name="BirthDate" />
                     </div>
                     <div class="mb-3">
-                        <label for="updateGender" class="form-label fw-bold">Cinsiyet:</label>
-                        <select class="form-select" id="updateGender" name="Gender">
+                        <label for="updateGender" class="admin-form-label">Cinsiyet:</label>
+                        <select class="admin-form-control" id="updateGender" name="Gender">
                             <option value="">Seçiniz</option>
                             <option value="0">Erkek</option>
                             <option value="1">Kadın</option>
@@ -219,9 +225,9 @@
                     </div>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
-                <button type="button" class="btn btn-primary" onclick="updateUser()">Güncelle</button>
+            <div class="modal-footer admin-modal-footer">
+                <button type="button" class="btn-admin-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn-admin-primary" onclick="updateUser()">Güncelle</button>
             </div>
         </div>
     </div>
@@ -238,16 +244,17 @@
 <!-- Detail Modal -->
 <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title fw-bold">Kullanıcı Detayları</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-content admin-modal-content">
+            <div class="modal-header admin-modal-header">
+                <h5 class="modal-title admin-modal-title">Kullanıcı Detayları</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body admin-modal-body">
                 <div class="row">
                     <div class="col-md-6">
-                        <h6 class="fw-bold mb-3">Kişisel Bilgiler</h6>
-                        <table class="table table-borderless">
+                        <h6 class="fw-bold mb-3 text-danger">Kişisel Bilgiler</h6>
+                        <table class="table table-borderless text-white">
                             <tr>
                                 <td class="fw-bold" style="width: 40%;">ID:</td>
                                 <td id="detailId">-</td>
@@ -279,8 +286,8 @@
                         </table>
                     </div>
                     <div class="col-md-6">
-                        <h6 class="fw-bold mb-3">Giriş İstatistikleri</h6>
-                        <table class="table table-borderless">
+                        <h6 class="fw-bold mb-3 text-danger">Giriş İstatistikleri</h6>
+                        <table class="table table-borderless text-white">
                             <tr>
                                 <td class="fw-bold" style="width: 50%;">Toplam Giriş:</td>
                                 <td id="detailTotalLoginAttempts">-</td>
@@ -306,8 +313,8 @@
                 </div>
                 <div class="row mt-3">
                     <div class="col-12">
-                        <h6 class="fw-bold mb-3">Kelime İstatistikleri</h6>
-                        <table class="table table-borderless">
+                        <h6 class="fw-bold mb-3 text-danger">Kelime İstatistikleri</h6>
+                        <table class="table table-borderless text-white">
                             <tr>
                                 <td class="fw-bold" style="width: 30%;">Toplam Kelime:</td>
                                 <td id="detailWordCount">-</td>
@@ -328,8 +335,8 @@
                     </div>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+            <div class="modal-footer admin-modal-footer">
+                <button type="button" class="btn-admin-secondary" data-bs-dismiss="modal">Kapat</button>
             </div>
         </div>
     </div>
@@ -338,25 +345,27 @@
 <!-- Update Roles Modal -->
 <div class="modal fade" id="updateRolesModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-content admin-modal-content">
+            <div class="modal-header admin-modal-header">
+                <h5 class="modal-title admin-modal-title">Rolleri Güncelle</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body admin-modal-body">
                 <form id="updateRolesForm">
                     <input type="hidden" id="updateRolesUserId" name="UserId" />
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Roller:</label>
-                        <div id="rolesContainer" class="border rounded p-3"
+                        <label class="admin-form-label">Roller:</label>
+                        <div id="rolesContainer" class="border rounded p-3 border-secondary"
                             style="max-height: 300px; overflow-y: auto;">
                             <!-- Roller buraya yüklenecek -->
                         </div>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
-                <button type="button" class="btn btn-primary" onclick="updateUserRoles()">Güncelle</button>
+            <div class="modal-footer admin-modal-footer">
+                <button type="button" class="btn-admin-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn-admin-primary" onclick="updateUserRoles()">Güncelle</button>
             </div>
         </div>
     </div>
