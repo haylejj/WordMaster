@@ -71,10 +71,12 @@
                                             <i class="fas fa-user"></i> @(User.Identity?.Name?.ToUpper() ?? "USER")
                                         </a>
                                         <ul class="dropdown-menu dropdown-menu-end">
-                                            <li><a class="dropdown-item" asp-action="UpdateProfile" asp-controller="Profile"><i
-                                                        class="fas fa-user-edit me-2"></i>Update Your Profile</a></li>
-                                            <li><a class="dropdown-item" asp-action="PasswordChange" asp-controller="Profile"><i
-                                                        class="fas fa-key me-2"></i>Password Change</a></li>
+                                            <li><a class="dropdown-item" asp-action="UpdateProfile"
+                                                    asp-controller="Profile"><i class="fas fa-user-edit me-2"></i>Update
+                                                    Your Profile</a></li>
+                                            <li><a class="dropdown-item" asp-action="PasswordChange"
+                                                    asp-controller="Profile"><i class="fas fa-key me-2"></i>Password
+                                                    Change</a></li>
                                             <li>
                                                 <hr class="dropdown-divider">
                                             </li>
@@ -93,14 +95,17 @@
                                             <i class="fas fa-user"></i> @(User.Identity?.Name?.ToUpper() ?? "USER")
                                         </a>
                                         <ul class="dropdown-menu dropdown-menu-end">
-                                            <li><a class="dropdown-item" asp-action="UpdateProfile" asp-controller="Profile"><i
-                                                        class="fas fa-user-edit me-2"></i>Update Your Profile</a></li>
-                                            <li><a class="dropdown-item" asp-action="PasswordChange" asp-controller="Profile"><i
-                                                        class="fas fa-key me-2"></i>Password Change</a></li>
+                                            <li><a class="dropdown-item" asp-action="UpdateProfile"
+                                                    asp-controller="Profile"><i class="fas fa-user-edit me-2"></i>Update
+                                                    Your Profile</a></li>
+                                            <li><a class="dropdown-item" asp-action="PasswordChange"
+                                                    asp-controller="Profile"><i class="fas fa-key me-2"></i>Password
+                                                    Change</a></li>
                                             <li>
                                                 <hr class="dropdown-divider">
                                             </li>
-                                            <li><a class="dropdown-item text-danger" href="/Logout"><i class="fas fa-sign-out-alt me-2"></i>Log
+                                            <li><a class="dropdown-item text-danger" href="/Logout"><i
+                                                        class="fas fa-sign-out-alt me-2"></i>Log
                                                     Out</a></li>
                                         </ul>
                                     </li>
@@ -121,7 +126,7 @@
             <div class="container">
                 <div class="row">
                     <div class="col-md-12 text-center">
-                        <p class="mb-0">&copy; @DateTime.Now.Year English Practice Site. All rights reserved.</p>
+                        <p class="mb-0">&copy; @DateTime.UtcNow.Year English Practice Site. All rights reserved.</p>
                     </div>
                 </div>
             </div>

@@ -166,13 +166,54 @@
                     <a class="page-link"
                         href="@Url.Action("Index", "User", new { area = "Admin", search = Model.Search, page = currentPage - 1, pageSize = Model.PageSize })">&laquo;</a>
                 </li>
-                @for (int p = 1; p <= Model.TotalPages; p++)
+                @if (Model.TotalPages <= 7)
                 {
-                    var active = p == currentPage ? "active" : string.Empty;
-                    <li class="page-item @active">
-                        <a class="page-link"
-                            href="@Url.Action("Index", "User", new { area = "Admin", search = Model.Search, page = p, pageSize = Model.PageSize })">@p</a>
-                    </li>
+                    for (int p = 1; p <= Model.TotalPages; p++)
+                    {
+                        var active = p == currentPage ? "active" : string.Empty;
+                        <li class="page-item @active">
+                            <a class="page-link"
+                                href="@Url.Action("Index", "User", new { area = "Admin", search = Model.Search, page = p, pageSize = Model.PageSize })">@p</a>
+                        </li>
+                    }
+                }
+                else
+                {
+                    var startPage = Math.Max(1, currentPage - 2);
+                    var endPage = Math.Min(Model.TotalPages, currentPage + 2);
+
+                    if (startPage > 1)
+                    {
+                        <li class="page-item">
+                            <a class="page-link"
+                                href="@Url.Action("Index", "User", new { area = "Admin", search = Model.Search, page = 1, pageSize = Model.PageSize })">1</a>
+                        </li>
+                        if (startPage > 2)
+                        {
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                        }
+                    }
+
+                    for (int p = startPage; p <= endPage; p++)
+                    {
+                        var active = p == currentPage ? "active" : string.Empty;
+                        <li class="page-item @active">
+                            <a class="page-link"
+                                href="@Url.Action("Index", "User", new { area = "Admin", search = Model.Search, page = p, pageSize = Model.PageSize })">@p</a>
+                        </li>
+                    }
+
+                    if (endPage < Model.TotalPages)
+                    {
+                        if (endPage < Model.TotalPages - 1)
+                        {
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                        }
+                        <li class="page-item">
+                            <a class="page-link"
+                                href="@Url.Action("Index", "User", new { area = "Admin", search = Model.Search, page = Model.TotalPages, pageSize = Model.PageSize })">@Model.TotalPages</a>
+                        </li>
+                    }
                 }
                 <li class="page-item @nextDisabled">
                     <a class="page-link"

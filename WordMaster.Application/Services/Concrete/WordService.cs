@@ -67,7 +67,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
             EnglishWord = wordDto.EnglishWord,
             TurkishWord = wordDto.TurkishWord,
             UserId = userId,
-            CreatedTime = DateTime.Now
+            CreatedTime = DateTime.UtcNow
         };
 
         await wordRepository.AddAsync(word);
@@ -200,7 +200,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
         bool isCorrect = word.TurkishWord == normalizedTurkishWord;
 
         word.IsLastAnswerCorrect = isCorrect;
-        word.LastPracticeDate = DateTime.Now;
+        word.LastPracticeDate = DateTime.UtcNow;
 
         if (isCorrect)
         {
