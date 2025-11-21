@@ -9,6 +9,5 @@ public class UserUpdateRequest
     public string? Email { get; set; }
     public string? Phone { get; set; }
     public DateTime? BirthDate { get; set; }
-    public string? City { get; set; }
     public Gender? Gender { get; set; }
 }

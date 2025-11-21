@@ -38,7 +38,6 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
                 Email = currentUser.Email,
                 Phone = currentUser.PhoneNumber,
                 BirthDate = currentUser.BirthDate,
-                City = currentUser.City,
                 Gender = currentUser.Gender,
             });
     }
@@ -55,7 +54,6 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
         currentUser.Email = request.Email;
         currentUser.PhoneNumber = request.Phone;
         currentUser.BirthDate = request.BirthDate;
-        currentUser.City = request.City;
         currentUser.Gender = request.Gender;
         // Removed Picture assignment since it's being removed from the form
 
@@ -109,7 +107,7 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
     {
         List<AppUser> users = await userManager.Users.ToListAsync();
 
-        return [.. users.Select(x => new UserViewModel { Id = x.Id, UserName = x.UserName!, Email = x.Email! })];
+        return [.. users.Select(x => new UserViewModel { Id = x.Id.ToString(), UserName = x.UserName!, Email = x.Email! })];
     }
 
     public async Task<Result<(List<UserWithRolesViewModel> Users, int TotalCount)>> GetPagedUsersAsync(string? search, int page, int pageSize)
@@ -128,7 +126,8 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
 
         if (!string.IsNullOrWhiteSpace(search))
         {
-            query = query.Where(x => x.UserName!.Contains(search) || x.Email!.Contains(search) || x.Id.Contains(search));
+            // Note: ToString() in query might not be supported by all providers or might cause client evaluation
+            query = query.Where(x => x.UserName!.Contains(search) || x.Email!.Contains(search) || x.Id.ToString().Contains(search));
         }
 
         int totalCount = await query.CountAsync();
@@ -146,7 +145,7 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
             IList<string> roles = await userManager.GetRolesAsync(user);
             usersWithRoles.Add(new UserWithRolesViewModel
             {
-                Id = user.Id,
+                Id = user.Id.ToString(),
                 UserName = user.UserName!,
                 Email = user.Email!,
                 Roles = [.. roles]
@@ -167,7 +166,7 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
         IList<string> roles = await userManager.GetRolesAsync(user);
         UserWithRolesViewModel userWithRoles = new()
         {
-            Id = user.Id,
+            Id = user.Id.ToString(),
             UserName = user.UserName!,
             Email = user.Email!,
             Roles = [.. roles]
@@ -187,14 +186,20 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
                 Email = user.Email,
                 Phone = user.PhoneNumber,
                 BirthDate = user.BirthDate,
-                City = user.City,
                 Gender = user.Gender,
             });
     }
 
     public async Task<Result<UserDetailViewModel>> GetUserDetailAsync(string id)
     {
-        AppUser? user = await userManager.FindByIdAsync(id);
+        if (!Guid.TryParse(id, out Guid userId))
+        {
+            return Result<UserDetailViewModel>.Failure("Geçersiz ID formatı.");
+        }
+
+        AppUser? user = await userManager.Users
+            .FirstOrDefaultAsync(x => x.Id == userId);
+
         if (user == null)
         {
             return Result<UserDetailViewModel>.Failure("Kullanıcı bulunamadı.");
@@ -205,24 +210,23 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
         LastLoginInfoViewModel lastLoginInfo = await logHistoryService.GetLastSuccessfulLoginAsync(id);
 
         // Word Statistics
-        int wordCount = await wordRepository.CountAsync(x => x.UserId == id);
-        int favoriteCount = await favoriteRepository.CountAsync(x => x.UserId == id);
-        int unknowsCount = await unknowsRepository.CountAsync(x => x.UserId == id);
+        int wordCount = await wordRepository.CountAsync(x => x.UserId == userId);
+        int favoriteCount = await favoriteRepository.CountAsync(x => x.UserId == userId);
+        int unknowsCount = await unknowsRepository.CountAsync(x => x.UserId == userId);
 
         DateTime? lastPracticeDate = await wordRepository
-            .Where(x => x.UserId == id && x.LastPracticeDate != null)
+            .Where(x => x.UserId == userId && x.LastPracticeDate != null)
             .OrderByDescending(x => x.LastPracticeDate)
             .Select(x => x.LastPracticeDate)
             .FirstOrDefaultAsync();
 
         UserDetailViewModel detail = new()
         {
-            Id = user.Id,
+            Id = user.Id.ToString(),
             UserName = user.UserName!,
             Email = user.Email!,
             Phone = user.PhoneNumber,
             BirthDate = user.BirthDate,
-            City = user.City,
             Gender = user.Gender,
             TotalLoginAttempts = userLoginStats.TotalLogins,
             SuccessfulLogins = userLoginStats.SuccessfulLogins,
@@ -250,7 +254,6 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
         user.Email = request.Email;
         user.PhoneNumber = request.Phone;
         user.BirthDate = request.BirthDate;
-        user.City = request.City;
         user.Gender = request.Gender;
 
         IdentityResult updateResult = await userManager.UpdateAsync(user);

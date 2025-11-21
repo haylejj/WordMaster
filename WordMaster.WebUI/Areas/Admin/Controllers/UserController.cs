@@ -59,7 +59,6 @@ public class UserController(IUserService userService, IRoleService roleService) 
                 userName = user.UserName,
                 email = user.Email,
                 phone = user.Phone ?? "",
-                city = user.City ?? "",
                 birthDate = birthDateStr,
                 gender = user.Gender?.ToString() ?? ""
             }
@@ -84,7 +83,6 @@ public class UserController(IUserService userService, IRoleService roleService) 
             Email = request.Email,
             Phone = request.Phone,
             BirthDate = request.BirthDate,
-            City = request.City,
             Gender = request.Gender
         };
 
@@ -143,7 +141,6 @@ public class UserController(IUserService userService, IRoleService roleService) 
                 email = detail.Email,
                 phone = detail.Phone ?? "-",
                 birthDate = detail.BirthDate?.ToString("dd.MM.yyyy") ?? "-",
-                city = detail.City ?? "-",
                 gender = detail.Gender?.ToString() ?? "-",
                 totalLoginAttempts = detail.TotalLoginAttempts,
                 successfulLogins = detail.SuccessfulLogins,

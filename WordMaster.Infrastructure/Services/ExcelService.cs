@@ -13,7 +13,7 @@ namespace WordMaster.Infrastructure.Services;
 
 public class ExcelService(AppDbContext context) : IExcelService
 {
-    public async Task<Result> ImportWordsAsync(Stream fileStream, string userId)
+    public async Task<Result> ImportWordsAsync(Stream fileStream, Guid userId)
     {
         try
         {

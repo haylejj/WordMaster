@@ -18,13 +18,13 @@ public class FolderService(
 {
     private static readonly TimeSpan DropdownCacheExpiration = TimeSpan.FromMinutes(10);
 
-    public async Task<Result<List<Folder>>> GetUserFoldersAsync(string userId)
+    public async Task<Result<List<Folder>>> GetUserFoldersAsync(Guid userId)
     {
         List<Folder> folders = await folderRepository.GetUserFoldersAsync(userId);
         return Result<List<Folder>>.Success(folders);
     }
 
-    public async Task<Result<Folder>> GetUserFolderAsync(int folderId, string userId)
+    public async Task<Result<Folder>> GetUserFolderAsync(long folderId, Guid userId)
     {
         Folder? folder = await folderRepository.GetUserFolderAsync(folderId, userId);
         return folder == null
@@ -32,7 +32,7 @@ public class FolderService(
             : Result<Folder>.Success(folder);
     }
 
-    public async Task<Result> AddFolderAsync(string name, string userId)
+    public async Task<Result> AddFolderAsync(string name, Guid userId)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -57,7 +57,7 @@ public class FolderService(
         return Result.Success();
     }
 
-    public async Task<Result> UpdateFolderAsync(int folderId, string name, string userId)
+    public async Task<Result> UpdateFolderAsync(long folderId, string name, Guid userId)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -82,7 +82,7 @@ public class FolderService(
         return Result.Success();
     }
 
-    public async Task<Result> DeleteFolderAsync(int folderId, string userId)
+    public async Task<Result> DeleteFolderAsync(long folderId, Guid userId)
     {
         Folder? folder = await folderRepository.GetUserFolderAsync(folderId, userId);
         if (folder == null)
@@ -95,7 +95,7 @@ public class FolderService(
         return Result.Success();
     }
 
-    public async Task<Result<List<Word>>> GetWordsInFolderAsync(int folderId, string userId)
+    public async Task<Result<List<Word>>> GetWordsInFolderAsync(long folderId, Guid userId)
     {
         // Ensure folder belongs to user
         Folder? folder = await folderRepository.GetUserFolderAsync(folderId, userId);
@@ -107,7 +107,7 @@ public class FolderService(
         return Result<List<Word>>.Success(words);
     }
 
-    public async Task<Result> AddWordToFolderAsync(int folderId, int wordId, string userId)
+    public async Task<Result> AddWordToFolderAsync(long folderId, long wordId, Guid userId)
     {
         bool folderExists = await folderRepository.AnyAsync(f => f.Id == folderId && f.UserId == userId);
         bool wordExists = await wordRepository.AnyAsync(w => w.Id == wordId && w.UserId == userId);
@@ -127,7 +127,7 @@ public class FolderService(
         return Result.Success();
     }
 
-    public async Task<Result> RemoveWordFromFolderAsync(int folderId, int wordId, string userId)
+    public async Task<Result> RemoveWordFromFolderAsync(long folderId, long wordId, Guid userId)
     {
         bool folderExists = await folderRepository.AnyAsync(f => f.Id == folderId && f.UserId == userId);
         if (!folderExists)
@@ -146,7 +146,7 @@ public class FolderService(
         return Result.Success();
     }
 
-    public async Task<Result<List<WordLookupDto>>> GetUserWordsAsync(string userId)
+    public async Task<Result<List<WordLookupDto>>> GetUserWordsAsync(Guid userId)
     {
         // Cache all user's words for dropdown usage; client will filter locally
         string cacheKey = $"dropdown_words:user:{userId}";

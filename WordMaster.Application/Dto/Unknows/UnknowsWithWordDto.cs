@@ -4,10 +4,10 @@ namespace WordMaster.Application.Dto.Unknows;
 
 public class UnknowsWithWordDto
 {
-    public int Id { get; set; }
+    public long Id { get; set; }
     public DateTime CreatedTime { get; set; }
-    public int WordId { get; set; }
-    public string? UserId { get; set; }
+    public long WordId { get; set; }
+    public Guid? UserId { get; set; }
     public WordDto? Word { get; set; }
 }
 

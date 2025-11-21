@@ -6,17 +6,17 @@ namespace WordMaster.Application.Services.Abstract;
 
 public interface IFolderService
 {
-    Task<Result<List<Folder>>> GetUserFoldersAsync(string userId);
-    Task<Result<Folder>> GetUserFolderAsync(int folderId, string userId);
-    Task<Result> AddFolderAsync(string name, string userId);
-    Task<Result> UpdateFolderAsync(int folderId, string name, string userId);
-    Task<Result> DeleteFolderAsync(int folderId, string userId);
+    Task<Result<List<Folder>>> GetUserFoldersAsync(Guid userId);
+    Task<Result<Folder>> GetUserFolderAsync(long folderId, Guid userId);
+    Task<Result> AddFolderAsync(string name, Guid userId);
+    Task<Result> UpdateFolderAsync(long folderId, string name, Guid userId);
+    Task<Result> DeleteFolderAsync(long folderId, Guid userId);
 
-    Task<Result<List<Word>>> GetWordsInFolderAsync(int folderId, string userId);
-    Task<Result> AddWordToFolderAsync(int folderId, int wordId, string userId);
-    Task<Result> RemoveWordFromFolderAsync(int folderId, int wordId, string userId);
+    Task<Result<List<Word>>> GetWordsInFolderAsync(long folderId, Guid userId);
+    Task<Result> AddWordToFolderAsync(long folderId, long wordId, Guid userId);
+    Task<Result> RemoveWordFromFolderAsync(long folderId, long wordId, Guid userId);
 
-    Task<Result<List<WordLookupDto>>> GetUserWordsAsync(string userId);
+    Task<Result<List<WordLookupDto>>> GetUserWordsAsync(Guid userId);
 }
 
 

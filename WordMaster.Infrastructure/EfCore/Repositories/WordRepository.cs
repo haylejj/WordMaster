@@ -6,26 +6,26 @@ namespace WordMaster.Infrastructure.EfCore.Repositories;
 
 public class WordRepository(AppDbContext context) : GenericRepository<Word>(context), IWordRepository
 {
-    public async Task<Word?> GetWordForUserAsync(int wordId, string userId)
+    public async Task<Word?> GetWordForUserAsync(long wordId, Guid userId)
     {
         return await _context.Words
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == wordId && x.UserId == userId);
     }
 
-    public async Task<Word?> GetWordForUserTrackedAsync(int wordId, string userId)
+    public async Task<Word?> GetWordForUserTrackedAsync(long wordId, Guid userId)
     {
         return await _context.Words
             .FirstOrDefaultAsync(x => x.Id == wordId && x.UserId == userId);
     }
 
-    public async Task<Word?> GetWordByNormalizedEnglishAsync(string userId, string normalizedEnglishWord)
+    public async Task<Word?> GetWordByNormalizedEnglishAsync(Guid userId, string normalizedEnglishWord)
     {
         return await _context.Words
             .FirstOrDefaultAsync(x => x.UserId == userId && x.EnglishWord != null && x.EnglishWord == normalizedEnglishWord);
     }
 
-    public async Task<List<Word>> GetWordsByUserAsync(string userId)
+    public async Task<List<Word>> GetWordsByUserAsync(Guid userId)
     {
         return await _context.Words
             .Where(x => x.UserId == userId)
@@ -33,7 +33,7 @@ public class WordRepository(AppDbContext context) : GenericRepository<Word>(cont
             .ToListAsync();
     }
 
-    public async Task<(List<Word> Words, int TotalCount)> GetPagedWordsAsync(string userId, string? search, int page, int pageSize)
+    public async Task<(List<Word> Words, int TotalCount)> GetPagedWordsAsync(Guid userId, string? search, int page, int pageSize)
     {
         IQueryable<Word> query = _context.Words
             .Include(x => x.Favorite)

@@ -17,8 +17,13 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
     [HttpGet("")]
     public async Task<IActionResult> Index(string? search, int page = 1, int pageSize = 10)
     {
-        string? userId = User.GetUserId();
-        Result<(List<Favorite> Favorites, int TotalCount)> result = await favoriteService.GetPagedFavoritesAsync(userId!, search, page, pageSize);
+        Guid userId = User.GetUserId();
+        if (userId == Guid.Empty)
+        {
+            return RedirectToAction("LogIn", "Login");
+        }
+
+        Result<(List<Favorite> Favorites, int TotalCount)> result = await favoriteService.GetPagedFavoritesAsync(userId, search, page, pageSize);
 
         FavoriteListViewModel viewModel = new()
         {
@@ -32,10 +37,15 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
         return View(viewModel);
     }
     [HttpPost("ToggleFavorite")]
-    public async Task<IActionResult> ToggleFavorite(int id)
+    public async Task<IActionResult> ToggleFavorite(long id)
     {
-        string? userId = User.GetUserId();
-        Result<bool> result = await favoriteService.ToggleFavoriteAsync(id, userId!);
+        Guid userId = User.GetUserId();
+        if (userId == Guid.Empty)
+        {
+            return Json(new { success = false, message = "Kullanıcı oturumu bulunamadı." });
+        }
+
+        Result<bool> result = await favoriteService.ToggleFavoriteAsync(id, userId);
         if (!result.IsSuccess)
         {
             return Json(new { success = false, message = result.ErrorMessage ?? "İşlem başarısız." });
@@ -44,10 +54,16 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
     }
 
     [HttpGet("AddFavorite")]
-    public async Task<IActionResult> AddFavorite(int id)
+    public async Task<IActionResult> AddFavorite(long id)
     {
-        string? userId = User.GetUserId();
-        Result<bool> result = await favoriteService.ToggleFavoriteAsync(id, userId!);
+        Guid userId = User.GetUserId();
+        if (userId == Guid.Empty)
+        {
+            TempData["ErrorMessage"] = "Kullanıcı oturumu bulunamadı.";
+            return Redirect("/Word");
+        }
+
+        Result<bool> result = await favoriteService.ToggleFavoriteAsync(id, userId);
         if (!result.IsSuccess)
         {
             TempData["ErrorMessage"] = result.ErrorMessage ?? "Favori işlemi sırasında bir sorun oluştu.";
@@ -59,8 +75,13 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
     [HttpGet("UpdateFavorite")]
     public async Task<IActionResult> UpdateFavorite(int id)
     {
-        string? userId = User.GetUserId();
-        Result<Favorite> result = await favoriteService.GetFavoriteWithWordAsync(id, userId!);
+        Guid userId = User.GetUserId();
+        if (userId == Guid.Empty)
+        {
+            return NotFound();
+        }
+
+        Result<Favorite> result = await favoriteService.GetFavoriteWithWordAsync(id, userId);
         if (!result.IsSuccess || result.Data?.Word == null)
         {
             return NotFound();
@@ -74,11 +95,16 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
         return View(viewModel);
     }
     [HttpGet("GetWord")]
-    public async Task<IActionResult> GetWord(int favoriteId)
+    public async Task<IActionResult> GetWord(long favoriteId)
     {
-        string? userId = User.GetUserId();
+        Guid userId = User.GetUserId();
+        if (userId == Guid.Empty)
+        {
+            return Json(new { success = false, message = "Kullanıcı bulunamadı." });
+        }
+
         // favoriteId aslında Word Id olarak gönderiliyor, bu yüzden WordService kullanıyoruz
-        Result<Word> result = await wordService.GetWordForUserAsync(favoriteId, userId!);
+        Result<Word> result = await wordService.GetWordForUserAsync(favoriteId, userId);
 
         if (!result.IsSuccess || result.Data == null)
         {
@@ -105,8 +131,8 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
             return Json(new { success = false, message = "Geçersiz veri." });
         }
 
-        string? userId = User.GetUserId();
-        if (string.IsNullOrEmpty(userId))
+        Guid userId = User.GetUserId();
+        if (userId == Guid.Empty)
         {
             return Json(new { success = false, message = "Kullanıcı bilgisi bulunamadı." });
         }
@@ -131,8 +157,8 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
     [HttpPost("DeleteFavorite")]
     public async Task<IActionResult> DeleteFavorite(int id)
     {
-        string? userId = User.GetUserId();
-        if (string.IsNullOrEmpty(userId))
+        Guid userId = User.GetUserId();
+        if (userId == Guid.Empty)
         {
             return Json(new { success = false, message = "Kullanıcı bilgisi bulunamadı." });
         }

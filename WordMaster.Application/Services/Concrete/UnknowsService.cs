@@ -15,7 +15,7 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
     private static readonly TimeSpan PracticeCacheExpiration = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan GetByIdCacheExpiration = TimeSpan.FromMinutes(10);
 
-    public async Task<Result> DeleteUnknowsAsync(int unknowsId, string userId)
+    public async Task<Result> DeleteUnknowsAsync(int unknowsId, Guid userId)
     {
         Unknows? unknow = await unknowsRepository.GetByIdForUserAsync(unknowsId, userId);
         if (unknow == null)
@@ -33,7 +33,7 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
         return Result.Success();
     }
 
-    public async Task<Result<string>> GetRandomWordFromUnknowsAsync(string userId)
+    public async Task<Result<string>> GetRandomWordFromUnknowsAsync(Guid userId)
     {
         string cacheKey = $"unknows:user:{userId}";
         List<PracticeUnknowsCacheDto>? cachedUnknows = await cacheService.GetAsync<List<PracticeUnknowsCacheDto>>(cacheKey);
@@ -66,17 +66,17 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
         return Result<string>.Success(practiceUnknows[index].EnglishWord ?? string.Empty);
     }
 
-    public Task<Result<bool>> CheckTranslationAndUpdateAsync(string userId, string turkishWord, string englishWord)
+    public Task<Result<bool>> CheckTranslationAndUpdateAsync(Guid userId, string turkishWord, string englishWord)
     {
         return wordService.CheckTranslationAndUpdateAsync(userId, turkishWord, englishWord);
     }
 
-    public Task<List<Unknows>> GetUserUnknowsAsync(string userId)
+    public Task<List<Unknows>> GetUserUnknowsAsync(Guid userId)
     {
         return unknowsRepository.GetUserUnknowsWithWordAsync(userId);
     }
 
-    public async Task<Result<bool>> ToggleUnknowsAsync(int wordId, string userId)
+    public async Task<Result<bool>> ToggleUnknowsAsync(long wordId, Guid userId)
     {
         Result<Word> wordExists = await wordService.GetWordForUserAsync(wordId, userId);
         if (!wordExists.IsSuccess || wordExists.Data == null)
@@ -106,7 +106,7 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
         return Result<bool>.Success(false);
     }
 
-    public async Task<Result<Unknows>> GetUnknowsWithWordAsync(int unknowsId, string userId)
+    public async Task<Result<Unknows>> GetUnknowsWithWordAsync(int unknowsId, Guid userId)
     {
         string cacheKey = $"unknows:{unknowsId}:user:{userId}";
         UnknowsWithWordDto? cachedUnknowDto = await cacheService.GetAsync<UnknowsWithWordDto>(cacheKey);
@@ -151,7 +151,7 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
         return Result<Unknows>.Success(unknow);
     }
 
-    public async Task<Result<(List<Unknows> Unknows, int TotalCount)>> GetPagedUnknowsAsync(string userId, string? search, int page, int pageSize)
+    public async Task<Result<(List<Unknows> Unknows, int TotalCount)>> GetPagedUnknowsAsync(Guid userId, string? search, int page, int pageSize)
     {
         if (page < 1)
         {

@@ -6,20 +6,20 @@ namespace WordMaster.Infrastructure.EfCore.Repositories;
 
 public class UnknowsRepository(AppDbContext context) : GenericRepository<Unknows>(context), IUnknowsRepository
 {
-    public async Task<Unknows?> GetByIdForUserAsync(int unknowsId, string userId)
+    public async Task<Unknows?> GetByIdForUserAsync(int unknowsId, Guid userId)
     {
         return await _context.Unknows
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == unknowsId && x.UserId == userId);
     }
 
-    public async Task<Unknows?> GetByWordForUserAsync(int wordId, string userId)
+    public async Task<Unknows?> GetByWordForUserAsync(long wordId, Guid userId)
     {
         return await _context.Unknows
             .FirstOrDefaultAsync(x => x.WordId == wordId && x.UserId == userId);
     }
 
-    public async Task<Unknows?> GetUnknowsWithWordAsync(int unknowsId, string userId)
+    public async Task<Unknows?> GetUnknowsWithWordAsync(int unknowsId, Guid userId)
     {
         return await _context.Unknows
             .Include(x => x.Word)
@@ -27,7 +27,7 @@ public class UnknowsRepository(AppDbContext context) : GenericRepository<Unknows
             .FirstOrDefaultAsync(x => x.Id == unknowsId && x.UserId == userId);
     }
 
-    public async Task<List<Unknows>> GetUserUnknowsWithWordAsync(string userId)
+    public async Task<List<Unknows>> GetUserUnknowsWithWordAsync(Guid userId)
     {
         return await _context.Unknows
             .Include(x => x.Word)
@@ -36,7 +36,7 @@ public class UnknowsRepository(AppDbContext context) : GenericRepository<Unknows
             .ToListAsync();
     }
 
-    public async Task<(List<Unknows> Unknows, int TotalCount)> GetPagedUnknowsAsync(string userId, string? search, int page, int pageSize)
+    public async Task<(List<Unknows> Unknows, int TotalCount)> GetPagedUnknowsAsync(Guid userId, string? search, int page, int pageSize)
     {
         IQueryable<Unknows> query = _context.Unknows
             .Include(x => x.Word)

@@ -15,8 +15,8 @@ public class PracticeFavoriteController(IFavoriteService favoriteService) : Cont
     [HttpGet("Index")]
     public async Task<IActionResult> Index()
     {
-        string? userId = User.GetUserId();
-        if (userId == null)
+        Guid userId = User.GetUserId();
+        if (userId == Guid.Empty)
         {
             return Unauthorized();
         }
@@ -34,8 +34,8 @@ public class PracticeFavoriteController(IFavoriteService favoriteService) : Cont
     [HttpGet("CheckTranslation")]
     public async Task<IActionResult> CheckTranslation(string turkishWord, string englishWord)
     {
-        string? userId = User.GetUserId();
-        if (userId == null)
+        Guid userId = User.GetUserId();
+        if (userId == Guid.Empty)
         {
             return Json(new { isCorrect = false });
         }
@@ -47,8 +47,8 @@ public class PracticeFavoriteController(IFavoriteService favoriteService) : Cont
     [HttpGet("GetNewEnglishWord")]
     public async Task<IActionResult> GetNewEnglishWord()
     {
-        string? userId = User.GetUserId();
-        if (userId == null)
+        Guid userId = User.GetUserId();
+        if (userId == Guid.Empty)
         {
             return Content(string.Empty);
         }

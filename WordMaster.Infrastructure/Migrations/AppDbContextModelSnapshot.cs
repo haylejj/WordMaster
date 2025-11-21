@@ -3,20 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WordMaster.Infrastructure.EfCore;
 
 #nullable disable
 
-namespace WordMaster.Infrastructure.EfCore.Migrations
+namespace WordMaster.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251110180623_05_add_Seed_data_allowedIpAddress")]
-    partial class _05_add_Seed_data_allowedIpAddress
+    partial class AppDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -25,7 +22,7 @@ namespace WordMaster.Infrastructure.EfCore.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -39,9 +36,8 @@ namespace WordMaster.Infrastructure.EfCore.Migrations
                     b.Property<string>("ClaimValue")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("RoleId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -50,7 +46,7 @@ namespace WordMaster.Infrastructure.EfCore.Migrations
                     b.ToTable("AspNetRoleClaims", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -64,9 +60,8 @@ namespace WordMaster.Infrastructure.EfCore.Migrations
                     b.Property<string>("ClaimValue")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -75,7 +70,7 @@ namespace WordMaster.Infrastructure.EfCore.Migrations
                     b.ToTable("AspNetUserClaims", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
                 {
                     b.Property<string>("LoginProvider")
                         .HasColumnType("nvarchar(450)");
@@ -86,9 +81,8 @@ namespace WordMaster.Infrastructure.EfCore.Migrations
                     b.Property<string>("ProviderDisplayName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("LoginProvider", "ProviderKey");
 
@@ -97,13 +91,13 @@ namespace WordMaster.Infrastructure.EfCore.Migrations
                     b.ToTable("AspNetUserLogins", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<System.Guid>", b =>
                 {
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("RoleId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("UserId", "RoleId");
 
@@ -112,10 +106,10 @@ namespace WordMaster.Infrastructure.EfCore.Migrations
                     b.ToTable("AspNetUserRoles", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
                 {
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("LoginProvider")
                         .HasColumnType("nvarchar(450)");
@@ -184,8 +178,9 @@ namespace WordMaster.Infrastructure.EfCore.Migrations
 
             modelBuilder.Entity("WordMaster.Domain.Entities.AppRole", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -211,14 +206,14 @@ namespace WordMaster.Infrastructure.EfCore.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "995B39DB-6677-4542-8F7B-B584F514D88E",
+                            Id = new Guid("995b39db-6677-4542-8f7b-b584f514d88e"),
                             ConcurrencyStamp = "CDE3129C-856B-4E48-A35C-20E43CA37A6A",
                             Name = "admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "DD471AEB-7B14-4559-83A0-CD6057A19A0F",
+                            Id = new Guid("dd471aeb-7b14-4559-83a0-cd6057a19a0f"),
                             ConcurrencyStamp = "352B49E7-5194-4F57-9940-72EE8940E306",
                             Name = "user",
                             NormalizedName = "USER"
@@ -227,17 +222,15 @@ namespace WordMaster.Infrastructure.EfCore.Migrations
 
             modelBuilder.Entity("WordMaster.Domain.Entities.AppUser", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("BirthDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("City")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -276,9 +269,6 @@ namespace WordMaster.Infrastructure.EfCore.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
 
-                    b.Property<string>("Picture")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
@@ -304,20 +294,20 @@ namespace WordMaster.Infrastructure.EfCore.Migrations
 
             modelBuilder.Entity("WordMaster.Domain.Entities.Favorite", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("bigint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedTime")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("WordId")
-                        .HasColumnType("int");
+                    b.Property<long>("WordId")
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
@@ -329,6 +319,32 @@ namespace WordMaster.Infrastructure.EfCore.Migrations
                     b.ToTable("Favorites");
                 });
 
+            modelBuilder.Entity("WordMaster.Domain.Entities.Folder", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Folders");
+                });
+
             modelBuilder.Entity("WordMaster.Domain.Entities.LogHistory", b =>
                 {
                     b.Property<long>("Id")
@@ -337,8 +353,8 @@ namespace WordMaster.Infrastructure.EfCore.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
-                    b.Property<string>("AppUserId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<Guid?>("AppUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("AttemptedAt")
                         .HasColumnType("datetime2");
@@ -367,20 +383,20 @@ namespace WordMaster.Infrastructure.EfCore.Migrations
 
             modelBuilder.Entity("WordMaster.Domain.Entities.Unknows", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("bigint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedTime")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("WordId")
-                        .HasColumnType("int");
+                    b.Property<long>("WordId")
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
@@ -394,11 +410,11 @@ namespace WordMaster.Infrastructure.EfCore.Migrations
 
             modelBuilder.Entity("WordMaster.Domain.Entities.Word", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("bigint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<int>("ConsecutiveCorrectCount")
                         .ValueGeneratedOnAdd()
@@ -421,6 +437,9 @@ namespace WordMaster.Infrastructure.EfCore.Migrations
                     b.Property<bool?>("IsLastAnswerCorrect")
                         .HasColumnType("bit");
 
+                    b.Property<bool?>("IsLastAnswerCorrectInFolderPractice")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime?>("LastPracticeDate")
                         .HasColumnType("datetime2");
 
@@ -439,17 +458,38 @@ namespace WordMaster.Infrastructure.EfCore.Migrations
                         .HasMaxLength(60)
                         .HasColumnType("nvarchar(60)");
 
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
                     b.HasIndex("UserId");
 
+                    b.HasIndex("UserId", "CreatedTime");
+
+                    b.HasIndex("UserId", "EnglishWord");
+
+                    b.HasIndex("UserId", "TurkishWord");
+
                     b.ToTable("Words");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+            modelBuilder.Entity("WordMaster.Domain.Entities.WordFolder", b =>
+                {
+                    b.Property<long>("FolderId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("WordId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("FolderId", "WordId");
+
+                    b.HasIndex("WordId");
+
+                    b.ToTable("FolderWords", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
                     b.HasOne("WordMaster.Domain.Entities.AppRole", null)
                         .WithMany()
@@ -458,7 +498,7 @@ namespace WordMaster.Infrastructure.EfCore.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
                 {
                     b.HasOne("WordMaster.Domain.Entities.AppUser", null)
                         .WithMany()
@@ -467,7 +507,7 @@ namespace WordMaster.Infrastructure.EfCore.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
                 {
                     b.HasOne("WordMaster.Domain.Entities.AppUser", null)
                         .WithMany()
@@ -476,7 +516,7 @@ namespace WordMaster.Infrastructure.EfCore.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<System.Guid>", b =>
                 {
                     b.HasOne("WordMaster.Domain.Entities.AppRole", null)
                         .WithMany()
@@ -491,7 +531,7 @@ namespace WordMaster.Infrastructure.EfCore.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
                 {
                     b.HasOne("WordMaster.Domain.Entities.AppUser", null)
                         .WithMany()
@@ -516,6 +556,16 @@ namespace WordMaster.Infrastructure.EfCore.Migrations
                     b.Navigation("User");
 
                     b.Navigation("Word");
+                });
+
+            modelBuilder.Entity("WordMaster.Domain.Entities.Folder", b =>
+                {
+                    b.HasOne("WordMaster.Domain.Entities.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("WordMaster.Domain.Entities.LogHistory", b =>
@@ -556,11 +606,37 @@ namespace WordMaster.Infrastructure.EfCore.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("WordMaster.Domain.Entities.WordFolder", b =>
+                {
+                    b.HasOne("WordMaster.Domain.Entities.Folder", "Folder")
+                        .WithMany("WordFolders")
+                        .HasForeignKey("FolderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("WordMaster.Domain.Entities.Word", "Word")
+                        .WithMany("WordFolders")
+                        .HasForeignKey("WordId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Folder");
+
+                    b.Navigation("Word");
+                });
+
+            modelBuilder.Entity("WordMaster.Domain.Entities.Folder", b =>
+                {
+                    b.Navigation("WordFolders");
+                });
+
             modelBuilder.Entity("WordMaster.Domain.Entities.Word", b =>
                 {
                     b.Navigation("Favorite");
 
                     b.Navigation("Unknows");
+
+                    b.Navigation("WordFolders");
                 });
 #pragma warning restore 612, 618
         }

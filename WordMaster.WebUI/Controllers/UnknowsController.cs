@@ -17,8 +17,13 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
     [HttpGet("")]
     public async Task<IActionResult> Index(string? search, int page = 1, int pageSize = 10)
     {
-        string? userId = User.GetUserId();
-        Result<(List<Unknows> Unknows, int TotalCount)> result = await unknowsService.GetPagedUnknowsAsync(userId!, search, page, pageSize);
+        Guid userId = User.GetUserId();
+        if (userId == Guid.Empty)
+        {
+            return RedirectToAction("LogIn", "Login");
+        }
+
+        Result<(List<Unknows> Unknows, int TotalCount)> result = await unknowsService.GetPagedUnknowsAsync(userId, search, page, pageSize);
 
         UnknowsListViewModel viewModel = new()
         {
@@ -32,10 +37,15 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
         return View(viewModel);
     }
     [HttpPost("ToggleUnknows")]
-    public async Task<IActionResult> ToggleUnknows(int id)
+    public async Task<IActionResult> ToggleUnknows(long id)
     {
-        string? userId = User.GetUserId();
-        Result<bool> result = await unknowsService.ToggleUnknowsAsync(id, userId!);
+        Guid userId = User.GetUserId();
+        if (userId == Guid.Empty)
+        {
+            return Json(new { success = false, message = "Kullanıcı oturumu bulunamadı." });
+        }
+
+        Result<bool> result = await unknowsService.ToggleUnknowsAsync(id, userId);
         if (!result.IsSuccess)
         {
             return Json(new { success = false, message = result.ErrorMessage ?? "İşlem başarısız." });
@@ -44,10 +54,16 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
     }
 
     [HttpGet("AddUnknows")]
-    public async Task<IActionResult> AddUnknows(int id)
+    public async Task<IActionResult> AddUnknows(long id)
     {
-        string? userId = User.GetUserId();
-        Result<bool> result = await unknowsService.ToggleUnknowsAsync(id, userId!);
+        Guid userId = User.GetUserId();
+        if (userId == Guid.Empty)
+        {
+            TempData["ErrorMessage"] = "Kullanıcı oturumu bulunamadı.";
+            return Redirect("/Word");
+        }
+
+        Result<bool> result = await unknowsService.ToggleUnknowsAsync(id, userId);
         if (!result.IsSuccess)
         {
             TempData["ErrorMessage"] = result.ErrorMessage ?? "Bilinmeyen işlemi sırasında bir sorun oluştu.";
@@ -60,8 +76,13 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
     [HttpGet("UpdateUnknows")]
     public async Task<IActionResult> UpdateUnknows(int id)
     {
-        string? userId = User.GetUserId();
-        Result<Unknows> result = await unknowsService.GetUnknowsWithWordAsync(id, userId!);
+        Guid userId = User.GetUserId();
+        if (userId == Guid.Empty)
+        {
+            return NotFound();
+        }
+
+        Result<Unknows> result = await unknowsService.GetUnknowsWithWordAsync(id, userId);
         if (!result.IsSuccess || result.Data?.Word == null)
         {
             return NotFound();
@@ -75,11 +96,16 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
         return View(viewModel);
     }
     [HttpGet("GetWord")]
-    public async Task<IActionResult> GetWord(int unknowsId)
+    public async Task<IActionResult> GetWord(long unknowsId)
     {
-        string? userId = User.GetUserId();
+        Guid userId = User.GetUserId();
+        if (userId == Guid.Empty)
+        {
+            return Json(new { success = false, message = "Kullanıcı bulunamadı." });
+        }
+
         // unknowsId aslında Word Id olarak gönderiliyor, bu yüzden WordService kullanıyoruz
-        Result<Word> result = await wordService.GetWordForUserAsync(unknowsId, userId!);
+        Result<Word> result = await wordService.GetWordForUserAsync(unknowsId, userId);
 
         if (!result.IsSuccess || result.Data == null)
         {
@@ -106,8 +132,8 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
             return Json(new { success = false, message = "Geçersiz veri." });
         }
 
-        string? userId = User.GetUserId();
-        if (string.IsNullOrEmpty(userId))
+        Guid userId = User.GetUserId();
+        if (userId == Guid.Empty)
         {
             return Json(new { success = false, message = "Kullanıcı bilgisi bulunamadı." });
         }
@@ -132,8 +158,8 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
     [HttpPost("DeleteUnknows")]
     public async Task<IActionResult> DeleteUnknows(int id)
     {
-        string? userId = User.GetUserId();
-        if (string.IsNullOrEmpty(userId))
+        Guid userId = User.GetUserId();
+        if (userId == Guid.Empty)
         {
             return Json(new { success = false, message = "Kullanıcı bilgisi bulunamadı." });
         }

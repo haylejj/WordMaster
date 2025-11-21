@@ -80,6 +80,15 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 WebApplication app = builder.Build();
 
+/*
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    // Otomatik migration uygulama (isteğe bağlı, development ortamında kullanışlı olabilir)
+    // dbContext.Database.Migrate(); 
+}
+*/
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {

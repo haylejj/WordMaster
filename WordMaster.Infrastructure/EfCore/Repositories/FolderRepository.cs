@@ -6,7 +6,7 @@ namespace WordMaster.Infrastructure.EfCore.Repositories;
 
 public class FolderRepository(AppDbContext context) : GenericRepository<Folder>(context), IFolderRepository
 {
-    public async Task<List<Folder>> GetUserFoldersAsync(string userId)
+    public async Task<List<Folder>> GetUserFoldersAsync(Guid userId)
     {
         return await _context.Folders
             .AsNoTracking()
@@ -15,7 +15,7 @@ public class FolderRepository(AppDbContext context) : GenericRepository<Folder>(
             .ToListAsync();
     }
 
-    public async Task<Folder?> GetUserFolderAsync(int folderId, string userId)
+    public async Task<Folder?> GetUserFolderAsync(long folderId, Guid userId)
     {
         return await _context.Folders
             .AsNoTracking()

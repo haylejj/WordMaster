@@ -5,7 +5,7 @@ using WordMaster.Domain.Entities;
 
 namespace WordMaster.Infrastructure.EfCore;
 
-public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbContext<AppUser, AppRole, string>(options)
+public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbContext<AppUser, AppRole, Guid>(options)
 {
     public DbSet<Word> Words { get; set; }
     public DbSet<Folder> Folders { get; set; }
@@ -22,8 +22,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
 
         // Seed Roles
         modelBuilder.Entity<AppRole>().HasData(
-            new AppRole { Id = "995B39DB-6677-4542-8F7B-B584F514D88E", Name = "admin", NormalizedName = "ADMIN", ConcurrencyStamp = "CDE3129C-856B-4E48-A35C-20E43CA37A6A" },
-            new AppRole { Id = "DD471AEB-7B14-4559-83A0-CD6057A19A0F", Name = "user", NormalizedName = "USER", ConcurrencyStamp = "352B49E7-5194-4F57-9940-72EE8940E306" }
+            new AppRole { Id = Guid.Parse("995B39DB-6677-4542-8F7B-B584F514D88E"), Name = "admin", NormalizedName = "ADMIN", ConcurrencyStamp = "CDE3129C-856B-4E48-A35C-20E43CA37A6A" },
+            new AppRole { Id = Guid.Parse("DD471AEB-7B14-4559-83A0-CD6057A19A0F"), Name = "user", NormalizedName = "USER", ConcurrencyStamp = "352B49E7-5194-4F57-9940-72EE8940E306" }
         );
 
         // Seed Allowed IP Addresses for Local Development

@@ -15,7 +15,7 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
     private static readonly TimeSpan PracticeCacheExpiration = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan GetByIdCacheExpiration = TimeSpan.FromMinutes(10);
 
-    public async Task<Result> DeleteFavoriteAsync(int favoriteId, string userId)
+    public async Task<Result> DeleteFavoriteAsync(int favoriteId, Guid userId)
     {
         Favorite? favorite = await favoriteRepository.GetByIdForUserAsync(favoriteId, userId);
         if (favorite == null)
@@ -33,12 +33,12 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
         return Result.Success();
     }
 
-    public async Task<List<Favorite>> GetUserFavoritesAsync(string userId)
+    public async Task<List<Favorite>> GetUserFavoritesAsync(Guid userId)
     {
         return await favoriteRepository.GetUserFavoritesWithWordAsync(userId);
     }
 
-    public async Task<Result<bool>> ToggleFavoriteAsync(int wordId, string userId)
+    public async Task<Result<bool>> ToggleFavoriteAsync(long wordId, Guid userId)
     {
         Result<Word> wordExists = await wordService.GetWordForUserAsync(wordId, userId);
         if (!wordExists.IsSuccess || wordExists.Data == null)
@@ -68,7 +68,7 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
         return Result<bool>.Success(false);
     }
 
-    public async Task<Result<Favorite>> GetFavoriteWithWordAsync(int favoriteId, string userId)
+    public async Task<Result<Favorite>> GetFavoriteWithWordAsync(int favoriteId, Guid userId)
     {
         string cacheKey = $"favorite:{favoriteId}:user:{userId}";
         FavoriteWithWordDto? cachedFavoriteDto = await cacheService.GetAsync<FavoriteWithWordDto>(cacheKey);
@@ -113,7 +113,7 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
         return Result<Favorite>.Success(favorite);
     }
 
-    public async Task<Result<string>> GetRandomWordFromFavoritesAsync(string userId)
+    public async Task<Result<string>> GetRandomWordFromFavoritesAsync(Guid userId)
     {
         string cacheKey = $"favorites:user:{userId}";
         List<PracticeFavoriteCacheDto>? cachedFavorites = await cacheService.GetAsync<List<PracticeFavoriteCacheDto>>(cacheKey);
@@ -146,12 +146,12 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
         return Result<string>.Success(practiceFavorites[index].EnglishWord ?? string.Empty);
     }
 
-    public Task<Result<bool>> CheckTranslationAndUpdateAsync(string userId, string turkishWord, string englishWord)
+    public Task<Result<bool>> CheckTranslationAndUpdateAsync(Guid userId, string turkishWord, string englishWord)
     {
         return wordService.CheckTranslationAndUpdateAsync(userId, turkishWord, englishWord);
     }
 
-    public async Task<Result<(List<Favorite> Favorites, int TotalCount)>> GetPagedFavoritesAsync(string userId, string? search, int page, int pageSize)
+    public async Task<Result<(List<Favorite> Favorites, int TotalCount)>> GetPagedFavoritesAsync(Guid userId, string? search, int page, int pageSize)
     {
         if (page < 1)
         {

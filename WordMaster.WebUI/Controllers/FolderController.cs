@@ -17,8 +17,8 @@ public class FolderController(IFolderService folderService) : Controller
     [HttpGet("")]
     public async Task<IActionResult> Index()
     {
-        string? userId = User.GetUserId();
-        if (string.IsNullOrEmpty(userId))
+        Guid userId = User.GetUserId();
+        if (userId == Guid.Empty)
         {
             return RedirectToAction("LogIn", "Login");
         }
@@ -36,8 +36,8 @@ public class FolderController(IFolderService folderService) : Controller
     [HttpGet("{id:int}")]
     public async Task<IActionResult> Detail(int id)
     {
-        string? userId = User.GetUserId();
-        if (string.IsNullOrEmpty(userId))
+        Guid userId = User.GetUserId();
+        if (userId == Guid.Empty)
         {
             return RedirectToAction("LogIn", "Login");
         }
@@ -70,8 +70,8 @@ public class FolderController(IFolderService folderService) : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Add(string name)
     {
-        string? userId = User.GetUserId();
-        if (string.IsNullOrEmpty(userId))
+        Guid userId = User.GetUserId();
+        if (userId == Guid.Empty)
         {
             TempData["ErrorMessage"] = "Kullanıcı oturumu bulunamadı.";
             return RedirectToAction(nameof(Index));
@@ -92,8 +92,8 @@ public class FolderController(IFolderService folderService) : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AddWord(int folderId, int wordId)
     {
-        string? userId = User.GetUserId();
-        if (string.IsNullOrEmpty(userId))
+        Guid userId = User.GetUserId();
+        if (userId == Guid.Empty)
         {
             TempData["ErrorMessage"] = "Kullanıcı oturumu bulunamadı.";
             return RedirectToAction(nameof(Detail), new { id = folderId });
@@ -113,8 +113,8 @@ public class FolderController(IFolderService folderService) : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> RemoveWord(int folderId, int wordId)
     {
-        string? userId = User.GetUserId();
-        if (string.IsNullOrEmpty(userId))
+        Guid userId = User.GetUserId();
+        if (userId == Guid.Empty)
         {
             TempData["ErrorMessage"] = "Kullanıcı oturumu bulunamadı.";
             return RedirectToAction(nameof(Detail), new { id = folderId });
@@ -133,8 +133,8 @@ public class FolderController(IFolderService folderService) : Controller
     [HttpGet("UserWords")]
     public async Task<IActionResult> GetUserWords()
     {
-        string? userId = User.GetUserId();
-        if (string.IsNullOrEmpty(userId))
+        Guid userId = User.GetUserId();
+        if (userId == Guid.Empty)
         {
             return Json(new { results = Array.Empty<object>() });
         }
@@ -150,8 +150,8 @@ public class FolderController(IFolderService folderService) : Controller
     [HttpGet("GetFolder")]
     public async Task<IActionResult> GetFolder(int id)
     {
-        string? userId = User.GetUserId();
-        if (string.IsNullOrEmpty(userId))
+        Guid userId = User.GetUserId();
+        if (userId == Guid.Empty)
         {
             return Json(new { success = false, message = "Kullanıcı oturumu bulunamadı." });
         }
@@ -169,8 +169,8 @@ public class FolderController(IFolderService folderService) : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Update(int id, string name)
     {
-        string? userId = User.GetUserId();
-        if (string.IsNullOrEmpty(userId))
+        Guid userId = User.GetUserId();
+        if (userId == Guid.Empty)
         {
             return Json(new { success = false, message = "Kullanıcı oturumu bulunamadı." });
         }
@@ -188,8 +188,8 @@ public class FolderController(IFolderService folderService) : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
     {
-        string? userId = User.GetUserId();
-        if (string.IsNullOrEmpty(userId))
+        Guid userId = User.GetUserId();
+        if (userId == Guid.Empty)
         {
             return Json(new { success = false, message = "Kullanıcı oturumu bulunamadı." });
         }

@@ -2,6 +2,6 @@
 
 namespace WordMaster.Domain.Entities;
 
-public class AppRole : IdentityRole
+public class AppRole : IdentityRole<Guid>
 {
 }

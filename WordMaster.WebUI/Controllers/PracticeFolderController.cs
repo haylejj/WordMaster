@@ -13,10 +13,10 @@ namespace WordMaster.WebUI.Controllers;
 public class PracticeFolderController(IFolderService folderService, IWordService wordService) : Controller
 {
     [HttpGet("", Name = "PracticeFolderIndex")]
-    public async Task<IActionResult> Index(int folderId)
+    public async Task<IActionResult> Index(long folderId)
     {
-        string? userId = User.GetUserId();
-        if (string.IsNullOrEmpty(userId))
+        Guid userId = User.GetUserId();
+        if (userId == Guid.Empty)
         {
             return RedirectToAction("LogIn", "Login");
         }
@@ -78,8 +78,8 @@ public class PracticeFolderController(IFolderService folderService, IWordService
             return BadRequest(new { success = false, errorMessage = "Geçersiz kelime bilgisi." });
         }
 
-        string? userId = User.GetUserId();
-        if (string.IsNullOrEmpty(userId))
+        Guid userId = User.GetUserId();
+        if (userId == Guid.Empty)
         {
             return Unauthorized(new { success = false, errorMessage = "Oturum bulunamadı." });
         }

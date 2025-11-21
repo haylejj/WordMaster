@@ -23,10 +23,6 @@ public class UserUpdateRequestValidator : AbstractValidator<UserUpdateRequest>
             .MaximumLength(20).When(x => !string.IsNullOrEmpty(x.Phone))
             .WithMessage("Telefon numarası en fazla 20 karakter olabilir");
 
-        RuleFor(x => x.City)
-            .MaximumLength(100).When(x => !string.IsNullOrEmpty(x.City))
-            .WithMessage("Şehir adı en fazla 100 karakter olabilir");
-
         RuleFor(x => x.BirthDate)
             .LessThan(DateTime.Now).When(x => x.BirthDate.HasValue)
             .WithMessage("Doğum tarihi bugünden ileri bir tarih olamaz");
