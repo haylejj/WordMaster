@@ -87,7 +87,7 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
         Unknows? existingUnknow = await unknowsRepository.GetByWordForUserAsync(wordId, userId);
         if (existingUnknow == null)
         {
-            Unknows unknow = new() { WordId = wordId, UserId = userId, CreatedTime = DateTime.Now };
+            Unknows unknow = new() { WordId = wordId, UserId = userId, CreatedTime = DateTime.UtcNow };
             await unknowsRepository.AddAsync(unknow);
             await unitOfWork.CommitAsync();
 

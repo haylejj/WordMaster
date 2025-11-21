@@ -49,7 +49,7 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
         Favorite? existingFavorite = await favoriteRepository.GetByWordForUserAsync(wordId, userId);
         if (existingFavorite == null)
         {
-            Favorite favorite = new() { WordId = wordId, UserId = userId, CreatedTime = DateTime.Now };
+            Favorite favorite = new() { WordId = wordId, UserId = userId, CreatedTime = DateTime.UtcNow };
             await favoriteRepository.AddAsync(favorite);
             await unitOfWork.CommitAsync();
 
