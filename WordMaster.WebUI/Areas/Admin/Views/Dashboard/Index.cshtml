@@ -85,13 +85,13 @@
 
     <div class="row g-4 mt-1">
         <div class="col-12">
-            <div class="table-card">
-                <div class="table-header">
-                    <h2>Günlük Giriş Özeti</h2>
-                    <span class="table-subtitle">Detaylı giriş denemeleri</span>
+            <div class="admin-table-container">
+                <div class="table-header mb-3">
+                    <h2 class="h5 text-white mb-1">Günlük Giriş Özeti</h2>
+                    <span class="text-muted small">Detaylı giriş denemeleri</span>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-dark table-striped align-middle mb-0">
+                    <table class="admin-table">
                         <thead>
                             <tr>
                                 <th>Tarih</th>
@@ -127,19 +127,19 @@
     <script>
         (function () {
             const chartSource = @Html.Raw(
-                JsonSerializer.Serialize(new
-                {
-                            labels = Model.DailyLoginStats
-                                        .Select(x => x.Date.ToString("dd MMM", CultureInfo.GetCultureInfo("tr-TR"))),
-                            success = Model.DailyLoginStats.Select(x => x.SuccessCount),
-                            fail = Model.DailyLoginStats.Select(x => x.FailCount)
-                })
-                        );
+                            JsonSerializer.Serialize(new
+                            {
+                                                labels = Model.DailyLoginStats
+                                                                                    .Select(x => x.Date.ToString("dd MMM", CultureInfo.GetCultureInfo("tr-TR"))),
+                                                success = Model.DailyLoginStats.Select(x => x.SuccessCount),
+                                                fail = Model.DailyLoginStats.Select(x => x.FailCount)
+                            })
+                            );
 
-            const ctx = document.getElementById('loginChart');
-            if (!ctx) {
-                return;
-            }
+        const ctx = document.getElementById('loginChart');
+        if (!ctx) {
+            return;
+        }
 
             new Chart(ctx, {
                 type: 'line',
