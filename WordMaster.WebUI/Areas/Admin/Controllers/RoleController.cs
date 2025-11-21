@@ -6,6 +6,8 @@ using WordMaster.Application.Services.Abstract;
 using WordMaster.Application.ViewModels.Role;
 using WordMaster.Domain.Results;
 
+using WordMaster.WebUI.Extensions;
+
 namespace WordMaster.WebUI.Areas.Admin.Controllers;
 
 [Area("Admin")]
@@ -32,7 +34,7 @@ public class RoleController(IRoleService roleService) : Controller
             return Json(new { success = false, message = "Rol ID gerekli." });
         }
 
-        Result<RoleUpdateViewModel> result = await roleService.FindByIdReturnRoleUpdateViewModelAsync(id);
+        ServiceResult<RoleUpdateViewModel> result = await roleService.FindByIdReturnRoleUpdateViewModelAsync(id);
 
         if (!result.IsSuccess || result.Data == null)
         {
@@ -64,15 +66,11 @@ public class RoleController(IRoleService roleService) : Controller
             return Json(new { success = false, message = string.Join(", ", errors) });
         }
 
-        Result<IEnumerable<IdentityError>> result = await roleService.UpdateRoleAsync(request);
+        ServiceResult result = await roleService.UpdateRoleAsync(request);
 
         if (!result.IsSuccess)
         {
-            string errorMessage = result.ErrorMessage ?? "Rol güncellenirken bir hata oluştu.";
-            if (result.Data != null && result.Data.Any())
-            {
-                errorMessage = string.Join(", ", result.Data.Select(e => e.Description));
-            }
+            string errorMessage = result.ErrorMessage() ?? "Rol güncellenirken bir hata oluştu.";
             return Json(new { success = false, message = errorMessage });
         }
 
@@ -82,15 +80,11 @@ public class RoleController(IRoleService roleService) : Controller
     [HttpPost("DeleteRole")]
     public async Task<IActionResult> DeleteRole(string id)
     {
-        Result<IEnumerable<IdentityError>> result = await roleService.DeleteRoleAsync(id);
+        ServiceResult result = await roleService.DeleteRoleAsync(id);
 
         if (!result.IsSuccess)
         {
-            string errorMessage = result.ErrorMessage ?? "Rol silinirken bir hata oluştu.";
-            if (result.Data != null && result.Data.Any())
-            {
-                errorMessage = string.Join(", ", result.Data.Select(e => e.Description));
-            }
+            string errorMessage = result.ErrorMessage() ?? "Rol silinirken bir hata oluştu.";
             return Json(new { success = false, message = errorMessage });
         }
 
@@ -109,15 +103,11 @@ public class RoleController(IRoleService roleService) : Controller
             return Json(new { success = false, message = string.Join(", ", errors) });
         }
 
-        Result<IEnumerable<IdentityError>> result = await roleService.CreateRoleAsync(request);
+        ServiceResult result = await roleService.CreateRoleAsync(request);
 
         if (!result.IsSuccess)
         {
-            string errorMessage = result.ErrorMessage ?? "Rol oluşturulurken bir hata oluştu.";
-            if (result.Data != null && result.Data.Any())
-            {
-                errorMessage = string.Join(", ", result.Data.Select(e => e.Description));
-            }
+            string errorMessage = result.ErrorMessage() ?? "Rol oluşturulurken bir hata oluştu.";
             return Json(new { success = false, message = errorMessage });
         }
 

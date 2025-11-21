@@ -1,15 +1,15 @@
-using WordMaster.Domain.Entities;
+using WordMaster.Application.Dto.Unknows;
 using WordMaster.Domain.Results;
 
 namespace WordMaster.Application.Services.Abstract;
 
 public interface IUnknowsService
 {
-    Task<List<Unknows>> GetUserUnknowsAsync(Guid userId);
-    Task<Result<bool>> ToggleUnknowsAsync(long wordId, Guid userId);
-    Task<Result<Unknows>> GetUnknowsWithWordAsync(int unknowsId, Guid userId);
-    Task<Result> DeleteUnknowsAsync(int unknowsId, Guid userId);
-    Task<Result<string>> GetRandomWordFromUnknowsAsync(Guid userId);
-    Task<Result<bool>> CheckTranslationAndUpdateAsync(Guid userId, string turkishWord, string englishWord);
-    Task<Result<(List<Unknows> Unknows, int TotalCount)>> GetPagedUnknowsAsync(Guid userId, string? search, int page, int pageSize);
+    Task<List<UnknowsWithWordDto>> GetUserUnknowsAsync(Guid userId);
+    Task<ServiceResult<bool>> ToggleUnknowsAsync(long wordId, Guid userId);
+    Task<ServiceResult<UnknowsWithWordDto>> GetUnknowsWithWordAsync(int unknowsId, Guid userId);
+    Task<ServiceResult> DeleteUnknowsAsync(int unknowsId, Guid userId);
+    Task<ServiceResult<string>> GetRandomWordFromUnknowsAsync(Guid userId);
+    Task<ServiceResult<bool>> CheckTranslationAndUpdateAsync(Guid userId, string turkishWord, string englishWord);
+    Task<ServiceResult<PagedResult<UnknowsWithWordDto>>> GetPagedUnknowsAsync(Guid userId, string? search, int page, int pageSize);
 }

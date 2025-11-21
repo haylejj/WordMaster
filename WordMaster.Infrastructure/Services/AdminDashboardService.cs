@@ -1,15 +1,17 @@
+using System.Net;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using WordMaster.Application.Persistence.Repositories;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Application.ViewModels.Admin;
 using WordMaster.Domain.Entities;
+using WordMaster.Domain.Results;
 
 namespace WordMaster.Infrastructure.Services;
 
 public class AdminDashboardService(IWordRepository wordRepository, IFavoriteRepository favoriteRepository, IUnknowsRepository unknowsRepository, ILogHistoryService logHistoryService, UserManager<AppUser> userManager) : IAdminDashboardService
 {
-    public async Task<AdminDashboardViewModel> GetDashboardAsync()
+    public async Task<ServiceResult<AdminDashboardViewModel>> GetDashboardAsync()
     {
         int totalWordsTask = await wordRepository.CountAsync();
         int totalFavoritesTask = await favoriteRepository.CountAsync();
@@ -18,7 +20,7 @@ public class AdminDashboardService(IWordRepository wordRepository, IFavoriteRepo
 
         LoginStatisticsViewModel loginStatistics = await logHistoryService.GetLoginStatisticsAsync();
 
-        return new AdminDashboardViewModel
+        var dashboard = new AdminDashboardViewModel
         {
             TotalWords = totalWordsTask,
             TotalFavorites = totalFavoritesTask,
@@ -29,6 +31,7 @@ public class AdminDashboardService(IWordRepository wordRepository, IFavoriteRepo
             FailedLogins = loginStatistics.FailedLogins,
             DailyLoginStats = loginStatistics.DailyLoginStats
         };
+
+        return ServiceResult<AdminDashboardViewModel>.Success(dashboard, HttpStatusCode.OK);
     }
 }
-

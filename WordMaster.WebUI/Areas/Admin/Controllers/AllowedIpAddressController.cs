@@ -5,6 +5,8 @@ using WordMaster.Application.Services.Abstract;
 using WordMaster.Application.ViewModels.AllowedIpAddress;
 using WordMaster.Domain.Results;
 
+using WordMaster.WebUI.Extensions;
+
 namespace WordMaster.WebUI.Areas.Admin.Controllers;
 
 [Area("Admin")]
@@ -31,7 +33,7 @@ public class AllowedIpAddressController(IAllowedIpAddressService allowedIpAddres
             return Json(new { success = false, message = "IP adresi ID gerekli." });
         }
 
-        Result<AllowedIpAddressViewModel> result = await allowedIpAddressService.GetByIdAsync(id);
+        ServiceResult<AllowedIpAddressViewModel> result = await allowedIpAddressService.GetByIdAsync(id);
 
         if (!result.IsSuccess || result.Data == null)
         {
@@ -65,15 +67,11 @@ public class AllowedIpAddressController(IAllowedIpAddressService allowedIpAddres
             return Json(new { success = false, message = string.Join(", ", errors) });
         }
 
-        Result<IEnumerable<string>> result = await allowedIpAddressService.UpdateAsync(request);
+        ServiceResult result = await allowedIpAddressService.UpdateAsync(request);
 
         if (!result.IsSuccess)
         {
-            string errorMessage = result.ErrorMessage ?? "IP adresi güncellenirken bir hata oluştu.";
-            if (result.Data != null && result.Data.Any())
-            {
-                errorMessage = string.Join(", ", result.Data);
-            }
+            string errorMessage = result.ErrorMessage() ?? "IP adresi güncellenirken bir hata oluştu.";
             return Json(new { success = false, message = errorMessage });
         }
 
@@ -83,15 +81,11 @@ public class AllowedIpAddressController(IAllowedIpAddressService allowedIpAddres
     [HttpPost("DeleteAllowedIpAddress")]
     public async Task<IActionResult> DeleteAllowedIpAddress(int id)
     {
-        Result<IEnumerable<string>> result = await allowedIpAddressService.DeleteAsync(id);
+        ServiceResult result = await allowedIpAddressService.DeleteAsync(id);
 
         if (!result.IsSuccess)
         {
-            string errorMessage = result.ErrorMessage ?? "IP adresi silinirken bir hata oluştu.";
-            if (result.Data != null && result.Data.Any())
-            {
-                errorMessage = string.Join(", ", result.Data);
-            }
+            string errorMessage = result.ErrorMessage() ?? "IP adresi silinirken bir hata oluştu.";
             return Json(new { success = false, message = errorMessage });
         }
 
@@ -110,15 +104,11 @@ public class AllowedIpAddressController(IAllowedIpAddressService allowedIpAddres
             return Json(new { success = false, message = string.Join(", ", errors) });
         }
 
-        Result<IEnumerable<string>> result = await allowedIpAddressService.CreateAsync(request);
+        ServiceResult result = await allowedIpAddressService.CreateAsync(request);
 
         if (!result.IsSuccess)
         {
-            string errorMessage = result.ErrorMessage ?? "IP adresi oluşturulurken bir hata oluştu.";
-            if (result.Data != null && result.Data.Any())
-            {
-                errorMessage = string.Join(", ", result.Data);
-            }
+            string errorMessage = result.ErrorMessage() ?? "IP adresi oluşturulurken bir hata oluştu.";
             return Json(new { success = false, message = errorMessage });
         }
 

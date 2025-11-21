@@ -24,7 +24,7 @@ public class ProfileController(IUserService userService) : Controller
     public async Task<IActionResult> UpdateProfile()
     {
         ViewBag.genderList = userService.GetGenderSelectList();
-        Result<UserEditViewModel> vm = await userService.GetUserEditViewModelAsync(User.Identity!.Name!);
+        ServiceResult<UserEditViewModel> vm = await userService.GetUserEditViewModelAsync(User.Identity!.Name!);
         return View(vm.Data);
     }
 
@@ -37,10 +37,10 @@ public class ProfileController(IUserService userService) : Controller
         {
             return View();
         }
-        Result<IEnumerable<IdentityError>> edit = await userService.EditUserAsync(request, User.Identity!.Name!);
+        ServiceResult edit = await userService.EditUserAsync(request, User.Identity!.Name!);
         if (!edit.IsSuccess)
         {
-            ModelState.AddModelErrorList(edit.Data!.Select(x => x.Description).ToList());
+            ModelState.AddModelErrorList(edit.ErrorList ?? ["Bir hata oluştu."]);
         }
         TempData["SuccessMessage"] = "Güncelleme işlemi başarılı.";
         return RedirectToAction(nameof(UpdateProfile));
@@ -56,16 +56,16 @@ public class ProfileController(IUserService userService) : Controller
         {
             return View();
         }
-        Result<bool> check = await userService.CheckPasswordAsync(User.Identity!.Name!, request.PasswordOld!);
+        ServiceResult<bool> check = await userService.CheckPasswordAsync(User.Identity!.Name!, request.PasswordOld!);
         if (!check.Data)
         {
             ModelState.AddModelError(string.Empty, "Mevcut Şifrenizi yanlış girdiniz.");
             return View();
         }
-        Result<IEnumerable<IdentityError>> change = await userService.ChangePasswordAsync(request, User.Identity!.Name!);
+        ServiceResult change = await userService.ChangePasswordAsync(request, User.Identity!.Name!);
         if (!change.IsSuccess)
         {
-            ModelState.AddModelErrorList(change.Data!.Select(x => x.Description).ToList());
+            ModelState.AddModelErrorList(change.ErrorList ?? ["Bir hata oluştu."]);
             return View();
         }
         TempData["SuccessMessage"] = "Şifreniz başarıyla değiştirilmiştir.";

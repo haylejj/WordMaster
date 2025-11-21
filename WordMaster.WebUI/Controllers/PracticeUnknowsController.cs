@@ -21,11 +21,11 @@ public class PracticeUnknowsController(IUnknowsService unknowsService) : Control
             return Unauthorized();
         }
 
-        Result<string> word = await unknowsService.GetRandomWordFromUnknowsAsync(userId);
+        ServiceResult<string> word = await unknowsService.GetRandomWordFromUnknowsAsync(userId);
         PracticeViewModel viewModel = new()
         {
             EnglishWord = word.IsSuccess && word.Data != null ? word.Data : string.Empty,
-            ErrorMessage = word.IsSuccess ? null : word.ErrorMessage
+            ErrorMessage = word.IsSuccess ? null : word.ErrorMessage()
         };
 
         return View(viewModel);
@@ -40,7 +40,7 @@ public class PracticeUnknowsController(IUnknowsService unknowsService) : Control
             return Json(new { isCorrect = false });
         }
 
-        Result<bool> result = await unknowsService.CheckTranslationAndUpdateAsync(userId, turkishWord, englishWord);
+        ServiceResult<bool> result = await unknowsService.CheckTranslationAndUpdateAsync(userId, turkishWord, englishWord);
         return Json(new { isCorrect = result.Data });
     }
 
@@ -53,7 +53,7 @@ public class PracticeUnknowsController(IUnknowsService unknowsService) : Control
             return Content(string.Empty);
         }
 
-        Result<string> word = await unknowsService.GetRandomWordFromUnknowsAsync(userId);
+        ServiceResult<string> word = await unknowsService.GetRandomWordFromUnknowsAsync(userId);
         return Content(word.IsSuccess && word.Data != null ? word.Data : string.Empty);
     }
 }

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using WordMaster.Application.ViewModels.User;
 using Microsoft.AspNetCore.Mvc;
 using WordMaster.Application.Requests.Auth;
 using WordMaster.Application.Services.Abstract;
@@ -43,7 +44,7 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
             RememberMe = viewModel.RememberMe
         };
 
-        Result<AppUser> userResult = await loginService.FindByEmailAsync(request.Email!);
+        ServiceResult<UserViewModel> userResult = await loginService.FindByEmailAsync(request.Email!);
         string? ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
 
         if (!userResult.IsSuccess || userResult.Data == null)
@@ -53,9 +54,9 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
             return View(viewModel);
         }
 
-        Result login = await loginService.LoginAsync(request, userResult.Data);
+        ServiceResult login = await loginService.LoginAsync(request);
 
-        await logHistoryService.RecordAsync(userResult.Data.Id.ToString(), request.Email, ipAddress, login.IsSuccess, "UserLogin");
+        await logHistoryService.RecordAsync(userResult.Data.Id, request.Email, ipAddress, login.IsSuccess, "UserLogin");
 
         if (login.IsSuccess)
         {
@@ -83,7 +84,7 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
         {
             Email = viewModel.Email
         };
-        Result<AppUser> user = await loginService.FindByEmailAsync(request.Email!);
+        ServiceResult<UserViewModel> user = await loginService.FindByEmailAsync(request.Email!);
         if (!user.IsSuccess || user.Data == null)
         {
             // Güvenlik gereği, kullanıcı bulunamasa bile sanki işlem başarılıymış gibi mesaj dönüyoruz.
@@ -92,9 +93,9 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
             return RedirectToAction(nameof(ForgetPassword));
         }
 
-        Result<string> passwordResetToken = await loginService.GeneratePasswordResetTokenAsync(user.Data.Id.ToString());// Şimdi biz özel token ürettik. Şifre değiştirmede kullanılacak 
+        ServiceResult<string> passwordResetToken = await loginService.GeneratePasswordResetTokenAsync(user.Data.Id);// Şimdi biz özel token ürettik. Şifre değiştirmede kullanılacak 
 
-        string passwordResetLink = Url.Action("ResetPassword", null, new { userId = user.Data.Id.ToString(), token = passwordResetToken.Data }, HttpContext.Request.Scheme)!; // bu linkin ömrünü program.cs de belirliycez.
+        string passwordResetLink = Url.Action("ResetPassword", null, new { userId = user.Data.Id, token = passwordResetToken.Data }, HttpContext.Request.Scheme)!; // bu linkin ömrünü program.cs de belirliycez.
         //Örnek link
         // https://localhost:7289?userId=12213&token=aasdfasdfsdf
 

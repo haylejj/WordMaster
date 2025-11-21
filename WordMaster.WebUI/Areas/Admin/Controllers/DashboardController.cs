@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Application.ViewModels.Admin;
+using WordMaster.Domain.Results;
 
 namespace WordMaster.WebUI.Areas.Admin.Controllers;
 
@@ -13,8 +14,12 @@ public class DashboardController(IAdminDashboardService adminDashboardService) :
     [HttpGet("")]
     public async Task<IActionResult> Index()
     {
-        AdminDashboardViewModel model = await adminDashboardService.GetDashboardAsync();
-        return View(model);
+        ServiceResult<AdminDashboardViewModel> result = await adminDashboardService.GetDashboardAsync();
+        if (!result.IsSuccess || result.Data == null)
+        {
+            // Handle error, maybe redirect or show empty view
+            return View(new AdminDashboardViewModel());
+        }
+        return View(result.Data);
     }
 }
-

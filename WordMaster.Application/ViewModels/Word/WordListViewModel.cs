@@ -1,8 +1,10 @@
+using WordMaster.Application.Dto.Word;
+
 namespace WordMaster.Application.ViewModels.Word;
 
 public class WordListViewModel
 {
-    public List<WordMaster.Domain.Entities.Word> Words { get; set; } = [];
+    public List<WordDto> Words { get; set; } = [];
     public int Page { get; set; }
     public int PageSize { get; set; }
     public int TotalCount { get; set; }
@@ -10,5 +12,3 @@ public class WordListViewModel
 
     public int TotalPages => PageSize <= 0 ? 0 : (int)Math.Ceiling((double)TotalCount / PageSize);
 }
-
-

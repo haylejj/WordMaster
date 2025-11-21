@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WordMaster.Application.Dto.Word;
+using WordMaster.Application.Dto.Unknows;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Application.ViewModels.Unknows;
 using WordMaster.Application.ViewModels.Word;
@@ -23,14 +24,14 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
             return RedirectToAction("LogIn", "Login");
         }
 
-        Result<(List<Unknows> Unknows, int TotalCount)> result = await unknowsService.GetPagedUnknowsAsync(userId, search, page, pageSize);
+        ServiceResult<PagedResult<UnknowsWithWordDto>> result = await unknowsService.GetPagedUnknowsAsync(userId, search, page, pageSize);
 
         UnknowsListViewModel viewModel = new()
         {
-            Words = result.IsSuccess ? result.Data.Unknows.Where(x => x.Word != null).Select(x => x.Word!).ToList() : new List<Word>(),
+            Unknows = result.IsSuccess && result.Data != null ? result.Data.Items : [],
             Page = page,
             PageSize = pageSize,
-            TotalCount = result.IsSuccess ? result.Data.TotalCount : 0,
+            TotalCount = result.IsSuccess && result.Data != null ? result.Data.TotalCount : 0,
             Search = search
         };
 
@@ -45,10 +46,10 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
             return Json(new { success = false, message = "Kullanıcı oturumu bulunamadı." });
         }
 
-        Result<bool> result = await unknowsService.ToggleUnknowsAsync(id, userId);
+        ServiceResult<bool> result = await unknowsService.ToggleUnknowsAsync(id, userId);
         if (!result.IsSuccess)
         {
-            return Json(new { success = false, message = result.ErrorMessage ?? "İşlem başarısız." });
+            return Json(new { success = false, message = result.ErrorList?.FirstOrDefault() ?? "İşlem başarısız." });
         }
         return Json(new { success = true, isUnknows = result.Data, message = result.Data == true ? "Bilinmeyenlere eklendi." : "Bilinmeyenlerden çıkarıldı." });
     }
@@ -63,10 +64,10 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
             return Redirect("/Word");
         }
 
-        Result<bool> result = await unknowsService.ToggleUnknowsAsync(id, userId);
+        ServiceResult<bool> result = await unknowsService.ToggleUnknowsAsync(id, userId);
         if (!result.IsSuccess)
         {
-            TempData["ErrorMessage"] = result.ErrorMessage ?? "Bilinmeyen işlemi sırasında bir sorun oluştu.";
+            TempData["ErrorMessage"] = result.ErrorList?.FirstOrDefault() ?? "Bilinmeyen işlemi sırasında bir sorun oluştu.";
             return Redirect("/Word");
         }
 
@@ -82,7 +83,7 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
             return NotFound();
         }
 
-        Result<Unknows> result = await unknowsService.GetUnknowsWithWordAsync(id, userId);
+        ServiceResult<UnknowsWithWordDto> result = await unknowsService.GetUnknowsWithWordAsync(id, userId);
         if (!result.IsSuccess || result.Data?.Word == null)
         {
             return NotFound();
@@ -105,7 +106,7 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
         }
 
         // unknowsId aslında Word Id olarak gönderiliyor, bu yüzden WordService kullanıyoruz
-        Result<Word> result = await wordService.GetWordForUserAsync(unknowsId, userId);
+        ServiceResult<WordDto> result = await wordService.GetWordForUserAsync(unknowsId, userId);
 
         if (!result.IsSuccess || result.Data == null)
         {
@@ -145,11 +146,11 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
             TurkishWord = viewModel.TurkishWord
         };
 
-        Result updateResult = await wordService.UpdateWordAsync(wordDto.Id, wordDto, userId);
+        ServiceResult updateResult = await wordService.UpdateWordAsync(wordDto.Id, wordDto, userId);
 
         if (!updateResult.IsSuccess)
         {
-            return Json(new { success = false, message = updateResult.ErrorMessage ?? "Kelime güncellenirken bir hata oluştu." });
+            return Json(new { success = false, message = updateResult.ErrorList?.FirstOrDefault() ?? "Kelime güncellenirken bir hata oluştu." });
         }
 
         return Json(new { success = true, message = "Kelime ba�ar�yla g�ncellendi." });
@@ -164,11 +165,11 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
             return Json(new { success = false, message = "Kullanıcı bilgisi bulunamadı." });
         }
 
-        Result result = await unknowsService.DeleteUnknowsAsync(id, userId);
+        ServiceResult result = await unknowsService.DeleteUnknowsAsync(id, userId);
 
         if (!result.IsSuccess)
         {
-            return Json(new { success = false, message = result.ErrorMessage ?? "Bilinmeyen kelime silinirken bir hata oluştu." });
+            return Json(new { success = false, message = result.ErrorList?.FirstOrDefault() ?? "Bilinmeyen kelime silinirken bir hata oluştu." });
         }
 
         return Json(new { success = true, message = "Bilinmeyen kelime başarıyla silindi." });

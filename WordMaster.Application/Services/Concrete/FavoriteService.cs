@@ -1,3 +1,4 @@
+using System.Net;
 using WordMaster.Application.Dto.Favorite;
 using WordMaster.Application.Dto.Practice;
 using WordMaster.Application.Dto.Word;
@@ -15,12 +16,12 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
     private static readonly TimeSpan PracticeCacheExpiration = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan GetByIdCacheExpiration = TimeSpan.FromMinutes(10);
 
-    public async Task<Result> DeleteFavoriteAsync(int favoriteId, Guid userId)
+    public async Task<ServiceResult> DeleteFavoriteAsync(int favoriteId, Guid userId)
     {
         Favorite? favorite = await favoriteRepository.GetByIdForUserAsync(favoriteId, userId);
         if (favorite == null)
         {
-            return Result.Failure("Favori bulunamadı veya size ait değil.");
+            return ServiceResult.Failure("Favori bulunamadı veya size ait değil.", HttpStatusCode.NotFound);
         }
 
         favoriteRepository.Remove(favorite);
@@ -30,20 +31,33 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
         await cacheService.RemoveAsync($"favorite:{favoriteId}:user:{userId}");
         await cacheService.RemoveAsync($"favorites:user:{userId}");
 
-        return Result.Success();
+        return ServiceResult.Success(HttpStatusCode.NoContent);
     }
 
-    public async Task<List<Favorite>> GetUserFavoritesAsync(Guid userId)
+    public async Task<List<FavoriteWithWordDto>> GetUserFavoritesAsync(Guid userId)
     {
-        return await favoriteRepository.GetUserFavoritesWithWordAsync(userId);
+        List<Favorite> favorites = await favoriteRepository.GetUserFavoritesWithWordAsync(userId);
+        return favorites.Select(f => new FavoriteWithWordDto
+        {
+            Id = f.Id,
+            CreatedTime = f.CreatedTime,
+            WordId = f.WordId,
+            UserId = f.UserId,
+            Word = f.Word != null ? new WordDto
+            {
+                Id = f.Word.Id,
+                EnglishWord = f.Word.EnglishWord,
+                TurkishWord = f.Word.TurkishWord
+            } : null
+        }).ToList();
     }
 
-    public async Task<Result<bool>> ToggleFavoriteAsync(long wordId, Guid userId)
+    public async Task<ServiceResult<bool>> ToggleFavoriteAsync(long wordId, Guid userId)
     {
-        Result<Word> wordExists = await wordService.GetWordForUserAsync(wordId, userId);
+        ServiceResult<WordDto> wordExists = await wordService.GetWordForUserAsync(wordId, userId);
         if (!wordExists.IsSuccess || wordExists.Data == null)
         {
-            return Result<bool>.Failure("Kelime bulunamadı.");
+            return ServiceResult<bool>.Failure("Kelime bulunamadı.", HttpStatusCode.NotFound);
         }
 
         Favorite? existingFavorite = await favoriteRepository.GetByWordForUserAsync(wordId, userId);
@@ -56,7 +70,7 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
             // Cache invalidation
             await cacheService.RemoveAsync($"favorites:user:{userId}");
 
-            return Result<bool>.Success(true);
+            return ServiceResult<bool>.Success(true, HttpStatusCode.OK);
         }
 
         favoriteRepository.Remove(existingFavorite);
@@ -65,35 +79,22 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
         // Cache invalidation
         await cacheService.RemoveAsync($"favorites:user:{userId}");
 
-        return Result<bool>.Success(false);
+        return ServiceResult<bool>.Success(false, HttpStatusCode.OK);
     }
 
-    public async Task<Result<Favorite>> GetFavoriteWithWordAsync(int favoriteId, Guid userId)
+    public async Task<ServiceResult<FavoriteWithWordDto>> GetFavoriteWithWordAsync(int favoriteId, Guid userId)
     {
         string cacheKey = $"favorite:{favoriteId}:user:{userId}";
         FavoriteWithWordDto? cachedFavoriteDto = await cacheService.GetAsync<FavoriteWithWordDto>(cacheKey);
         if (cachedFavoriteDto != null)
         {
-            Favorite cachedFavorite = new()
-            {
-                Id = cachedFavoriteDto.Id,
-                CreatedTime = cachedFavoriteDto.CreatedTime,
-                WordId = cachedFavoriteDto.WordId,
-                UserId = cachedFavoriteDto.UserId,
-                Word = cachedFavoriteDto.Word != null ? new Word
-                {
-                    Id = cachedFavoriteDto.Word.Id,
-                    EnglishWord = cachedFavoriteDto.Word.EnglishWord,
-                    TurkishWord = cachedFavoriteDto.Word.TurkishWord
-                } : null
-            };
-            return Result<Favorite>.Success(cachedFavorite);
+            return ServiceResult<FavoriteWithWordDto>.Success(cachedFavoriteDto, HttpStatusCode.OK);
         }
 
         Favorite? favorite = await favoriteRepository.GetFavoriteWithWordAsync(favoriteId, userId);
         if (favorite == null)
         {
-            return Result<Favorite>.Failure("Favori bulunamadı.");
+            return ServiceResult<FavoriteWithWordDto>.Failure("Favori bulunamadı.", HttpStatusCode.NotFound);
         }
 
         FavoriteWithWordDto favoriteDto = new()
@@ -110,10 +111,10 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
             } : null
         };
         await cacheService.SetAsync(cacheKey, favoriteDto, GetByIdCacheExpiration);
-        return Result<Favorite>.Success(favorite);
+        return ServiceResult<FavoriteWithWordDto>.Success(favoriteDto, HttpStatusCode.OK);
     }
 
-    public async Task<Result<string>> GetRandomWordFromFavoritesAsync(Guid userId)
+    public async Task<ServiceResult<string>> GetRandomWordFromFavoritesAsync(Guid userId)
     {
         string cacheKey = $"favorites:user:{userId}";
         List<PracticeFavoriteCacheDto>? cachedFavorites = await cacheService.GetAsync<List<PracticeFavoriteCacheDto>>(cacheKey);
@@ -139,19 +140,19 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
 
         if (practiceFavorites.Count == 0)
         {
-            return Result<string>.Failure("Kayıt bulunamadı.");
+            return ServiceResult<string>.Failure("Kayıt bulunamadı.", HttpStatusCode.NotFound);
         }
 
         int index = _random.Next(0, practiceFavorites.Count);
-        return Result<string>.Success(practiceFavorites[index].EnglishWord ?? string.Empty);
+        return ServiceResult<string>.Success(practiceFavorites[index].EnglishWord ?? string.Empty, HttpStatusCode.OK);
     }
 
-    public Task<Result<bool>> CheckTranslationAndUpdateAsync(Guid userId, string turkishWord, string englishWord)
+    public Task<ServiceResult<bool>> CheckTranslationAndUpdateAsync(Guid userId, string turkishWord, string englishWord)
     {
         return wordService.CheckTranslationAndUpdateAsync(userId, turkishWord, englishWord);
     }
 
-    public async Task<Result<(List<Favorite> Favorites, int TotalCount)>> GetPagedFavoritesAsync(Guid userId, string? search, int page, int pageSize)
+    public async Task<ServiceResult<PagedResult<FavoriteWithWordDto>>> GetPagedFavoritesAsync(Guid userId, string? search, int page, int pageSize)
     {
         if (page < 1)
         {
@@ -164,7 +165,29 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
         }
 
         (List<Favorite>? favorites, int totalCount) = await favoriteRepository.GetPagedFavoritesAsync(userId, search, page, pageSize);
-        return Result<(List<Favorite> Favorites, int TotalCount)>.Success((favorites, totalCount));
+
+        List<FavoriteWithWordDto> favoriteDtos = favorites.Select(f => new FavoriteWithWordDto
+        {
+            Id = f.Id,
+            CreatedTime = f.CreatedTime,
+            WordId = f.WordId,
+            UserId = f.UserId,
+            Word = f.Word != null ? new WordDto
+            {
+                Id = f.Word.Id,
+                EnglishWord = f.Word.EnglishWord,
+                TurkishWord = f.Word.TurkishWord
+            } : null
+        }).ToList();
+
+        PagedResult<FavoriteWithWordDto> pagedResult = new()
+        {
+            Items = favoriteDtos,
+            PageNumber = page,
+            PageSize = pageSize,
+            TotalCount = totalCount
+        };
+
+        return ServiceResult<PagedResult<FavoriteWithWordDto>>.Success(pagedResult, HttpStatusCode.OK);
     }
 }
-
