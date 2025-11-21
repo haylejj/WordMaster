@@ -51,6 +51,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ILogHistoryService, LogHistoryService>();
         services.AddScoped<IAdminDashboardService, AdminDashboardService>();
         services.AddScoped<IAllowedIpAddressService, AllowedIpAddressService>();
+        services.AddScoped<IExcelService, ExcelService>();
 
         return services;
     }

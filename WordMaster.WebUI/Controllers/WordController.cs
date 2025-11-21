@@ -11,7 +11,7 @@ namespace WordMaster.WebUI.Controllers;
 
 [Authorize]
 [Route("/Word")]
-public class WordController(IWordService wordService) : Controller
+public class WordController(IWordService wordService, IExcelService excelService) : Controller
 {
     [HttpGet("")]
     public async Task<IActionResult> Index(string? search, int page = 1, int pageSize = 10)
@@ -140,6 +140,36 @@ public class WordController(IWordService wordService) : Controller
         }
 
         return Json(new { success = true, message = "Kelime başarıyla güncellendi." });
+    }
+
+    [HttpPost("ImportFromExcel")]
+    public async Task<IActionResult> ImportFromExcel(IFormFile file)
+    {
+        string? userId = User.GetUserId();
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Json(new { success = false, message = "Kullanıcı bilgisi bulunamadı." });
+        }
+
+        if (file == null || file.Length == 0)
+        {
+            return Json(new { success = false, message = "Lütfen bir dosya seçin." });
+        }
+
+        if (!Path.GetExtension(file.FileName).Equals(".csv", StringComparison.OrdinalIgnoreCase))
+        {
+            return Json(new { success = false, message = "Sadece .csv dosyaları kabul edilir." });
+        }
+
+        using var stream = file.OpenReadStream();
+        Result result = await excelService.ImportWordsAsync(stream, userId);
+
+        if (!result.IsSuccess)
+        {
+            return Json(new { success = false, message = result.ErrorMessage ?? "İçe aktarma sırasında bir hata oluştu." });
+        }
+
+        return Json(new { success = true, message = "Kelimeler başarıyla içe aktarıldı." });
     }
 
 }
