@@ -11,17 +11,17 @@ public interface IUserService
 {
     Task LogOutAsync();
     SelectList GetGenderSelectList();
-    Task<Result<UserEditViewModel>> GetUserEditViewModelAsync(string username);
-    Task<Result<IEnumerable<IdentityError>>> EditUserAsync(UserEditRequest request, string username);
-    Task<Result<bool>> CheckPasswordAsync(string userName, string passwordOld);
-    Task<Result<IEnumerable<IdentityError>>> ChangePasswordAsync(PasswordChangeRequest request, string userName);
+    Task<ServiceResult<UserEditViewModel>> GetUserEditViewModelAsync(string username);
+    Task<ServiceResult<IEnumerable<IdentityError>>> EditUserAsync(UserEditRequest request, string username);
+    Task<ServiceResult<bool>> CheckPasswordAsync(string userName, string passwordOld);
+    Task<ServiceResult<IEnumerable<IdentityError>>> ChangePasswordAsync(PasswordChangeRequest request, string userName);
     Task<List<UserViewModel>> GetUsersAsync();
-    Task<Result<(List<UserWithRolesViewModel> Users, int TotalCount)>> GetPagedUsersAsync(string? search, int page, int pageSize);
-    Task<Result<UserWithRolesViewModel>> GetUserByIdAsync(string id);
-    Task<Result<UserEditViewModel>> GetUserEditViewModelByIdAsync(string id);
-    Task<Result<UserDetailViewModel>> GetUserDetailAsync(string id);
-    Task<Result<IEnumerable<IdentityError>>> UpdateUserAsync(string id, UserEditRequest request);
-    Task<Result<bool>> DeleteUserAsync(string id);
-    Task<Result<string>> ResetUserPasswordAsync(string id);
+    Task<ServiceResult<(List<UserWithRolesViewModel> Users, int TotalCount)>> GetPagedUsersAsync(string? search, int page, int pageSize);
+    Task<ServiceResult<UserWithRolesViewModel>> GetUserByIdAsync(string id);
+    Task<ServiceResult<UserEditViewModel>> GetUserEditViewModelByIdAsync(string id);
+    Task<ServiceResult<UserDetailViewModel>> GetUserDetailAsync(string id);
+    Task<ServiceResult<IEnumerable<IdentityError>>> UpdateUserAsync(string id, UserEditRequest request);
+    Task<ServiceResult<bool>> DeleteUserAsync(string id);
+    Task<ServiceResult<string>> ResetUserPasswordAsync(string id);
 }
 

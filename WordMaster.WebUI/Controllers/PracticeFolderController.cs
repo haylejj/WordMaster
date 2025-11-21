@@ -27,14 +27,14 @@ public class PracticeFolderController(IFolderService folderService, IWordService
             return RedirectToAction("Index", "Folder");
         }
 
-        Result<Folder> folderResult = await folderService.GetUserFolderAsync(folderId, userId);
+        ServiceResult<Folder> folderResult = await folderService.GetUserFolderAsync(folderId, userId);
         if (!folderResult.IsSuccess || folderResult.Data == null)
         {
             TempData["ErrorMessage"] = folderResult.ErrorMessage ?? "Klasör bulunamadı.";
             return RedirectToAction("Index", "Folder");
         }
 
-        Result<List<Word>> wordsResult = await folderService.GetWordsInFolderAsync(folderId, userId);
+        ServiceResult<List<Word>> wordsResult = await folderService.GetWordsInFolderAsync(folderId, userId);
         if (!wordsResult.IsSuccess || wordsResult.Data == null)
         {
             TempData["ErrorMessage"] = wordsResult.ErrorMessage ?? "Bu klasörde pratik yapılacak kelime yok.";
@@ -85,7 +85,7 @@ public class PracticeFolderController(IFolderService folderService, IWordService
         }
 
         string turkishWord = request.TurkishWord ?? string.Empty;
-        Result<bool> result = await wordService.CheckTranslationAndUpdateAsync(userId, turkishWord, request.EnglishWord);
+        ServiceResult<bool> result = await wordService.CheckTranslationAndUpdateAsync(userId, turkishWord, request.EnglishWord);
 
         if (!result.IsSuccess)
         {

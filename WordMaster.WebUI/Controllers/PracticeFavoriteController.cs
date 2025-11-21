@@ -21,7 +21,7 @@ public class PracticeFavoriteController(IFavoriteService favoriteService) : Cont
             return Unauthorized();
         }
 
-        Result<string> word = await favoriteService.GetRandomWordFromFavoritesAsync(userId);
+        ServiceResult<string> word = await favoriteService.GetRandomWordFromFavoritesAsync(userId);
         PracticeViewModel viewModel = new()
         {
             EnglishWord = word.IsSuccess && word.Data != null ? word.Data : string.Empty,
@@ -40,7 +40,7 @@ public class PracticeFavoriteController(IFavoriteService favoriteService) : Cont
             return Json(new { isCorrect = false });
         }
 
-        Result<bool> result = await favoriteService.CheckTranslationAndUpdateAsync(userId, turkishWord, englishWord);
+        ServiceResult<bool> result = await favoriteService.CheckTranslationAndUpdateAsync(userId, turkishWord, englishWord);
         return Json(new { isCorrect = result.Data });
     }
 
@@ -53,7 +53,7 @@ public class PracticeFavoriteController(IFavoriteService favoriteService) : Cont
             return Content(string.Empty);
         }
 
-        Result<string> word = await favoriteService.GetRandomWordFromFavoritesAsync(userId);
+        ServiceResult<string> word = await favoriteService.GetRandomWordFromFavoritesAsync(userId);
         return Content(word.IsSuccess && word.Data != null ? word.Data : string.Empty);
     }
 }

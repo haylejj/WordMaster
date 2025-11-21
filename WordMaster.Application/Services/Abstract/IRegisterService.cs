@@ -6,5 +6,5 @@ namespace WordMaster.Application.Services.Abstract;
 
 public interface IRegisterService
 {
-    Task<Result<IEnumerable<IdentityError>>> RegisterAsync(RegisterRequest request);
+    Task<ServiceResult<IEnumerable<IdentityError>>> RegisterAsync(RegisterRequest request);
 }

@@ -24,7 +24,7 @@ public class ProfileController(IUserService userService) : Controller
     public async Task<IActionResult> UpdateProfile()
     {
         ViewBag.genderList = userService.GetGenderSelectList();
-        Result<UserEditViewModel> vm = await userService.GetUserEditViewModelAsync(User.Identity!.Name!);
+        ServiceResult<UserEditViewModel> vm = await userService.GetUserEditViewModelAsync(User.Identity!.Name!);
         return View(vm.Data);
     }
 
@@ -37,7 +37,7 @@ public class ProfileController(IUserService userService) : Controller
         {
             return View();
         }
-        Result<IEnumerable<IdentityError>> edit = await userService.EditUserAsync(request, User.Identity!.Name!);
+        ServiceResult<IEnumerable<IdentityError>> edit = await userService.EditUserAsync(request, User.Identity!.Name!);
         if (!edit.IsSuccess)
         {
             ModelState.AddModelErrorList(edit.Data!.Select(x => x.Description).ToList());
@@ -56,13 +56,13 @@ public class ProfileController(IUserService userService) : Controller
         {
             return View();
         }
-        Result<bool> check = await userService.CheckPasswordAsync(User.Identity!.Name!, request.PasswordOld!);
+        ServiceResult<bool> check = await userService.CheckPasswordAsync(User.Identity!.Name!, request.PasswordOld!);
         if (!check.Data)
         {
             ModelState.AddModelError(string.Empty, "Mevcut Şifrenizi yanlış girdiniz.");
             return View();
         }
-        Result<IEnumerable<IdentityError>> change = await userService.ChangePasswordAsync(request, User.Identity!.Name!);
+        ServiceResult<IEnumerable<IdentityError>> change = await userService.ChangePasswordAsync(request, User.Identity!.Name!);
         if (!change.IsSuccess)
         {
             ModelState.AddModelErrorList(change.Data!.Select(x => x.Description).ToList());

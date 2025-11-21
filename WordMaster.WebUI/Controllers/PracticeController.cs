@@ -21,7 +21,7 @@ public class PracticeController(IWordService wordService) : Controller
             return Unauthorized();
         }
 
-        Result<string> word = await wordService.GetRandomWordAsync(userId);
+        ServiceResult<string> word = await wordService.GetRandomWordAsync(userId);
         PracticeViewModel viewModel = new()
         {
             EnglishWord = word.IsSuccess && word.Data != null ? word.Data : string.Empty,
@@ -40,7 +40,7 @@ public class PracticeController(IWordService wordService) : Controller
             return Json(new { isCorrect = false });
         }
 
-        Result<bool> result = await wordService.CheckTranslationAndUpdateAsync(userId, turkishWord, englishWord);
+        ServiceResult<bool> result = await wordService.CheckTranslationAndUpdateAsync(userId, turkishWord, englishWord);
         return Json(new { isCorrect = result.Data });
     }
 
@@ -53,7 +53,7 @@ public class PracticeController(IWordService wordService) : Controller
             return Content(string.Empty);
         }
 
-        Result<string> word = await wordService.GetRandomWordAsync(userId);
+        ServiceResult<string> word = await wordService.GetRandomWordAsync(userId);
         return Content(word.IsSuccess && word.Data != null ? word.Data : string.Empty);
     }
 }

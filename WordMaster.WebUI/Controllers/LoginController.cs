@@ -43,7 +43,7 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
             RememberMe = viewModel.RememberMe
         };
 
-        Result<AppUser> userResult = await loginService.FindByEmailAsync(request.Email!);
+        ServiceResult<AppUser> userResult = await loginService.FindByEmailAsync(request.Email!);
         string? ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
 
         if (!userResult.IsSuccess || userResult.Data == null)
@@ -53,7 +53,7 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
             return View(viewModel);
         }
 
-        Result login = await loginService.LoginAsync(request, userResult.Data);
+        ServiceResult login = await loginService.LoginAsync(request, userResult.Data);
 
         await logHistoryService.RecordAsync(userResult.Data.Id.ToString(), request.Email, ipAddress, login.IsSuccess, "UserLogin");
 
@@ -83,7 +83,7 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
         {
             Email = viewModel.Email
         };
-        Result<AppUser> user = await loginService.FindByEmailAsync(request.Email!);
+        ServiceResult<AppUser> user = await loginService.FindByEmailAsync(request.Email!);
         if (!user.IsSuccess || user.Data == null)
         {
             // Güvenlik gereği, kullanıcı bulunamasa bile sanki işlem başarılıymış gibi mesaj dönüyoruz.
@@ -92,7 +92,7 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
             return RedirectToAction(nameof(ForgetPassword));
         }
 
-        Result<string> passwordResetToken = await loginService.GeneratePasswordResetTokenAsync(user.Data.Id.ToString());// Şimdi biz özel token ürettik. Şifre değiştirmede kullanılacak 
+        ServiceResult<string> passwordResetToken = await loginService.GeneratePasswordResetTokenAsync(user.Data.Id.ToString());// Şimdi biz özel token ürettik. Şifre değiştirmede kullanılacak 
 
         string passwordResetLink = Url.Action("ResetPassword", null, new { userId = user.Data.Id.ToString(), token = passwordResetToken.Data }, HttpContext.Request.Scheme)!; // bu linkin ömrünü program.cs de belirliycez.
         //Örnek link

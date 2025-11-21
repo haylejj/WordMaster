@@ -15,12 +15,12 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
     private static readonly TimeSpan PracticeCacheExpiration = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan GetByIdCacheExpiration = TimeSpan.FromMinutes(10);
 
-    public async Task<Result> DeleteUnknowsAsync(int unknowsId, Guid userId)
+    public async Task<ServiceResult> DeleteUnknowsAsync(int unknowsId, Guid userId)
     {
         Unknows? unknow = await unknowsRepository.GetByIdForUserAsync(unknowsId, userId);
         if (unknow == null)
         {
-            return Result.Failure("Bilinmeyen kelime bulunamadı veya size ait değil.");
+            return ServiceResult.Failure("Bilinmeyen kelime bulunamadı veya size ait değil.");
         }
 
         unknowsRepository.Remove(unknow);
@@ -30,10 +30,10 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
         await cacheService.RemoveAsync($"unknows:{unknowsId}:user:{userId}");
         await cacheService.RemoveAsync($"unknows:user:{userId}");
 
-        return Result.Success();
+        return ServiceResult.Success();
     }
 
-    public async Task<Result<string>> GetRandomWordFromUnknowsAsync(Guid userId)
+    public async Task<ServiceResult<string>> GetRandomWordFromUnknowsAsync(Guid userId)
     {
         string cacheKey = $"unknows:user:{userId}";
         List<PracticeUnknowsCacheDto>? cachedUnknows = await cacheService.GetAsync<List<PracticeUnknowsCacheDto>>(cacheKey);
@@ -59,14 +59,14 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
 
         if (practiceUnknows.Count == 0)
         {
-            return Result<string>.Failure("Kayıt bulunamadı.");
+            return ServiceResult<string>.Failure("Kayıt bulunamadı.");
         }
 
         int index = _random.Next(0, practiceUnknows.Count);
-        return Result<string>.Success(practiceUnknows[index].EnglishWord ?? string.Empty);
+        return ServiceResult<string>.Success(practiceUnknows[index].EnglishWord ?? string.Empty);
     }
 
-    public Task<Result<bool>> CheckTranslationAndUpdateAsync(Guid userId, string turkishWord, string englishWord)
+    public Task<ServiceResult<bool>> CheckTranslationAndUpdateAsync(Guid userId, string turkishWord, string englishWord)
     {
         return wordService.CheckTranslationAndUpdateAsync(userId, turkishWord, englishWord);
     }
@@ -76,12 +76,12 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
         return unknowsRepository.GetUserUnknowsWithWordAsync(userId);
     }
 
-    public async Task<Result<bool>> ToggleUnknowsAsync(long wordId, Guid userId)
+    public async Task<ServiceResult<bool>> ToggleUnknowsAsync(long wordId, Guid userId)
     {
-        Result<Word> wordExists = await wordService.GetWordForUserAsync(wordId, userId);
+        ServiceResult<Word> wordExists = await wordService.GetWordForUserAsync(wordId, userId);
         if (!wordExists.IsSuccess || wordExists.Data == null)
         {
-            return Result<bool>.Failure("Kelime bulunamadı.");
+            return ServiceResult<bool>.Failure("Kelime bulunamadı.");
         }
 
         Unknows? existingUnknow = await unknowsRepository.GetByWordForUserAsync(wordId, userId);
@@ -94,7 +94,7 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
             // Cache invalidation
             await cacheService.RemoveAsync($"unknows:user:{userId}");
 
-            return Result<bool>.Success(true);
+            return ServiceResult<bool>.Success(true);
         }
 
         unknowsRepository.Remove(existingUnknow);
@@ -103,10 +103,10 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
         // Cache invalidation
         await cacheService.RemoveAsync($"unknows:user:{userId}");
 
-        return Result<bool>.Success(false);
+        return ServiceResult<bool>.Success(false);
     }
 
-    public async Task<Result<Unknows>> GetUnknowsWithWordAsync(int unknowsId, Guid userId)
+    public async Task<ServiceResult<Unknows>> GetUnknowsWithWordAsync(int unknowsId, Guid userId)
     {
         string cacheKey = $"unknows:{unknowsId}:user:{userId}";
         UnknowsWithWordDto? cachedUnknowDto = await cacheService.GetAsync<UnknowsWithWordDto>(cacheKey);
@@ -125,13 +125,13 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
                     TurkishWord = cachedUnknowDto.Word.TurkishWord
                 } : null
             };
-            return Result<Unknows>.Success(cachedUnknow);
+            return ServiceResult<Unknows>.Success(cachedUnknow);
         }
 
         Unknows? unknow = await unknowsRepository.GetUnknowsWithWordAsync(unknowsId, userId);
         if (unknow == null)
         {
-            return Result<Unknows>.Failure("Kayıt bulunamadı.");
+            return ServiceResult<Unknows>.Failure("Kayıt bulunamadı.");
         }
 
         UnknowsWithWordDto unknowDto = new()
@@ -148,10 +148,10 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
             } : null
         };
         await cacheService.SetAsync(cacheKey, unknowDto, GetByIdCacheExpiration);
-        return Result<Unknows>.Success(unknow);
+        return ServiceResult<Unknows>.Success(unknow);
     }
 
-    public async Task<Result<(List<Unknows> Unknows, int TotalCount)>> GetPagedUnknowsAsync(Guid userId, string? search, int page, int pageSize)
+    public async Task<ServiceResult<(List<Unknows> Unknows, int TotalCount)>> GetPagedUnknowsAsync(Guid userId, string? search, int page, int pageSize)
     {
         if (page < 1)
         {
@@ -164,7 +164,7 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
         }
 
         (List<Unknows>? items, int totalCount) = await unknowsRepository.GetPagedUnknowsAsync(userId, search, page, pageSize);
-        return Result<(List<Unknows> Unknows, int TotalCount)>.Success((items, totalCount));
+        return ServiceResult<(List<Unknows> Unknows, int TotalCount)>.Success((items, totalCount));
     }
 }
 

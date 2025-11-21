@@ -32,7 +32,7 @@ public class AuthController(ILoginService loginService, UserManager<AppUser> use
             return View(viewModel);
         }
 
-        Result<AppUser> userResult = await loginService.FindByEmailAsync(viewModel.Email!);
+        ServiceResult<AppUser> userResult = await loginService.FindByEmailAsync(viewModel.Email!);
         string? ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
 
         // IP adresi kontrolü
@@ -70,7 +70,7 @@ public class AuthController(ILoginService loginService, UserManager<AppUser> use
             RememberMe = viewModel.RememberMe
         };
 
-        Result login = await loginService.LoginAsync(request, userResult.Data);
+        ServiceResult login = await loginService.LoginAsync(request, userResult.Data);
         if (!login.IsSuccess)
         {
             ModelState.AddModelErrorList(new List<string> { "Email veya şifre yanlış" });

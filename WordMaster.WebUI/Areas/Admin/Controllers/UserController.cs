@@ -17,7 +17,7 @@ public class UserController(IUserService userService, IRoleService roleService) 
     [HttpGet("")]
     public async Task<IActionResult> Index(string? search, int page = 1, int pageSize = 10)
     {
-        Result<(List<UserWithRolesViewModel> Users, int TotalCount)> pageResult = await userService.GetPagedUsersAsync(search, page, pageSize);
+        ServiceResult<(List<UserWithRolesViewModel> Users, int TotalCount)> pageResult = await userService.GetPagedUsersAsync(search, page, pageSize);
         (List<UserWithRolesViewModel>? users, int totalCount) = pageResult.IsSuccess ? pageResult.Data : (new List<UserWithRolesViewModel>(), 0);
 
         UserListViewModel viewModel = new()
@@ -40,7 +40,7 @@ public class UserController(IUserService userService, IRoleService roleService) 
             return Json(new { success = false, message = "Kullanıcı ID gerekli." });
         }
 
-        Result<UserEditViewModel> result = await userService.GetUserEditViewModelByIdAsync(id);
+        ServiceResult<UserEditViewModel> result = await userService.GetUserEditViewModelByIdAsync(id);
 
         if (!result.IsSuccess || result.Data == null)
         {
@@ -86,7 +86,7 @@ public class UserController(IUserService userService, IRoleService roleService) 
             Gender = request.Gender
         };
 
-        Result<IEnumerable<IdentityError>> result = await userService.UpdateUserAsync(request.Id, userEditRequest);
+        ServiceResult<IEnumerable<IdentityError>> result = await userService.UpdateUserAsync(request.Id, userEditRequest);
 
         if (!result.IsSuccess)
         {
@@ -104,7 +104,7 @@ public class UserController(IUserService userService, IRoleService roleService) 
     [HttpPost("DeleteUser")]
     public async Task<IActionResult> DeleteUser(string id)
     {
-        Result<bool> result = await userService.DeleteUserAsync(id);
+        ServiceResult<bool> result = await userService.DeleteUserAsync(id);
 
         if (!result.IsSuccess)
         {
@@ -122,7 +122,7 @@ public class UserController(IUserService userService, IRoleService roleService) 
             return Json(new { success = false, message = "Kullanıcı ID gerekli." });
         }
 
-        Result<UserDetailViewModel> result = await userService.GetUserDetailAsync(id);
+        ServiceResult<UserDetailViewModel> result = await userService.GetUserDetailAsync(id);
 
         if (!result.IsSuccess || result.Data == null)
         {
@@ -215,7 +215,7 @@ public class UserController(IUserService userService, IRoleService roleService) 
             return Json(new { success = false, message = "Kullanıcı ID gerekli." });
         }
 
-        Result<string> result = await userService.ResetUserPasswordAsync(id);
+        ServiceResult<string> result = await userService.ResetUserPasswordAsync(id);
 
         if (!result.IsSuccess)
         {

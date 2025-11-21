@@ -23,7 +23,7 @@ public class FolderController(IFolderService folderService) : Controller
             return RedirectToAction("LogIn", "Login");
         }
 
-        Result<List<Folder>> foldersResult = await folderService.GetUserFoldersAsync(userId);
+        ServiceResult<List<Folder>> foldersResult = await folderService.GetUserFoldersAsync(userId);
         if (!foldersResult.IsSuccess)
         {
             TempData["ErrorMessage"] = foldersResult.ErrorMessage ?? "Klasörler getirilirken hata oluştu.";
@@ -42,14 +42,14 @@ public class FolderController(IFolderService folderService) : Controller
             return RedirectToAction("LogIn", "Login");
         }
 
-        Result<Folder> folderResult = await folderService.GetUserFolderAsync(id, userId);
+        ServiceResult<Folder> folderResult = await folderService.GetUserFolderAsync(id, userId);
         if (!folderResult.IsSuccess)
         {
             TempData["ErrorMessage"] = "Klasör bulunamadı.";
             return RedirectToAction(nameof(Index));
         }
 
-        Result<List<Word>> wordsResult = await folderService.GetWordsInFolderAsync(id, userId);
+        ServiceResult<List<Word>> wordsResult = await folderService.GetWordsInFolderAsync(id, userId);
         if (!wordsResult.IsSuccess)
         {
             TempData["ErrorMessage"] = wordsResult.ErrorMessage ?? "Klasör kelimeleri getirilemedi.";
@@ -77,7 +77,7 @@ public class FolderController(IFolderService folderService) : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        Result result = await folderService.AddFolderAsync(name, userId);
+        ServiceResult result = await folderService.AddFolderAsync(name, userId);
         if (!result.IsSuccess)
         {
             TempData["ErrorMessage"] = result.ErrorMessage ?? "İşlem başarısız.";
@@ -99,7 +99,7 @@ public class FolderController(IFolderService folderService) : Controller
             return RedirectToAction(nameof(Detail), new { id = folderId });
         }
 
-        Result result = await folderService.AddWordToFolderAsync(folderId, wordId, userId);
+        ServiceResult result = await folderService.AddWordToFolderAsync(folderId, wordId, userId);
         if (!result.IsSuccess)
         {
             TempData["ErrorMessage"] = result.ErrorMessage ?? "İşlem başarısız.";
@@ -120,7 +120,7 @@ public class FolderController(IFolderService folderService) : Controller
             return RedirectToAction(nameof(Detail), new { id = folderId });
         }
 
-        Result result = await folderService.RemoveWordFromFolderAsync(folderId, wordId, userId);
+        ServiceResult result = await folderService.RemoveWordFromFolderAsync(folderId, wordId, userId);
         if (!result.IsSuccess)
         {
             TempData["ErrorMessage"] = result.ErrorMessage ?? "İşlem başarısız.";
@@ -138,7 +138,7 @@ public class FolderController(IFolderService folderService) : Controller
         {
             return Json(new { results = Array.Empty<object>() });
         }
-        Result<List<WordLookupDto>> wordsResult = await folderService.GetUserWordsAsync(userId);
+        ServiceResult<List<WordLookupDto>> wordsResult = await folderService.GetUserWordsAsync(userId);
         if (!wordsResult.IsSuccess || wordsResult.Data == null)
         {
             return Json(new { results = Array.Empty<object>() });
@@ -156,7 +156,7 @@ public class FolderController(IFolderService folderService) : Controller
             return Json(new { success = false, message = "Kullanıcı oturumu bulunamadı." });
         }
 
-        Result<Folder> folderResult = await folderService.GetUserFolderAsync(id, userId);
+        ServiceResult<Folder> folderResult = await folderService.GetUserFolderAsync(id, userId);
         if (!folderResult.IsSuccess || folderResult.Data == null)
         {
             return Json(new { success = false, message = folderResult.ErrorMessage ?? "Klasör bulunamadı." });
@@ -175,7 +175,7 @@ public class FolderController(IFolderService folderService) : Controller
             return Json(new { success = false, message = "Kullanıcı oturumu bulunamadı." });
         }
 
-        Result result = await folderService.UpdateFolderAsync(id, name, userId);
+        ServiceResult result = await folderService.UpdateFolderAsync(id, name, userId);
         if (!result.IsSuccess)
         {
             return Json(new { success = false, message = result.ErrorMessage ?? "Güncelleme başarısız." });
@@ -194,7 +194,7 @@ public class FolderController(IFolderService folderService) : Controller
             return Json(new { success = false, message = "Kullanıcı oturumu bulunamadı." });
         }
 
-        Result result = await folderService.DeleteFolderAsync(id, userId);
+        ServiceResult result = await folderService.DeleteFolderAsync(id, userId);
         if (!result.IsSuccess)
         {
             return Json(new { success = false, message = result.ErrorMessage ?? "Silme başarısız." });

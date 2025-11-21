@@ -17,7 +17,7 @@ public class WordController(IWordService wordService, IExcelService excelService
     public async Task<IActionResult> Index(string? search, int page = 1, int pageSize = 10)
     {
         Guid userId = User.GetUserId();
-        Result<(List<Word> Words, int TotalCount)> pageResult = await wordService.GetPagedWordsAsync(userId, search, page, pageSize);
+        ServiceResult<(List<Word> Words, int TotalCount)> pageResult = await wordService.GetPagedWordsAsync(userId, search, page, pageSize);
         (List<Word>? words, int totalCount) = pageResult.IsSuccess ? pageResult.Data : (new List<Word>(), 0);
 
         WordListViewModel viewModel = new()
@@ -58,7 +58,7 @@ public class WordController(IWordService wordService, IExcelService excelService
             TurkishWord = viewModel.TurkishWord
         };
 
-        Result result = await wordService.AddWordAsync(wordDto, userId);
+        ServiceResult result = await wordService.AddWordAsync(wordDto, userId);
 
         if (!result.IsSuccess)
         {
@@ -78,7 +78,7 @@ public class WordController(IWordService wordService, IExcelService excelService
             return Json(new { success = false, message = "Kullanıcı bilgisi bulunamadı." });
         }
 
-        Result result = await wordService.DeleteWordAsync(id, userId);
+        ServiceResult result = await wordService.DeleteWordAsync(id, userId);
 
         if (!result.IsSuccess)
         {
@@ -92,7 +92,7 @@ public class WordController(IWordService wordService, IExcelService excelService
     public async Task<IActionResult> GetWord(long id)
     {
         Guid userId = User.GetUserId();
-        Result<Word> result = await wordService.GetWordForUserAsync(id, userId);
+        ServiceResult<Word> result = await wordService.GetWordForUserAsync(id, userId);
 
         if (!result.IsSuccess || result.Data == null)
         {
@@ -132,7 +132,7 @@ public class WordController(IWordService wordService, IExcelService excelService
             TurkishWord = viewModel.TurkishWord
         };
 
-        Result result = await wordService.UpdateWordAsync(wordDto.Id, wordDto, userId);
+        ServiceResult result = await wordService.UpdateWordAsync(wordDto.Id, wordDto, userId);
 
         if (!result.IsSuccess)
         {
@@ -162,7 +162,7 @@ public class WordController(IWordService wordService, IExcelService excelService
         }
 
         using Stream stream = file.OpenReadStream();
-        Result result = await excelService.ImportWordsAsync(stream, userId);
+        ServiceResult result = await excelService.ImportWordsAsync(stream, userId);
 
         if (!result.IsSuccess)
         {

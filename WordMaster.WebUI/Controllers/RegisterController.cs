@@ -32,7 +32,7 @@ public class RegisterController(IRegisterService registerService) : Controller
             PasswordConfirm = viewModel.PasswordConfirm,
             Phone = viewModel.Phone
         };
-        Result<IEnumerable<IdentityError>> result = await registerService.RegisterAsync(request);
+        ServiceResult<IEnumerable<IdentityError>> result = await registerService.RegisterAsync(request);
 
         if (!result.IsSuccess)
         {

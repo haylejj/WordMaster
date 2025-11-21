@@ -31,7 +31,7 @@ public class AllowedIpAddressController(IAllowedIpAddressService allowedIpAddres
             return Json(new { success = false, message = "IP adresi ID gerekli." });
         }
 
-        Result<AllowedIpAddressViewModel> result = await allowedIpAddressService.GetByIdAsync(id);
+        ServiceResult<AllowedIpAddressViewModel> result = await allowedIpAddressService.GetByIdAsync(id);
 
         if (!result.IsSuccess || result.Data == null)
         {
@@ -65,7 +65,7 @@ public class AllowedIpAddressController(IAllowedIpAddressService allowedIpAddres
             return Json(new { success = false, message = string.Join(", ", errors) });
         }
 
-        Result<IEnumerable<string>> result = await allowedIpAddressService.UpdateAsync(request);
+        ServiceResult<IEnumerable<string>> result = await allowedIpAddressService.UpdateAsync(request);
 
         if (!result.IsSuccess)
         {
@@ -83,7 +83,7 @@ public class AllowedIpAddressController(IAllowedIpAddressService allowedIpAddres
     [HttpPost("DeleteAllowedIpAddress")]
     public async Task<IActionResult> DeleteAllowedIpAddress(int id)
     {
-        Result<IEnumerable<string>> result = await allowedIpAddressService.DeleteAsync(id);
+        ServiceResult<IEnumerable<string>> result = await allowedIpAddressService.DeleteAsync(id);
 
         if (!result.IsSuccess)
         {
@@ -110,7 +110,7 @@ public class AllowedIpAddressController(IAllowedIpAddressService allowedIpAddres
             return Json(new { success = false, message = string.Join(", ", errors) });
         }
 
-        Result<IEnumerable<string>> result = await allowedIpAddressService.CreateAsync(request);
+        ServiceResult<IEnumerable<string>> result = await allowedIpAddressService.CreateAsync(request);
 
         if (!result.IsSuccess)
         {

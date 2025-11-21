@@ -18,31 +18,31 @@ public class FolderService(
 {
     private static readonly TimeSpan DropdownCacheExpiration = TimeSpan.FromMinutes(10);
 
-    public async Task<Result<List<Folder>>> GetUserFoldersAsync(Guid userId)
+    public async Task<ServiceResult<List<Folder>>> GetUserFoldersAsync(Guid userId)
     {
         List<Folder> folders = await folderRepository.GetUserFoldersAsync(userId);
-        return Result<List<Folder>>.Success(folders);
+        return ServiceResult<List<Folder>>.Success(folders);
     }
 
-    public async Task<Result<Folder>> GetUserFolderAsync(long folderId, Guid userId)
+    public async Task<ServiceResult<Folder>> GetUserFolderAsync(long folderId, Guid userId)
     {
         Folder? folder = await folderRepository.GetUserFolderAsync(folderId, userId);
         return folder == null
-            ? Result<Folder>.Failure("Klasör bulunamadı.")
-            : Result<Folder>.Success(folder);
+            ? ServiceResult<Folder>.Failure("Klasör bulunamadı.")
+            : ServiceResult<Folder>.Success(folder);
     }
 
-    public async Task<Result> AddFolderAsync(string name, Guid userId)
+    public async Task<ServiceResult> AddFolderAsync(string name, Guid userId)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
-            return Result.Failure("Klasör adı gereklidir.");
+            return ServiceResult.Failure("Klasör adı gereklidir.");
         }
 
         bool exists = await folderRepository.AnyAsync(f => f.UserId == userId && f.Name == name.Trim());
         if (exists)
         {
-            return Result.Failure("Bu isimde bir klasör zaten mevcut.");
+            return ServiceResult.Failure("Bu isimde bir klasör zaten mevcut.");
         }
 
         Folder folder = new()
@@ -54,106 +54,106 @@ public class FolderService(
 
         await folderRepository.AddAsync(folder);
         await unitOfWork.CommitAsync();
-        return Result.Success();
+        return ServiceResult.Success();
     }
 
-    public async Task<Result> UpdateFolderAsync(long folderId, string name, Guid userId)
+    public async Task<ServiceResult> UpdateFolderAsync(long folderId, string name, Guid userId)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
-            return Result.Failure("Klasör adı gereklidir.");
+            return ServiceResult.Failure("Klasör adı gereklidir.");
         }
 
         Folder? folder = await folderRepository.GetUserFolderAsync(folderId, userId);
         if (folder == null)
         {
-            return Result.Failure("Klasör bulunamadı.");
+            return ServiceResult.Failure("Klasör bulunamadı.");
         }
 
         bool exists = await folderRepository.AnyAsync(f => f.UserId == userId && f.Name == name.Trim() && f.Id != folderId);
         if (exists)
         {
-            return Result.Failure("Bu isimde bir klasör zaten mevcut.");
+            return ServiceResult.Failure("Bu isimde bir klasör zaten mevcut.");
         }
 
         folder.Name = name.Trim();
         folderRepository.Update(folder);
         await unitOfWork.CommitAsync();
-        return Result.Success();
+        return ServiceResult.Success();
     }
 
-    public async Task<Result> DeleteFolderAsync(long folderId, Guid userId)
+    public async Task<ServiceResult> DeleteFolderAsync(long folderId, Guid userId)
     {
         Folder? folder = await folderRepository.GetUserFolderAsync(folderId, userId);
         if (folder == null)
         {
-            return Result.Failure("Klasör bulunamadı.");
+            return ServiceResult.Failure("Klasör bulunamadı.");
         }
 
         folderRepository.Remove(folder);
         await unitOfWork.CommitAsync();
-        return Result.Success();
+        return ServiceResult.Success();
     }
 
-    public async Task<Result<List<Word>>> GetWordsInFolderAsync(long folderId, Guid userId)
+    public async Task<ServiceResult<List<Word>>> GetWordsInFolderAsync(long folderId, Guid userId)
     {
         // Ensure folder belongs to user
         Folder? folder = await folderRepository.GetUserFolderAsync(folderId, userId);
         if (folder == null)
         {
-            return Result<List<Word>>.Failure("Klasör bulunamadı.");
+            return ServiceResult<List<Word>>.Failure("Klasör bulunamadı.");
         }
         List<Word> words = await wordFolderRepository.GetWordsInFolderAsync(folderId);
-        return Result<List<Word>>.Success(words);
+        return ServiceResult<List<Word>>.Success(words);
     }
 
-    public async Task<Result> AddWordToFolderAsync(long folderId, long wordId, Guid userId)
+    public async Task<ServiceResult> AddWordToFolderAsync(long folderId, long wordId, Guid userId)
     {
         bool folderExists = await folderRepository.AnyAsync(f => f.Id == folderId && f.UserId == userId);
         bool wordExists = await wordRepository.AnyAsync(w => w.Id == wordId && w.UserId == userId);
         if (!folderExists || !wordExists)
         {
-            return Result.Failure("Klasör veya kelime bulunamadı.");
+            return ServiceResult.Failure("Klasör veya kelime bulunamadı.");
         }
 
         bool linkExists = await wordFolderRepository.LinkExistsAsync(folderId, wordId);
         if (linkExists)
         {
-            return Result.Failure("Kelime zaten bu klasörde.");
+            return ServiceResult.Failure("Kelime zaten bu klasörde.");
         }
 
         await wordFolderRepository.AddAsync(new WordFolder { FolderId = folderId, WordId = wordId });
         await unitOfWork.CommitAsync();
-        return Result.Success();
+        return ServiceResult.Success();
     }
 
-    public async Task<Result> RemoveWordFromFolderAsync(long folderId, long wordId, Guid userId)
+    public async Task<ServiceResult> RemoveWordFromFolderAsync(long folderId, long wordId, Guid userId)
     {
         bool folderExists = await folderRepository.AnyAsync(f => f.Id == folderId && f.UserId == userId);
         if (!folderExists)
         {
-            return Result.Failure("Klasör bulunamadı.");
+            return ServiceResult.Failure("Klasör bulunamadı.");
         }
 
         WordFolder? link = await wordFolderRepository.GetLinkAsync(folderId, wordId);
         if (link == null)
         {
-            return Result.Failure("Kelime bu klasörde değil.");
+            return ServiceResult.Failure("Kelime bu klasörde değil.");
         }
 
         wordFolderRepository.Remove(link);
         await unitOfWork.CommitAsync();
-        return Result.Success();
+        return ServiceResult.Success();
     }
 
-    public async Task<Result<List<WordLookupDto>>> GetUserWordsAsync(Guid userId)
+    public async Task<ServiceResult<List<WordLookupDto>>> GetUserWordsAsync(Guid userId)
     {
         // Cache all user's words for dropdown usage; client will filter locally
         string cacheKey = $"dropdown_words:user:{userId}";
         List<WordLookupDto>? cached = await cacheService.GetAsync<List<WordLookupDto>>(cacheKey);
         if (cached != null && cached.Count > 0)
         {
-            return Result<List<WordLookupDto>>.Success(cached);
+            return ServiceResult<List<WordLookupDto>>.Success(cached);
         }
 
         List<WordLookupDto> words = await wordRepository
@@ -168,7 +168,7 @@ public class FolderService(
             .ToListAsync();
 
         await cacheService.SetAsync(cacheKey, words, DropdownCacheExpiration);
-        return Result<List<WordLookupDto>>.Success(words);
+        return ServiceResult<List<WordLookupDto>>.Success(words);
     }
 }
 

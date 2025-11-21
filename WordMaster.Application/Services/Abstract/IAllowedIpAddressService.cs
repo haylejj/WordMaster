@@ -7,10 +7,10 @@ namespace WordMaster.Application.Services.Abstract;
 public interface IAllowedIpAddressService
 {
     Task<List<AllowedIpAddressViewModel>> GetAllAsync();
-    Task<Result<AllowedIpAddressViewModel>> GetByIdAsync(int id);
-    Task<Result<IEnumerable<string>>> CreateAsync(AllowedIpAddressCreateRequest request);
-    Task<Result<IEnumerable<string>>> UpdateAsync(AllowedIpAddressUpdateRequest request);
-    Task<Result<IEnumerable<string>>> DeleteAsync(int id);
+    Task<ServiceResult<AllowedIpAddressViewModel>> GetByIdAsync(int id);
+    Task<ServiceResult<IEnumerable<string>>> CreateAsync(AllowedIpAddressCreateRequest request);
+    Task<ServiceResult<IEnumerable<string>>> UpdateAsync(AllowedIpAddressUpdateRequest request);
+    Task<ServiceResult<IEnumerable<string>>> DeleteAsync(int id);
     Task<bool> IsIpAllowedAsync(string ipAddress);
 }
 

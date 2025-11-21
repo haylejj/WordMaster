@@ -41,12 +41,12 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
         return viewModels;
     }
 
-    public async Task<Result<AllowedIpAddressViewModel>> GetByIdAsync(int id)
+    public async Task<ServiceResult<AllowedIpAddressViewModel>> GetByIdAsync(int id)
     {
         AllowedIpAddress? entity = await repository.GetByIdAsync(id);
         if (entity == null)
         {
-            return Result<AllowedIpAddressViewModel>.Failure("IP adresi bulunamadı.");
+            return ServiceResult<AllowedIpAddressViewModel>.Failure("IP adresi bulunamadı.");
         }
 
         AllowedIpAddressViewModel viewModel = new()
@@ -58,10 +58,10 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
             IsActive = entity.IsActive
         };
 
-        return Result<AllowedIpAddressViewModel>.Success(viewModel);
+        return ServiceResult<AllowedIpAddressViewModel>.Success(viewModel);
     }
 
-    public async Task<Result<IEnumerable<string>>> CreateAsync(AllowedIpAddressCreateRequest request)
+    public async Task<ServiceResult<IEnumerable<string>>> CreateAsync(AllowedIpAddressCreateRequest request)
     {
         List<string> errors = new();
 
@@ -71,7 +71,7 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
         if (existing != null)
         {
             errors.Add("Bu IP adresi zaten kayıtlı.");
-            return new Result<IEnumerable<string>> { IsSuccess = false, ErrorMessage = "IP adresi eklenemedi.", Data = errors };
+            return new ServiceResult<IEnumerable<string>> { IsSuccess = false, ErrorMessage = "IP adresi eklenemedi.", Data = errors };
         }
 
         AllowedIpAddress entity = new()
@@ -88,10 +88,10 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
         await cacheService.RemoveAsync(AllowedIpAddressesCacheKey);
         await cacheService.RemoveAsync(AllowedIpAddressesActiveCacheKey);
 
-        return Result<IEnumerable<string>>.Success(null);
+        return ServiceResult<IEnumerable<string>>.Success(null);
     }
 
-    public async Task<Result<IEnumerable<string>>> UpdateAsync(AllowedIpAddressUpdateRequest request)
+    public async Task<ServiceResult<IEnumerable<string>>> UpdateAsync(AllowedIpAddressUpdateRequest request)
     {
         List<string> errors = new();
 
@@ -99,7 +99,7 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
         if (entity == null)
         {
             errors.Add("IP adresi bulunamadı.");
-            return new Result<IEnumerable<string>> { IsSuccess = false, ErrorMessage = "IP adresi güncellenemedi.", Data = errors };
+            return new ServiceResult<IEnumerable<string>> { IsSuccess = false, ErrorMessage = "IP adresi güncellenemedi.", Data = errors };
         }
 
         // IP adresi değiştiyse ve başka bir kayıtta varsa kontrol et
@@ -111,7 +111,7 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
             if (existing != null)
             {
                 errors.Add("Bu IP adresi başka bir kayıtta zaten mevcut.");
-                return new Result<IEnumerable<string>> { IsSuccess = false, ErrorMessage = "IP adresi güncellenemedi.", Data = errors };
+                return new ServiceResult<IEnumerable<string>> { IsSuccess = false, ErrorMessage = "IP adresi güncellenemedi.", Data = errors };
             }
         }
 
@@ -125,10 +125,10 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
         await cacheService.RemoveAsync(AllowedIpAddressesCacheKey);
         await cacheService.RemoveAsync(AllowedIpAddressesActiveCacheKey);
 
-        return Result<IEnumerable<string>>.Success(null);
+        return ServiceResult<IEnumerable<string>>.Success(null);
     }
 
-    public async Task<Result<IEnumerable<string>>> DeleteAsync(int id)
+    public async Task<ServiceResult<IEnumerable<string>>> DeleteAsync(int id)
     {
         List<string> errors = new();
 
@@ -136,7 +136,7 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
         if (entity == null)
         {
             errors.Add("IP adresi bulunamadı.");
-            return new Result<IEnumerable<string>> { IsSuccess = false, ErrorMessage = "IP adresi silinemedi.", Data = errors };
+            return new ServiceResult<IEnumerable<string>> { IsSuccess = false, ErrorMessage = "IP adresi silinemedi.", Data = errors };
         }
 
         repository.Remove(entity);
@@ -145,7 +145,7 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
         await cacheService.RemoveAsync(AllowedIpAddressesCacheKey);
         await cacheService.RemoveAsync(AllowedIpAddressesActiveCacheKey);
 
-        return Result<IEnumerable<string>>.Success(null);
+        return ServiceResult<IEnumerable<string>>.Success(null);
     }
 
     public async Task<bool> IsIpAllowedAsync(string ipAddress)

@@ -23,7 +23,7 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
             return RedirectToAction("LogIn", "Login");
         }
 
-        Result<(List<Favorite> Favorites, int TotalCount)> result = await favoriteService.GetPagedFavoritesAsync(userId, search, page, pageSize);
+        ServiceResult<(List<Favorite> Favorites, int TotalCount)> result = await favoriteService.GetPagedFavoritesAsync(userId, search, page, pageSize);
 
         FavoriteListViewModel viewModel = new()
         {
@@ -45,7 +45,7 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
             return Json(new { success = false, message = "Kullanıcı oturumu bulunamadı." });
         }
 
-        Result<bool> result = await favoriteService.ToggleFavoriteAsync(id, userId);
+        ServiceResult<bool> result = await favoriteService.ToggleFavoriteAsync(id, userId);
         if (!result.IsSuccess)
         {
             return Json(new { success = false, message = result.ErrorMessage ?? "İşlem başarısız." });
@@ -63,7 +63,7 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
             return Redirect("/Word");
         }
 
-        Result<bool> result = await favoriteService.ToggleFavoriteAsync(id, userId);
+        ServiceResult<bool> result = await favoriteService.ToggleFavoriteAsync(id, userId);
         if (!result.IsSuccess)
         {
             TempData["ErrorMessage"] = result.ErrorMessage ?? "Favori işlemi sırasında bir sorun oluştu.";
@@ -81,7 +81,7 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
             return NotFound();
         }
 
-        Result<Favorite> result = await favoriteService.GetFavoriteWithWordAsync(id, userId);
+        ServiceResult<Favorite> result = await favoriteService.GetFavoriteWithWordAsync(id, userId);
         if (!result.IsSuccess || result.Data?.Word == null)
         {
             return NotFound();
@@ -104,7 +104,7 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
         }
 
         // favoriteId aslında Word Id olarak gönderiliyor, bu yüzden WordService kullanıyoruz
-        Result<Word> result = await wordService.GetWordForUserAsync(favoriteId, userId);
+        ServiceResult<Word> result = await wordService.GetWordForUserAsync(favoriteId, userId);
 
         if (!result.IsSuccess || result.Data == null)
         {
@@ -144,7 +144,7 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
             TurkishWord = viewModel.TurkishWord
         };
 
-        Result updateResult = await wordService.UpdateWordAsync(wordDto.Id, wordDto, userId);
+        ServiceResult updateResult = await wordService.UpdateWordAsync(wordDto.Id, wordDto, userId);
 
         if (!updateResult.IsSuccess)
         {
@@ -163,7 +163,7 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
             return Json(new { success = false, message = "Kullanıcı bilgisi bulunamadı." });
         }
 
-        Result result = await favoriteService.DeleteFavoriteAsync(id, userId);
+        ServiceResult result = await favoriteService.DeleteFavoriteAsync(id, userId);
 
         if (!result.IsSuccess)
         {

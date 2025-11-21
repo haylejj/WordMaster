@@ -23,7 +23,7 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
             return RedirectToAction("LogIn", "Login");
         }
 
-        Result<(List<Unknows> Unknows, int TotalCount)> result = await unknowsService.GetPagedUnknowsAsync(userId, search, page, pageSize);
+        ServiceResult<(List<Unknows> Unknows, int TotalCount)> result = await unknowsService.GetPagedUnknowsAsync(userId, search, page, pageSize);
 
         UnknowsListViewModel viewModel = new()
         {
@@ -45,7 +45,7 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
             return Json(new { success = false, message = "Kullanıcı oturumu bulunamadı." });
         }
 
-        Result<bool> result = await unknowsService.ToggleUnknowsAsync(id, userId);
+        ServiceResult<bool> result = await unknowsService.ToggleUnknowsAsync(id, userId);
         if (!result.IsSuccess)
         {
             return Json(new { success = false, message = result.ErrorMessage ?? "İşlem başarısız." });
@@ -63,7 +63,7 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
             return Redirect("/Word");
         }
 
-        Result<bool> result = await unknowsService.ToggleUnknowsAsync(id, userId);
+        ServiceResult<bool> result = await unknowsService.ToggleUnknowsAsync(id, userId);
         if (!result.IsSuccess)
         {
             TempData["ErrorMessage"] = result.ErrorMessage ?? "Bilinmeyen işlemi sırasında bir sorun oluştu.";
@@ -82,7 +82,7 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
             return NotFound();
         }
 
-        Result<Unknows> result = await unknowsService.GetUnknowsWithWordAsync(id, userId);
+        ServiceResult<Unknows> result = await unknowsService.GetUnknowsWithWordAsync(id, userId);
         if (!result.IsSuccess || result.Data?.Word == null)
         {
             return NotFound();
@@ -105,7 +105,7 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
         }
 
         // unknowsId aslında Word Id olarak gönderiliyor, bu yüzden WordService kullanıyoruz
-        Result<Word> result = await wordService.GetWordForUserAsync(unknowsId, userId);
+        ServiceResult<Word> result = await wordService.GetWordForUserAsync(unknowsId, userId);
 
         if (!result.IsSuccess || result.Data == null)
         {
@@ -145,7 +145,7 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
             TurkishWord = viewModel.TurkishWord
         };
 
-        Result updateResult = await wordService.UpdateWordAsync(wordDto.Id, wordDto, userId);
+        ServiceResult updateResult = await wordService.UpdateWordAsync(wordDto.Id, wordDto, userId);
 
         if (!updateResult.IsSuccess)
         {
@@ -164,7 +164,7 @@ public class UnknowsController(IUnknowsService unknowsService, IWordService word
             return Json(new { success = false, message = "Kullanıcı bilgisi bulunamadı." });
         }
 
-        Result result = await unknowsService.DeleteUnknowsAsync(id, userId);
+        ServiceResult result = await unknowsService.DeleteUnknowsAsync(id, userId);
 
         if (!result.IsSuccess)
         {

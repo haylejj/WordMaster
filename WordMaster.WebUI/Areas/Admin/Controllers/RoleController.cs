@@ -32,7 +32,7 @@ public class RoleController(IRoleService roleService) : Controller
             return Json(new { success = false, message = "Rol ID gerekli." });
         }
 
-        Result<RoleUpdateViewModel> result = await roleService.FindByIdReturnRoleUpdateViewModelAsync(id);
+        ServiceResult<RoleUpdateViewModel> result = await roleService.FindByIdReturnRoleUpdateViewModelAsync(id);
 
         if (!result.IsSuccess || result.Data == null)
         {
@@ -64,7 +64,7 @@ public class RoleController(IRoleService roleService) : Controller
             return Json(new { success = false, message = string.Join(", ", errors) });
         }
 
-        Result<IEnumerable<IdentityError>> result = await roleService.UpdateRoleAsync(request);
+        ServiceResult<IEnumerable<IdentityError>> result = await roleService.UpdateRoleAsync(request);
 
         if (!result.IsSuccess)
         {
@@ -82,7 +82,7 @@ public class RoleController(IRoleService roleService) : Controller
     [HttpPost("DeleteRole")]
     public async Task<IActionResult> DeleteRole(string id)
     {
-        Result<IEnumerable<IdentityError>> result = await roleService.DeleteRoleAsync(id);
+        ServiceResult<IEnumerable<IdentityError>> result = await roleService.DeleteRoleAsync(id);
 
         if (!result.IsSuccess)
         {
@@ -109,7 +109,7 @@ public class RoleController(IRoleService roleService) : Controller
             return Json(new { success = false, message = string.Join(", ", errors) });
         }
 
-        Result<IEnumerable<IdentityError>> result = await roleService.CreateRoleAsync(request);
+        ServiceResult<IEnumerable<IdentityError>> result = await roleService.CreateRoleAsync(request);
 
         if (!result.IsSuccess)
         {

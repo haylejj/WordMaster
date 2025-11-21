@@ -27,7 +27,7 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
         await cacheService.SetAsync(RolesCacheKey, roleViewModel, RolesCacheExpiration);
         return roleViewModel;
     }
-    public async Task<Result<IEnumerable<IdentityError>>> CreateRoleAsync(RoleCreateRequest request)
+    public async Task<ServiceResult<IEnumerable<IdentityError>>> CreateRoleAsync(RoleCreateRequest request)
     {
         IdentityResult result = await roleManager.CreateAsync(new AppRole() { Name = request.Name });
 
@@ -37,26 +37,26 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
         }
 
         return !result.Succeeded
-            ? new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Rol oluşturulamadı.", Data = result.Errors }
-            : Result<IEnumerable<IdentityError>>.Success(null);
+            ? new ServiceResult<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Rol oluşturulamadı.", Data = result.Errors }
+            : ServiceResult<IEnumerable<IdentityError>>.Success(null);
     }
-    public async Task<Result<RoleUpdateViewModel>> FindByIdReturnRoleUpdateViewModelAsync(string id)
+    public async Task<ServiceResult<RoleUpdateViewModel>> FindByIdReturnRoleUpdateViewModelAsync(string id)
     {
         AppRole? role = await roleManager.FindByIdAsync(id);
         if (role == null)
         {
-            return Result<RoleUpdateViewModel>.Failure("Rol bulunamadı.");
+            return ServiceResult<RoleUpdateViewModel>.Failure("Rol bulunamadı.");
         }
         RoleUpdateViewModel roleUpdateViewModel = new() { Id = role.Id.ToString(), Name = role.Name! };
-        return Result<RoleUpdateViewModel>.Success(roleUpdateViewModel);
+        return ServiceResult<RoleUpdateViewModel>.Success(roleUpdateViewModel);
     }
 
-    public async Task<Result<IEnumerable<IdentityError>>> UpdateRoleAsync(RoleUpdateRequest request)
+    public async Task<ServiceResult<IEnumerable<IdentityError>>> UpdateRoleAsync(RoleUpdateRequest request)
     {
         AppRole? role = await roleManager.FindByIdAsync(request.Id);
         if (role == null)
         {
-            return new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Rol bulunamadı.", Data = null };
+            return new ServiceResult<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Rol bulunamadı.", Data = null };
         }
         role.Name = request.Name;
         IdentityResult result = await roleManager.UpdateAsync(role);
@@ -67,15 +67,15 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
         }
 
         return !result.Succeeded
-            ? new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Rol güncellenemedi.", Data = result.Errors }
-            : Result<IEnumerable<IdentityError>>.Success(null);
+            ? new ServiceResult<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Rol güncellenemedi.", Data = result.Errors }
+            : ServiceResult<IEnumerable<IdentityError>>.Success(null);
     }
-    public async Task<Result<IEnumerable<IdentityError>>> DeleteRoleAsync(string id)
+    public async Task<ServiceResult<IEnumerable<IdentityError>>> DeleteRoleAsync(string id)
     {
         AppRole? role = await roleManager.FindByIdAsync(id);
         if (role == null)
         {
-            return new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Rol bulunamadı.", Data = null };
+            return new ServiceResult<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Rol bulunamadı.", Data = null };
         }
 
         IdentityResult result = await roleManager.DeleteAsync(role);
@@ -86,8 +86,8 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
         }
 
         return !result.Succeeded
-            ? new Result<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Rol silinemedi.", Data = result.Errors }
-            : Result<IEnumerable<IdentityError>>.Success(null);
+            ? new ServiceResult<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Rol silinemedi.", Data = result.Errors }
+            : ServiceResult<IEnumerable<IdentityError>>.Success(null);
     }
 
     public async Task<List<AssignToRoleViewModel>> GetRoleByIdReturnAssignToRoleAsync(string id)
