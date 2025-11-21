@@ -4,7 +4,7 @@ on:
   push:
     branches: [feature/*]
   pull_request:
-    branches: [feature/*]
+    branches: [feature/*,api-*]
 
 jobs:
   codeql-analysis:
