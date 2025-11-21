@@ -83,7 +83,18 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4">
-                <p class="text-muted small mb-4">Toplu kelime eklemek için CSV dosyası yükleyin.</p>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <p class="text-muted small mb-0">Toplu kelime eklemek için CSV dosyası yükleyin.</p>
+                    <div>
+                        <button type="button" class="btn btn-link text-muted p-0 me-2" data-bs-toggle="modal"
+                            data-bs-target="#infoModal" title="Bilgi">
+                            <i class="fas fa-question-circle fa-lg"></i>
+                        </button>
+                        <a href="~/files/sample_words.csv" class="btn btn-outline-primary btn-sm" download>
+                            <i class="fas fa-download me-1"></i> Örnek CSV
+                        </a>
+                    </div>
+                </div>
 
                 <form id="csvUploadForm" enctype="multipart/form-data">
                     <div class="mb-4">
@@ -110,6 +121,49 @@
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Info Modal -->
+<div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="infoModalLabel">
+                    <i class="fas fa-info-circle text-info me-2"></i>CSV Formatı Hakkında
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-muted">CSV dosyanızın aşağıdaki kurallara uyması gerekmektedir:</p>
+                <ul class="list-group list-group-flush mb-3">
+                    <li class="list-group-item px-0">
+                        <i class="fas fa-check text-success me-2"></i>Dosya uzantısı <strong>.csv</strong> olmalıdır.
+                    </li>
+                    <li class="list-group-item px-0">
+                        <i class="fas fa-check text-success me-2"></i>Başlık satırı (header) bulunmalıdır:
+                        <strong>WORD,MEANING</strong>
+                    </li>
+                    <li class="list-group-item px-0">
+                        <i class="fas fa-check text-success me-2"></i>Sütunlar <strong>virgül (,)</strong> ile
+                        ayrılmalıdır.Eğer birden fazla anlam eklemek isterseniz, anlamları boşluk ile ayırabilirsiniz.
+                    </li>
+                    <li class="list-group-item px-0">
+                        <i class="fas fa-check text-success me-2"></i>Türkçe karakter desteği için dosya kodlaması
+                        <strong>UTF-8</strong> olmalıdır.
+                    </li>
+                </ul>
+                <div class="alert alert-light border">
+                    <strong>Örnek İçerik:</strong><br>
+                    <code>WORD,MEANING<br>Apple,Elma<br>Book,Kitap Defter 3.Anlam</code>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button class="btn btn-primary btn-sm" data-bs-target="#importModal" data-bs-toggle="modal">
+                    <i class="fas fa-arrow-left me-1"></i> Geri Dön
+                </button>
             </div>
         </div>
     </div>

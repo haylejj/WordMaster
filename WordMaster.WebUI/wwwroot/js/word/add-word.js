@@ -66,11 +66,53 @@ $(document).ready(function() {
             const file = fileInput.files[0];
             if (!file) return;
 
-            swal({
-                title: "Hazır!",
-                text: "Dosya doğrulandı ve yüklemeye hazır. (Backend entegrasyonu bekleniyor)",
-                icon: "success",
-                button: "Tamam",
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // Disable button and show loading state
+            const originalBtnText = importBtn.innerHTML;
+            importBtn.disabled = true;
+            importBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Yükleniyor...';
+
+            $.ajax({
+                url: '/Word/ImportFromExcel',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        swal({
+                            title: "Başarılı!",
+                            text: response.message,
+                            icon: "success",
+                            button: "Tamam",
+                        }).then(() => {
+                            // Close modal and refresh page or clear form
+                            $('#importModal').modal('hide');
+                            location.reload();
+                        });
+                    } else {
+                        swal({
+                            title: "Hata!",
+                            text: response.message,
+                            icon: "error",
+                            button: "Tamam",
+                        });
+                        importBtn.disabled = false;
+                        importBtn.innerHTML = originalBtnText;
+                    }
+                },
+                error: function() {
+                    swal({
+                        title: "Hata!",
+                        text: "Sunucu ile iletişim hatası oluştu.",
+                        icon: "error",
+                        button: "Tamam",
+                    });
+                    importBtn.disabled = false;
+                    importBtn.innerHTML = originalBtnText;
+                }
             });
         });
     }
