@@ -37,10 +37,10 @@ public class ProfileController(IUserService userService) : Controller
         {
             return View();
         }
-        ServiceResult<IEnumerable<IdentityError>> edit = await userService.EditUserAsync(request, User.Identity!.Name!);
+        ServiceResult edit = await userService.EditUserAsync(request, User.Identity!.Name!);
         if (!edit.IsSuccess)
         {
-            ModelState.AddModelErrorList(edit.Data!.Select(x => x.Description).ToList());
+            ModelState.AddModelErrorList(edit.ErrorList ?? ["Bir hata oluştu."]);
         }
         TempData["SuccessMessage"] = "Güncelleme işlemi başarılı.";
         return RedirectToAction(nameof(UpdateProfile));
@@ -62,10 +62,10 @@ public class ProfileController(IUserService userService) : Controller
             ModelState.AddModelError(string.Empty, "Mevcut Şifrenizi yanlış girdiniz.");
             return View();
         }
-        ServiceResult<IEnumerable<IdentityError>> change = await userService.ChangePasswordAsync(request, User.Identity!.Name!);
+        ServiceResult change = await userService.ChangePasswordAsync(request, User.Identity!.Name!);
         if (!change.IsSuccess)
         {
-            ModelState.AddModelErrorList(change.Data!.Select(x => x.Description).ToList());
+            ModelState.AddModelErrorList(change.ErrorList ?? ["Bir hata oluştu."]);
             return View();
         }
         TempData["SuccessMessage"] = "Şifreniz başarıyla değiştirilmiştir.";

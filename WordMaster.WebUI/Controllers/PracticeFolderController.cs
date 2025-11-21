@@ -6,6 +6,9 @@ using WordMaster.Domain.Entities;
 using WordMaster.Domain.Results;
 using WordMaster.WebUI.Extensions;
 
+using WordMaster.Application.Dto.Folder;
+using WordMaster.Application.Dto.Word;
+
 namespace WordMaster.WebUI.Controllers;
 
 [Authorize]
@@ -27,17 +30,17 @@ public class PracticeFolderController(IFolderService folderService, IWordService
             return RedirectToAction("Index", "Folder");
         }
 
-        ServiceResult<Folder> folderResult = await folderService.GetUserFolderAsync(folderId, userId);
+        ServiceResult<FolderDto> folderResult = await folderService.GetUserFolderAsync(folderId, userId);
         if (!folderResult.IsSuccess || folderResult.Data == null)
         {
-            TempData["ErrorMessage"] = folderResult.ErrorMessage ?? "Klasör bulunamadı.";
+            TempData["ErrorMessage"] = folderResult.ErrorMessage() ?? "Klasör bulunamadı.";
             return RedirectToAction("Index", "Folder");
         }
 
-        ServiceResult<List<Word>> wordsResult = await folderService.GetWordsInFolderAsync(folderId, userId);
+        ServiceResult<List<WordDto>> wordsResult = await folderService.GetWordsInFolderAsync(folderId, userId);
         if (!wordsResult.IsSuccess || wordsResult.Data == null)
         {
-            TempData["ErrorMessage"] = wordsResult.ErrorMessage ?? "Bu klasörde pratik yapılacak kelime yok.";
+            TempData["ErrorMessage"] = wordsResult.ErrorMessage() ?? "Bu klasörde pratik yapılacak kelime yok.";
             return RedirectToAction("Detail", "Folder", new { id = folderId });
         }
 
@@ -92,7 +95,7 @@ public class PracticeFolderController(IFolderService folderService, IWordService
             return BadRequest(new
             {
                 success = false,
-                errorMessage = result.ErrorMessage ?? "Kontrol işlemi sırasında bir hata oluştu."
+                errorMessage = result.ErrorMessage() ?? "Kontrol işlemi sırasında bir hata oluştu."
             });
         }
 

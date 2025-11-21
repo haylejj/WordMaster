@@ -7,6 +7,8 @@ using WordMaster.Application.ViewModels.Role;
 using WordMaster.Application.ViewModels.User;
 using WordMaster.Domain.Results;
 
+using WordMaster.WebUI.Extensions;
+
 namespace WordMaster.WebUI.Areas.Admin.Controllers;
 
 [Area("Admin")]
@@ -17,8 +19,10 @@ public class UserController(IUserService userService, IRoleService roleService) 
     [HttpGet("")]
     public async Task<IActionResult> Index(string? search, int page = 1, int pageSize = 10)
     {
-        ServiceResult<(List<UserWithRolesViewModel> Users, int TotalCount)> pageResult = await userService.GetPagedUsersAsync(search, page, pageSize);
-        (List<UserWithRolesViewModel>? users, int totalCount) = pageResult.IsSuccess ? pageResult.Data : (new List<UserWithRolesViewModel>(), 0);
+        ServiceResult<PagedResult<UserWithRolesViewModel>> pageResult = await userService.GetPagedUsersAsync(search, page, pageSize);
+        (List<UserWithRolesViewModel>? users, int totalCount) = pageResult.IsSuccess && pageResult.Data != null
+            ? (pageResult.Data.Items, pageResult.Data.TotalCount)
+            : (new List<UserWithRolesViewModel>(), 0);
 
         UserListViewModel viewModel = new()
         {
@@ -86,15 +90,11 @@ public class UserController(IUserService userService, IRoleService roleService) 
             Gender = request.Gender
         };
 
-        ServiceResult<IEnumerable<IdentityError>> result = await userService.UpdateUserAsync(request.Id, userEditRequest);
+        ServiceResult result = await userService.UpdateUserAsync(request.Id, userEditRequest);
 
         if (!result.IsSuccess)
         {
-            string errorMessage = result.ErrorMessage ?? "Kullanıcı güncellenirken bir hata oluştu.";
-            if (result.Data != null && result.Data.Any())
-            {
-                errorMessage = string.Join(", ", result.Data.Select(e => e.Description));
-            }
+            string errorMessage = result.ErrorMessage() ?? "Kullanıcı güncellenirken bir hata oluştu.";
             return Json(new { success = false, message = errorMessage });
         }
 
@@ -104,11 +104,11 @@ public class UserController(IUserService userService, IRoleService roleService) 
     [HttpPost("DeleteUser")]
     public async Task<IActionResult> DeleteUser(string id)
     {
-        ServiceResult<bool> result = await userService.DeleteUserAsync(id);
+        ServiceResult result = await userService.DeleteUserAsync(id);
 
         if (!result.IsSuccess)
         {
-            return Json(new { success = false, message = result.ErrorMessage ?? "Kullanıcı silinirken bir hata oluştu." });
+            return Json(new { success = false, message = result.ErrorMessage() ?? "Kullanıcı silinirken bir hata oluştu." });
         }
 
         return Json(new { success = true, message = "Kullanıcı başarıyla silindi." });
@@ -219,7 +219,7 @@ public class UserController(IUserService userService, IRoleService roleService) 
 
         if (!result.IsSuccess)
         {
-            return Json(new { success = false, message = result.ErrorMessage ?? "Şifre sıfırlanırken bir hata oluştu." });
+            return Json(new { success = false, message = result.ErrorMessage() ?? "Şifre sıfırlanırken bir hata oluştu." });
         }
 
         return Json(new { success = true, message = "Şifre başarıyla sıfırlandı ve kullanıcıya email olarak gönderildi." });

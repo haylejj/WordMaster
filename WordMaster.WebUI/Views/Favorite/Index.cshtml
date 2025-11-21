@@ -77,61 +77,6 @@
             <tr>
                 <th>İngilizce</th>
                 <th>Türkçe</th>
-                <th class="text-center">Durum</th>
-                <th class="text-center" style="width: 80px;">Düzenle</th>
-                <th class="text-center" style="width: 80px;">Sil</th>
-            </tr>
-        </thead>
-        <tbody>
-            @if (Model == null || Model.Words == null || Model.Words.Count == 0)
-            {
-                <tr>
-                    <td colspan="5" class="text-center py-5">
-                        <div class="text-muted">
-                            <i class="fas fa-inbox fa-3x mb-3 opacity-50"></i>
-                            <p class="mb-0">Veri bulunmamaktadır.</p>
-                        </div>
-                    </td>
-                </tr>
-            }
-            else
-            {
-                @foreach (var item in Model.Words)
-                {
-                    <tr>
-                        <td class="fw-bold text-primary">@item.EnglishWord</td>
-                        <td>@item.TurkishWord</td>
-                        <td class="text-center">
-                            <div class="d-flex justify-content-center gap-3">
-                                <div class="form-check form-switch" title="Favorilere Ekle/Çıkar">
-                                    <input class="form-check-input favorite-checkbox" type="checkbox" data-word-id="@item.Id"
-                                        @(item.Favorite != null ? "checked" : "") id="favorite-@item.Id">
-                                    <label class="form-check-label" for="favorite-@item.Id">
-                                        <i class="fas fa-star text-warning"></i>
-                                    </label>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="text-center">
-                            <button type="button" class="btn-action btn-action-edit" onclick="openUpdateModal(@item.Id, event)"
-                                title="Düzenle">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                        </td>
-                        <td class="text-center">
-                            <button type="button" class="btn-action btn-action-delete" onclick="deleteFavorite(@item.Id, event)"
-                                title="Sil">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </td>
-                    </tr>
-                }
-            }
-        </tbody>
-    </table>
-</div>
-
-@if (Model != null && Model.TotalPages > 1)
 {
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 mt-4">
         <div class="text-muted small">Toplam <strong>@Model.TotalCount</strong> kayıt</div>

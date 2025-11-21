@@ -32,15 +32,18 @@ public class RegisterController(IRegisterService registerService) : Controller
             PasswordConfirm = viewModel.PasswordConfirm,
             Phone = viewModel.Phone
         };
-        ServiceResult<IEnumerable<IdentityError>> result = await registerService.RegisterAsync(request);
+        ServiceResult result = await registerService.RegisterAsync(request);
 
         if (!result.IsSuccess)
         {
-            ModelState.AddModelErrorList(result.Data!.Select(x => x.Description).ToList());
+            if (result.ErrorList != null)
+            {
+                ModelState.AddModelErrorList(result.ErrorList);
+            }
             return View();
         }
 
-        TempData["SuccessMessage"] = "Kay�t olma i�lemi ba�ar�yla tamamlanm��t�r";
+        TempData["SuccessMessage"] = "Kayıt olma işlemi başarıyla tamamlanmıştır";
 
         return View(nameof(Register));
     }

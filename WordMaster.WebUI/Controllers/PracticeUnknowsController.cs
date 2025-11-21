@@ -25,7 +25,7 @@ public class PracticeUnknowsController(IUnknowsService unknowsService) : Control
         PracticeViewModel viewModel = new()
         {
             EnglishWord = word.IsSuccess && word.Data != null ? word.Data : string.Empty,
-            ErrorMessage = word.IsSuccess ? null : word.ErrorMessage
+            ErrorMessage = word.IsSuccess ? null : word.ErrorMessage()
         };
 
         return View(viewModel);

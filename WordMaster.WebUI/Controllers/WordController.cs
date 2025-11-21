@@ -17,8 +17,10 @@ public class WordController(IWordService wordService, IExcelService excelService
     public async Task<IActionResult> Index(string? search, int page = 1, int pageSize = 10)
     {
         Guid userId = User.GetUserId();
-        ServiceResult<(List<Word> Words, int TotalCount)> pageResult = await wordService.GetPagedWordsAsync(userId, search, page, pageSize);
-        (List<Word>? words, int totalCount) = pageResult.IsSuccess ? pageResult.Data : (new List<Word>(), 0);
+        ServiceResult<PagedResult<WordDto>> pageResult = await wordService.GetPagedWordsAsync(userId, search, page, pageSize);
+
+        List<WordDto> words = pageResult.IsSuccess && pageResult.Data != null ? pageResult.Data.Items : [];
+        int totalCount = pageResult.IsSuccess && pageResult.Data != null ? pageResult.Data.TotalCount : 0;
 
         WordListViewModel viewModel = new()
         {
@@ -62,7 +64,7 @@ public class WordController(IWordService wordService, IExcelService excelService
 
         if (!result.IsSuccess)
         {
-            ModelState.AddModelError("EnglishWord", result.ErrorMessage ?? "Kelime eklenirken bir hata oluştu.");
+            ModelState.AddModelError("EnglishWord", result.ErrorList?.FirstOrDefault() ?? "Kelime eklenirken bir hata oluştu.");
             return View(viewModel);
         }
 
@@ -82,7 +84,7 @@ public class WordController(IWordService wordService, IExcelService excelService
 
         if (!result.IsSuccess)
         {
-            return Json(new { success = false, message = result.ErrorMessage ?? "Kelime silinirken bir hata oluştu." });
+            return Json(new { success = false, message = result.ErrorList?.FirstOrDefault() ?? "Kelime silinirken bir hata oluştu." });
         }
 
         return Json(new { success = true, message = "Kelime başarıyla silindi." });
@@ -92,7 +94,7 @@ public class WordController(IWordService wordService, IExcelService excelService
     public async Task<IActionResult> GetWord(long id)
     {
         Guid userId = User.GetUserId();
-        ServiceResult<Word> result = await wordService.GetWordForUserAsync(id, userId);
+        ServiceResult<WordDto> result = await wordService.GetWordForUserAsync(id, userId);
 
         if (!result.IsSuccess || result.Data == null)
         {
@@ -136,7 +138,7 @@ public class WordController(IWordService wordService, IExcelService excelService
 
         if (!result.IsSuccess)
         {
-            return Json(new { success = false, message = result.ErrorMessage ?? "Kelime güncellenirken bir hata oluştu." });
+            return Json(new { success = false, message = result.ErrorList?.FirstOrDefault() ?? "Kelime güncellenirken bir hata oluştu." });
         }
 
         return Json(new { success = true, message = "Kelime başarıyla güncellendi." });
@@ -166,7 +168,7 @@ public class WordController(IWordService wordService, IExcelService excelService
 
         if (!result.IsSuccess)
         {
-            return Json(new { success = false, message = result.ErrorMessage ?? "İçe aktarma sırasında bir hata oluştu." });
+            return Json(new { success = false, message = result.ErrorList?.FirstOrDefault() ?? "İçe aktarma sırasında bir hata oluştu." });
         }
 
         return Json(new { success = true, message = "Kelimeler başarıyla içe aktarıldı." });

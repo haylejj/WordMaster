@@ -6,6 +6,7 @@ using WordMaster.Application.ViewModels.Folder;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Results;
 using WordMaster.WebUI.Extensions;
+using WordMaster.Application.Dto.Folder;
 
 namespace WordMaster.WebUI.Controllers;
 
@@ -23,11 +24,11 @@ public class FolderController(IFolderService folderService) : Controller
             return RedirectToAction("LogIn", "Login");
         }
 
-        ServiceResult<List<Folder>> foldersResult = await folderService.GetUserFoldersAsync(userId);
+        ServiceResult<List<FolderDto>> foldersResult = await folderService.GetUserFoldersAsync(userId);
         if (!foldersResult.IsSuccess)
         {
-            TempData["ErrorMessage"] = foldersResult.ErrorMessage ?? "Klasörler getirilirken hata oluştu.";
-            return View(new List<Folder>());
+            TempData["ErrorMessage"] = foldersResult.ErrorMessage() ?? "Klasörler getirilirken hata oluştu.";
+            return View(new List<FolderDto>());
         }
 
         return View(foldersResult.Data ?? []);
@@ -42,17 +43,17 @@ public class FolderController(IFolderService folderService) : Controller
             return RedirectToAction("LogIn", "Login");
         }
 
-        ServiceResult<Folder> folderResult = await folderService.GetUserFolderAsync(id, userId);
+        ServiceResult<FolderDto> folderResult = await folderService.GetUserFolderAsync(id, userId);
         if (!folderResult.IsSuccess)
         {
             TempData["ErrorMessage"] = "Klasör bulunamadı.";
             return RedirectToAction(nameof(Index));
         }
 
-        ServiceResult<List<Word>> wordsResult = await folderService.GetWordsInFolderAsync(id, userId);
+        ServiceResult<List<WordDto>> wordsResult = await folderService.GetWordsInFolderAsync(id, userId);
         if (!wordsResult.IsSuccess)
         {
-            TempData["ErrorMessage"] = wordsResult.ErrorMessage ?? "Klasör kelimeleri getirilemedi.";
+            TempData["ErrorMessage"] = wordsResult.ErrorMessage() ?? "Klasör kelimeleri getirilemedi.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -80,7 +81,7 @@ public class FolderController(IFolderService folderService) : Controller
         ServiceResult result = await folderService.AddFolderAsync(name, userId);
         if (!result.IsSuccess)
         {
-            TempData["ErrorMessage"] = result.ErrorMessage ?? "İşlem başarısız.";
+            TempData["ErrorMessage"] = result.ErrorMessage() ?? "İşlem başarısız.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -102,7 +103,7 @@ public class FolderController(IFolderService folderService) : Controller
         ServiceResult result = await folderService.AddWordToFolderAsync(folderId, wordId, userId);
         if (!result.IsSuccess)
         {
-            TempData["ErrorMessage"] = result.ErrorMessage ?? "İşlem başarısız.";
+            TempData["ErrorMessage"] = result.ErrorMessage() ?? "İşlem başarısız.";
             return RedirectToAction(nameof(Detail), new { id = folderId });
         }
         TempData["SuccessMessage"] = "Kelime klasöre eklendi.";
@@ -123,7 +124,7 @@ public class FolderController(IFolderService folderService) : Controller
         ServiceResult result = await folderService.RemoveWordFromFolderAsync(folderId, wordId, userId);
         if (!result.IsSuccess)
         {
-            TempData["ErrorMessage"] = result.ErrorMessage ?? "İşlem başarısız.";
+            TempData["ErrorMessage"] = result.ErrorMessage() ?? "İşlem başarısız.";
             return RedirectToAction(nameof(Detail), new { id = folderId });
         }
         TempData["SuccessMessage"] = "Kelime klasörden kaldırıldı.";
@@ -156,10 +157,10 @@ public class FolderController(IFolderService folderService) : Controller
             return Json(new { success = false, message = "Kullanıcı oturumu bulunamadı." });
         }
 
-        ServiceResult<Folder> folderResult = await folderService.GetUserFolderAsync(id, userId);
+        ServiceResult<FolderDto> folderResult = await folderService.GetUserFolderAsync(id, userId);
         if (!folderResult.IsSuccess || folderResult.Data == null)
         {
-            return Json(new { success = false, message = folderResult.ErrorMessage ?? "Klasör bulunamadı." });
+            return Json(new { success = false, message = folderResult.ErrorMessage() ?? "Klasör bulunamadı." });
         }
 
         return Json(new { success = true, folder = new { id = folderResult.Data.Id, name = folderResult.Data.Name } });
@@ -178,7 +179,7 @@ public class FolderController(IFolderService folderService) : Controller
         ServiceResult result = await folderService.UpdateFolderAsync(id, name, userId);
         if (!result.IsSuccess)
         {
-            return Json(new { success = false, message = result.ErrorMessage ?? "Güncelleme başarısız." });
+            return Json(new { success = false, message = result.ErrorMessage() ?? "Güncelleme başarısız." });
         }
 
         return Json(new { success = true, message = "Klasör güncellendi." });
@@ -197,7 +198,7 @@ public class FolderController(IFolderService folderService) : Controller
         ServiceResult result = await folderService.DeleteFolderAsync(id, userId);
         if (!result.IsSuccess)
         {
-            return Json(new { success = false, message = result.ErrorMessage ?? "Silme başarısız." });
+            return Json(new { success = false, message = result.ErrorMessage() ?? "Silme başarısız." });
         }
 
         return Json(new { success = true, message = "Klasör silindi." });

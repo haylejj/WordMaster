@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WordMaster.Application.Dto.Word;
+using WordMaster.Application.Dto.Favorite;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Application.ViewModels.Favorite;
 using WordMaster.Application.ViewModels.Word;
@@ -23,14 +24,14 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
             return RedirectToAction("LogIn", "Login");
         }
 
-        ServiceResult<(List<Favorite> Favorites, int TotalCount)> result = await favoriteService.GetPagedFavoritesAsync(userId, search, page, pageSize);
+        ServiceResult<PagedResult<FavoriteWithWordDto>> result = await favoriteService.GetPagedFavoritesAsync(userId, search, page, pageSize);
 
         FavoriteListViewModel viewModel = new()
         {
-            Words = result.IsSuccess ? [.. result.Data.Favorites.Where(x => x.Word != null).Select(x => x.Word!)] : [],
+            Favorites = result.IsSuccess && result.Data != null ? result.Data.Items : [],
             Page = page,
             PageSize = pageSize,
-            TotalCount = result.IsSuccess ? result.Data.TotalCount : 0,
+            TotalCount = result.IsSuccess && result.Data != null ? result.Data.TotalCount : 0,
             Search = search
         };
 
@@ -48,7 +49,7 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
         ServiceResult<bool> result = await favoriteService.ToggleFavoriteAsync(id, userId);
         if (!result.IsSuccess)
         {
-            return Json(new { success = false, message = result.ErrorMessage ?? "İşlem başarısız." });
+            return Json(new { success = false, message = result.ErrorList?.FirstOrDefault() ?? "İşlem başarısız." });
         }
         return Json(new { success = true, isFavorite = result.Data, message = result.Data == true ? "Favorilere eklendi." : "Favorilerden çıkarıldı." });
     }
@@ -66,7 +67,7 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
         ServiceResult<bool> result = await favoriteService.ToggleFavoriteAsync(id, userId);
         if (!result.IsSuccess)
         {
-            TempData["ErrorMessage"] = result.ErrorMessage ?? "Favori işlemi sırasında bir sorun oluştu.";
+            TempData["ErrorMessage"] = result.ErrorList?.FirstOrDefault() ?? "Favori işlemi sırasında bir sorun oluştu.";
             return Redirect("/Word");
         }
         TempData["SuccessMessage"] = result.Data == true ? "Favorilere eklendi." : "Favorilerden çıkarıldı.";
@@ -81,7 +82,7 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
             return NotFound();
         }
 
-        ServiceResult<Favorite> result = await favoriteService.GetFavoriteWithWordAsync(id, userId);
+        ServiceResult<FavoriteWithWordDto> result = await favoriteService.GetFavoriteWithWordAsync(id, userId);
         if (!result.IsSuccess || result.Data?.Word == null)
         {
             return NotFound();
@@ -104,7 +105,7 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
         }
 
         // favoriteId aslında Word Id olarak gönderiliyor, bu yüzden WordService kullanıyoruz
-        ServiceResult<Word> result = await wordService.GetWordForUserAsync(favoriteId, userId);
+        ServiceResult<WordDto> result = await wordService.GetWordForUserAsync(favoriteId, userId);
 
         if (!result.IsSuccess || result.Data == null)
         {
@@ -148,7 +149,7 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
 
         if (!updateResult.IsSuccess)
         {
-            return Json(new { success = false, message = updateResult.ErrorMessage ?? "Kelime güncellenirken bir hata oluştu." });
+            return Json(new { success = false, message = updateResult.ErrorList?.FirstOrDefault() ?? "Kelime güncellenirken bir hata oluştu." });
         }
 
         return Json(new { success = true, message = "Kelime başarıyla güncellendi." });
@@ -167,7 +168,7 @@ public class FavoriteController(IFavoriteService favoriteService, IWordService w
 
         if (!result.IsSuccess)
         {
-            return Json(new { success = false, message = result.ErrorMessage ?? "Favori silinirken bir hata oluştu." });
+            return Json(new { success = false, message = result.ErrorList?.FirstOrDefault() ?? "Favori silinirken bir hata oluştu." });
         }
 
         return Json(new { success = true, message = "Favori başarıyla silindi." });

@@ -83,7 +83,7 @@
             </tr>
         </thead>
         <tbody>
-            @if (Model == null || Model.Words == null || Model.Words.Count == 0)
+            @if (Model == null || Model.Unknows == null || Model.Unknows.Count == 0)
             {
                 <tr>
                     <td colspan="5" class="text-center py-5">
@@ -96,24 +96,24 @@
             }
             else
             {
-                @foreach (var item in Model.Words)
+                @foreach (var item in Model.Unknows)
                 {
                     <tr>
-                        <td class="fw-bold text-primary">@item.EnglishWord</td>
-                        <td>@item.TurkishWord</td>
+                        <td class="fw-bold text-primary">@item.Word?.EnglishWord</td>
+                        <td>@item.Word?.TurkishWord</td>
                         <td class="text-center">
                             <div class="d-flex justify-content-center gap-3">
                                 <div class="form-check form-switch" title="Bilinmeyenlere Ekle/Çıkar">
-                                    <input class="form-check-input unknows-checkbox" type="checkbox" data-word-id="@item.Id"
-                                        @(item.Unknows != null ? "checked" : "") id="unknows-@item.Id">
-                                    <label class="form-check-label" for="unknows-@item.Id">
+                                    <input class="form-check-input unknows-checkbox" type="checkbox" data-word-id="@item.Word?.Id"
+                                        checked id="unknows-@item.Word?.Id">
+                                    <label class="form-check-label" for="unknows-@item.Word?.Id">
                                         <i class="fas fa-question-circle text-danger"></i>
                                     </label>
                                 </div>
                             </div>
                         </td>
                         <td class="text-center">
-                            <button type="button" class="btn-action btn-action-edit" onclick="openUpdateModal(@item.Id, event)"
+                            <button type="button" class="btn-action btn-action-edit" onclick="openUpdateModal(@item.Word?.Id, event)"
                                 title="Düzenle">
                                 <i class="fas fa-edit"></i>
                             </button>

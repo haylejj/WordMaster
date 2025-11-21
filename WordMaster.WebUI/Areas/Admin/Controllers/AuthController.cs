@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using WordMaster.Application.Requests.Auth;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Application.ViewModels.Auth;
+using WordMaster.Application.ViewModels.User;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Results;
 using WordMaster.WebUI.Extensions;
@@ -32,7 +33,7 @@ public class AuthController(ILoginService loginService, UserManager<AppUser> use
             return View(viewModel);
         }
 
-        ServiceResult<AppUser> userResult = await loginService.FindByEmailAsync(viewModel.Email!);
+        ServiceResult<UserViewModel> userResult = await loginService.FindByEmailAsync(viewModel.Email!);
         string? ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
 
         // IP adresi kontrolü
@@ -54,12 +55,19 @@ public class AuthController(ILoginService loginService, UserManager<AppUser> use
             return View(viewModel);
         }
 
+        var user = await userManager.FindByEmailAsync(viewModel.Email!);
+        if (user == null)
+        {
+            ModelState.AddModelErrorList(new List<string> { "Kullanıcı bulunamadı." });
+            return View(viewModel);
+        }
+
         // Admin rol kontrolü
-        bool isAdmin = await userManager.IsInRoleAsync(userResult.Data, "admin");
+        bool isAdmin = await userManager.IsInRoleAsync(user, "admin");
         if (!isAdmin)
         {
             ModelState.AddModelErrorList(new List<string> { "Bu panele erişim yetkiniz yok." });
-            await logHistoryService.RecordAsync(userResult.Data.Id.ToString(), viewModel.Email, ipAddress, false, "AdminLogin");
+            await logHistoryService.RecordAsync(user.Id.ToString(), viewModel.Email, ipAddress, false, "AdminLogin");
             return View(viewModel);
         }
 
@@ -70,16 +78,16 @@ public class AuthController(ILoginService loginService, UserManager<AppUser> use
             RememberMe = viewModel.RememberMe
         };
 
-        ServiceResult login = await loginService.LoginAsync(request, userResult.Data);
+        ServiceResult login = await loginService.LoginAsync(request);
         if (!login.IsSuccess)
         {
             ModelState.AddModelErrorList(new List<string> { "Email veya şifre yanlış" });
-            await logHistoryService.RecordAsync(userResult.Data.Id.ToString(), viewModel.Email, ipAddress, false, "AdminLogin");
+            await logHistoryService.RecordAsync(user.Id.ToString(), viewModel.Email, ipAddress, false, "AdminLogin");
             return View(viewModel);
         }
 
         TempData["AdminLoginSuccess"] = "Başarıyla giriş yaptınız.";
-        await logHistoryService.RecordAsync(userResult.Data.Id.ToString(), viewModel.Email, ipAddress, true, "AdminLogin");
+        await logHistoryService.RecordAsync(user.Id.ToString(), viewModel.Email, ipAddress, true, "AdminLogin");
 
         return Redirect("/Admin/Dashboard");
     }
