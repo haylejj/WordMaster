@@ -1,4 +1,4 @@
-
+using System.Net;
 using Microsoft.AspNetCore.Identity;
 using WordMaster.Application.Requests.Auth;
 using WordMaster.Application.Services.Abstract;
@@ -9,23 +9,24 @@ namespace WordMaster.Infrastructure.Services;
 
 public class RegisterService(UserManager<AppUser> userManager) : IRegisterService
 {
-    public async Task<ServiceResult<IEnumerable<IdentityError>>> RegisterAsync(RegisterRequest request)
+    public async Task<ServiceResult> RegisterAsync(RegisterRequest request)
     {
         IdentityResult result = await userManager.CreateAsync(new AppUser() { UserName = request.UserName, Email = request.Email, PhoneNumber = request.Phone }, request.Password!);
 
         if (!result.Succeeded)
         {
-            return new ServiceResult<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Kayıt başarısız.", Data = result.Errors };
+            var errors = result.Errors.Select(e => e.Description).ToList();
+            return ServiceResult.Failure(errors, HttpStatusCode.BadRequest);
         }
         else
         {
             AppUser? user = await userManager.FindByNameAsync(request.UserName!);
             if (user == null)
             {
-                return new ServiceResult<IEnumerable<IdentityError>> { IsSuccess = false, ErrorMessage = "Kullanıcı bulunamadı.", Data = null };
+                return ServiceResult.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound);
             }
             await userManager.AddToRoleAsync(user, "user");
-            return ServiceResult<IEnumerable<IdentityError>>.Success(null);
+            return ServiceResult.SuccessAsCreated();
         }
     }
 }

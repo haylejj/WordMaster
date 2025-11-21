@@ -1,13 +1,12 @@
 using WordMaster.Application.Requests.Auth;
-using WordMaster.Domain.Entities;
+using WordMaster.Application.ViewModels.User;
 using WordMaster.Domain.Results;
 
 namespace WordMaster.Application.Services.Abstract;
 
 public interface ILoginService
 {
-    Task<ServiceResult<AppUser>> FindByEmailAsync(string email);
-    Task<ServiceResult> LoginAsync(LoginRequest request, AppUser user);
+    Task<ServiceResult<UserViewModel>> FindByEmailAsync(string email);
+    Task<ServiceResult> LoginAsync(LoginRequest request);
     Task<ServiceResult<string>> GeneratePasswordResetTokenAsync(string userId);
-
 }
