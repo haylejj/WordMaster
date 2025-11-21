@@ -55,7 +55,7 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
 
         Result login = await loginService.LoginAsync(request, userResult.Data);
 
-        await logHistoryService.RecordAsync(userResult.Data.Id, request.Email, ipAddress, login.IsSuccess, "UserLogin");
+        await logHistoryService.RecordAsync(userResult.Data.Id.ToString(), request.Email, ipAddress, login.IsSuccess, "UserLogin");
 
         if (login.IsSuccess)
         {
@@ -92,9 +92,9 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
             return RedirectToAction(nameof(ForgetPassword));
         }
 
-        Result<string> passwordResetToken = await loginService.GeneratePasswordResetTokenAsync(user.Data.Id);// Şimdi biz özel token ürettik. Şifre değiştirmede kullanılacak 
+        Result<string> passwordResetToken = await loginService.GeneratePasswordResetTokenAsync(user.Data.Id.ToString());// Şimdi biz özel token ürettik. Şifre değiştirmede kullanılacak 
 
-        string passwordResetLink = Url.Action("ResetPassword", null, new { userId = user.Data.Id, token = passwordResetToken.Data }, HttpContext.Request.Scheme)!; // bu linkin ömrünü program.cs de belirliycez.
+        string passwordResetLink = Url.Action("ResetPassword", null, new { userId = user.Data.Id.ToString(), token = passwordResetToken.Data }, HttpContext.Request.Scheme)!; // bu linkin ömrünü program.cs de belirliycez.
         //Örnek link
         // https://localhost:7289?userId=12213&token=aasdfasdfsdf
 

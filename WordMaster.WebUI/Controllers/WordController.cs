@@ -16,8 +16,8 @@ public class WordController(IWordService wordService, IExcelService excelService
     [HttpGet("")]
     public async Task<IActionResult> Index(string? search, int page = 1, int pageSize = 10)
     {
-        string? userId = User.GetUserId();
-        Result<(List<Word> Words, int TotalCount)> pageResult = await wordService.GetPagedWordsAsync(userId!, search, page, pageSize);
+        Guid userId = User.GetUserId();
+        Result<(List<Word> Words, int TotalCount)> pageResult = await wordService.GetPagedWordsAsync(userId, search, page, pageSize);
         (List<Word>? words, int totalCount) = pageResult.IsSuccess ? pageResult.Data : (new List<Word>(), 0);
 
         WordListViewModel viewModel = new()
@@ -44,8 +44,8 @@ public class WordController(IWordService wordService, IExcelService excelService
             return View(viewModel);
         }
 
-        string? userId = User.GetUserId();
-        if (string.IsNullOrEmpty(userId))
+        Guid userId = User.GetUserId();
+        if (userId == Guid.Empty)
         {
             ModelState.AddModelError("", "Kullanıcı bilgisi bulunamadı.");
             return View(viewModel);
@@ -70,10 +70,10 @@ public class WordController(IWordService wordService, IExcelService excelService
         return RedirectToAction(nameof(AddWord));
     }
     [HttpPost("DeleteWord")]
-    public async Task<IActionResult> DeleteWord(int id)
+    public async Task<IActionResult> DeleteWord(long id)
     {
-        string? userId = User.GetUserId();
-        if (string.IsNullOrEmpty(userId))
+        Guid userId = User.GetUserId();
+        if (userId == Guid.Empty)
         {
             return Json(new { success = false, message = "Kullanıcı bilgisi bulunamadı." });
         }
@@ -89,10 +89,10 @@ public class WordController(IWordService wordService, IExcelService excelService
     }
 
     [HttpGet("GetWord")]
-    public async Task<IActionResult> GetWord(int id)
+    public async Task<IActionResult> GetWord(long id)
     {
-        string? userId = User.GetUserId();
-        Result<Word> result = await wordService.GetWordForUserAsync(id, userId!);
+        Guid userId = User.GetUserId();
+        Result<Word> result = await wordService.GetWordForUserAsync(id, userId);
 
         if (!result.IsSuccess || result.Data == null)
         {
@@ -119,8 +119,8 @@ public class WordController(IWordService wordService, IExcelService excelService
             return Json(new { success = false, message = "Geçersiz veri." });
         }
 
-        string? userId = User.GetUserId();
-        if (string.IsNullOrEmpty(userId))
+        Guid userId = User.GetUserId();
+        if (userId == Guid.Empty)
         {
             return Json(new { success = false, message = "Kullanıcı bilgisi bulunamadı." });
         }
@@ -145,8 +145,8 @@ public class WordController(IWordService wordService, IExcelService excelService
     [HttpPost("ImportFromExcel")]
     public async Task<IActionResult> ImportFromExcel(IFormFile file)
     {
-        string? userId = User.GetUserId();
-        if (string.IsNullOrEmpty(userId))
+        Guid userId = User.GetUserId();
+        if (userId == Guid.Empty)
         {
             return Json(new { success = false, message = "Kullanıcı bilgisi bulunamadı." });
         }
@@ -161,7 +161,7 @@ public class WordController(IWordService wordService, IExcelService excelService
             return Json(new { success = false, message = "Sadece .csv dosyaları kabul edilir." });
         }
 
-        using var stream = file.OpenReadStream();
+        using Stream stream = file.OpenReadStream();
         Result result = await excelService.ImportWordsAsync(stream, userId);
 
         if (!result.IsSuccess)

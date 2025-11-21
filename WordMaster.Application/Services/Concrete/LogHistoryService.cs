@@ -12,9 +12,15 @@ public class LogHistoryService(ILogHistoryRepository logHistoryRepository, IUnit
 {
     public async Task RecordAsync(string? appUserId, string? email, string? ipAddress, bool isSuccessful, string source)
     {
+        Guid? parsedUserId = null;
+        if (!string.IsNullOrWhiteSpace(appUserId) && Guid.TryParse(appUserId, out Guid userId))
+        {
+            parsedUserId = userId;
+        }
+
         LogHistory log = new()
         {
-            AppUserId = string.IsNullOrWhiteSpace(appUserId) ? null : appUserId,
+            AppUserId = parsedUserId,
             Email = string.IsNullOrWhiteSpace(email) ? null : email,
             IpAddress = string.IsNullOrWhiteSpace(ipAddress) ? null : ipAddress,
             IsSuccessful = isSuccessful,
@@ -28,9 +34,14 @@ public class LogHistoryService(ILogHistoryRepository logHistoryRepository, IUnit
 
     public async Task<UserLoginStatsViewModel> GetUserLoginStatsAsync(string userId)
     {
-        int totalLogins = await logHistoryRepository.CountAsync(x => x.AppUserId == userId);
+        if (!Guid.TryParse(userId, out Guid userGuid))
+        {
+            return new UserLoginStatsViewModel();
+        }
 
-        int successfulLogins = await logHistoryRepository.CountAsync(x => x.AppUserId == userId && x.IsSuccessful);
+        int totalLogins = await logHistoryRepository.CountAsync(x => x.AppUserId == userGuid);
+
+        int successfulLogins = await logHistoryRepository.CountAsync(x => x.AppUserId == userGuid && x.IsSuccessful);
         int failedLogins = totalLogins - successfulLogins;
 
         return new UserLoginStatsViewModel
@@ -43,7 +54,16 @@ public class LogHistoryService(ILogHistoryRepository logHistoryRepository, IUnit
 
     public async Task<LastLoginInfoViewModel> GetLastSuccessfulLoginAsync(string userId)
     {
-        LogHistory? lastLogin = await logHistoryRepository.GetLastSuccessfulLoginAsync(userId);
+        if (!Guid.TryParse(userId, out Guid userGuid))
+        {
+            return new LastLoginInfoViewModel
+            {
+                LastLoginDate = null,
+                LastLoginIpAddress = null
+            };
+        }
+
+        LogHistory? lastLogin = await logHistoryRepository.GetLastSuccessfulLoginAsync(userGuid);
 
         return lastLogin == null
             ? new LastLoginInfoViewModel

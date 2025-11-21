@@ -14,11 +14,16 @@ public class WordConfigurations : IEntityTypeConfiguration<Word>
         builder.Property(x => x.TurkishWord).IsRequired().HasMaxLength(60);
         builder.Property(x => x.CreatedTime).IsRequired();
 
-        // Öðrenme Takibi - Varsayýlan deðerler
+
         builder.Property(x => x.ConsecutiveCorrectCount).HasDefaultValue(0);
         builder.Property(x => x.ConsecutiveWrongCount).HasDefaultValue(0);
         builder.Property(x => x.TotalCorrectCount).HasDefaultValue(0);
         builder.Property(x => x.TotalWrongCount).HasDefaultValue(0);
+
+        builder.HasIndex(x => x.UserId);
+        builder.HasIndex(x => new { x.UserId, x.EnglishWord });
+        builder.HasIndex(x => new { x.UserId, x.TurkishWord });
+        builder.HasIndex(x => new { x.UserId, x.CreatedTime });
 
         builder.HasOne(x => x.User)
             .WithMany()

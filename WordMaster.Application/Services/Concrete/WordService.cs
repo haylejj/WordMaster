@@ -15,7 +15,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
     private static readonly TimeSpan PracticeCacheExpiration = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan GetByIdCacheExpiration = TimeSpan.FromMinutes(10);
 
-    public async Task<Result<Word>> GetWordForUserAsync(int id, string userId)
+    public async Task<Result<Word>> GetWordForUserAsync(long id, Guid userId)
     {
         string cacheKey = $"word:{id}:user:{userId}";
         WordDto? cachedWordDto = await cacheService.GetAsync<WordDto>(cacheKey);
@@ -46,7 +46,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
         return Result<Word>.Success(word);
     }
 
-    public async Task<Result> AddWordAsync(WordDto wordDto, string userId)
+    public async Task<Result> AddWordAsync(WordDto wordDto, Guid userId)
     {
         wordDto.EnglishWord = wordDto.EnglishWord?.NormalizeEnglishWord();
         wordDto.TurkishWord = wordDto.TurkishWord?.NormalizeTurkishWord();
@@ -79,7 +79,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
         return Result.Success();
     }
 
-    public async Task<Result> UpdateWordAsync(int wordId, WordDto wordDto, string userId)
+    public async Task<Result> UpdateWordAsync(long wordId, WordDto wordDto, Guid userId)
     {
         Word? existingWord = await wordRepository.GetWordForUserTrackedAsync(wordId, userId);
         if (existingWord == null)
@@ -119,7 +119,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
         return Result.Success();
     }
 
-    public async Task<Result> DeleteWordAsync(int wordId, string userId)
+    public async Task<Result> DeleteWordAsync(long wordId, Guid userId)
     {
         Word? word = await wordRepository.GetWordForUserTrackedAsync(wordId, userId);
         if (word == null)
@@ -137,7 +137,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
         return Result.Success();
     }
 
-    public async Task<Result<bool>> IsWordDuplicateAsync(string englishWord, string userId)
+    public async Task<Result<bool>> IsWordDuplicateAsync(string englishWord, Guid userId)
     {
         if (string.IsNullOrWhiteSpace(englishWord))
         {
@@ -150,7 +150,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
         return Result<bool>.Success(existingWord != null);
     }
 
-    public async Task<Result<string>> GetRandomWordAsync(string userId)
+    public async Task<Result<string>> GetRandomWordAsync(Guid userId)
     {
         string cacheKey = $"words:user:{userId}";
         List<PracticeWordCacheDto>? cachedWords = await cacheService.GetAsync<List<PracticeWordCacheDto>>(cacheKey);
@@ -183,7 +183,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
         return Result<string>.Success(practiceWords[index].EnglishWord ?? string.Empty);
     }
 
-    public async Task<Result<bool>> CheckTranslationAndUpdateAsync(string userId, string turkishWord, string englishWord)
+    public async Task<Result<bool>> CheckTranslationAndUpdateAsync(Guid userId, string turkishWord, string englishWord)
     {
         string? normalizedEnglishWord = englishWord?.NormalizeEnglishWord();
 
@@ -225,7 +225,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
         return Result<bool>.Success(isCorrect);
     }
 
-    public async Task<Result<(List<Word> Words, int TotalCount)>> GetPagedWordsAsync(string userId, string? search, int page, int pageSize)
+    public async Task<Result<(List<Word> Words, int TotalCount)>> GetPagedWordsAsync(Guid userId, string? search, int page, int pageSize)
     {
         if (page < 1)
         {

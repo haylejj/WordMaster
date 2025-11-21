@@ -4,9 +4,10 @@ namespace WordMaster.WebUI.Extensions;
 
 public static class ClaimsPrincipalExtensions
 {
-    public static string? GetUserId(this ClaimsPrincipal principal)
+    public static Guid GetUserId(this ClaimsPrincipal principal)
     {
-        return principal.FindFirstValue(ClaimTypes.NameIdentifier);
+        string? userId = principal.FindFirstValue(ClaimTypes.NameIdentifier);
+        return Guid.TryParse(userId, out Guid result) ? result : Guid.Empty;
     }
 }
 
