@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using WordMaster.Application.Requests.Auth;
 using WordMaster.Application.Requests.User;
+using WordMaster.Application.Responses;
 using WordMaster.Application.ViewModels.User;
 using WordMaster.Domain.Results;
 
@@ -23,4 +24,20 @@ public interface IUserService
     Task<ServiceResult> UpdateUserAsync(string id, UserEditRequest request);
     Task<ServiceResult> DeleteUserAsync(string id);
     Task<ServiceResult<string>> ResetUserPasswordAsync(string id);
+
+    /// <summary>
+    /// Refresh token'ı doğrular ve kullanıcı bilgilerini döndürür.
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID'si</param>
+    /// <param name="refreshToken">Doğrulanacak refresh token</param>
+    /// <returns>Kullanıcı ve rolleri içeren ServiceResult</returns>
+    Task<ServiceResult<UserWithRolesResponse>> ValidateAndGetUserByRefreshTokenAsync(string userId, string refreshToken);
+
+    /// <summary>
+    /// Kullanıcının refresh token bilgilerini günceller.
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID'si</param>
+    /// <param name="refreshToken">Yeni refresh token</param>
+    /// <param name="expiresInDays">Geçerlilik süresi (gün)</param>
+    Task<ServiceResult> UpdateRefreshTokenAsync(string userId, string refreshToken, int expiresInDays);
 }

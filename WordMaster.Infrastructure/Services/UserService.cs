@@ -6,6 +6,7 @@ using WordMaster.Application.Persistence;
 using WordMaster.Application.Persistence.Repositories;
 using WordMaster.Application.Requests.Auth;
 using WordMaster.Application.Requests.User;
+using WordMaster.Application.Responses;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Application.ViewModels.Admin;
 using WordMaster.Application.ViewModels.User;
@@ -345,5 +346,59 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
             await unitOfWork.RollbackTransactionAsync();
             return ServiceResult<string>.Failure($"Şifre sıfırlanırken bir hata oluştu: {ex.Message}", HttpStatusCode.InternalServerError);
         }
+    }
+
+    public async Task<ServiceResult<UserWithRolesResponse>> ValidateAndGetUserByRefreshTokenAsync(string userId, string refreshToken)
+    {
+        // Kullanıcıyı veritabanından getir
+        AppUser? user = await userManager.FindByIdAsync(userId);
+        if (user == null)
+        {
+            return ServiceResult<UserWithRolesResponse>.Failure("Kullanıcı bulunamadı", HttpStatusCode.NotFound);
+        }
+
+        // Veritabanındaki refresh token hash'i ile gelen refresh token'ı karşılaştır
+        if (string.IsNullOrEmpty(user.RefreshToken) || !RefreshTokenHasher.VerifyRefreshToken(refreshToken, user.RefreshToken))
+        {
+            return ServiceResult<UserWithRolesResponse>.Failure("Geçersiz refresh token", HttpStatusCode.Unauthorized);
+        }
+
+        // Refresh token'ın süresinin dolup dolmadığını kontrol et
+        if (user.RefreshTokenExpires == null || user.RefreshTokenExpires < DateTime.UtcNow)
+        {
+            return ServiceResult<UserWithRolesResponse>.Failure("Refresh token süresi dolmuş", HttpStatusCode.Unauthorized);
+        }
+
+        // Kullanıcının rollerini al
+        IList<string> roles = await userManager.GetRolesAsync(user);
+
+        UserWithRolesResponse response = new()
+        {
+            User = user,
+            Roles = roles
+        };
+
+        return ServiceResult<UserWithRolesResponse>.Success(response, HttpStatusCode.OK);
+    }
+
+    public async Task<ServiceResult> UpdateRefreshTokenAsync(string userId, string refreshToken, int expiresInDays)
+    {
+        AppUser? user = await userManager.FindByIdAsync(userId);
+        if (user == null)
+        {
+            return ServiceResult.Failure("Kullanıcı bulunamadı", HttpStatusCode.NotFound);
+        }
+
+        // Refresh token'ı hash'leyerek sakla (güvenlik için)
+        user.RefreshToken = RefreshTokenHasher.HashRefreshToken(refreshToken);
+        user.RefreshTokenExpires = DateTime.UtcNow.AddDays(expiresInDays);
+
+        IdentityResult result = await userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+        {
+            return ServiceResult.Failure("Refresh token güncellenirken hata oluştu", HttpStatusCode.InternalServerError);
+        }
+
+        return ServiceResult.Success(HttpStatusCode.NoContent);
     }
 }
