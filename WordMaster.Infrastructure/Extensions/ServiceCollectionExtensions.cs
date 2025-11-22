@@ -52,6 +52,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAdminDashboardService, AdminDashboardService>();
         services.AddScoped<IAllowedIpAddressService, AllowedIpAddressService>();
         services.AddScoped<IExcelService, ExcelService>();
+        services.AddScoped<IJwtService, JwtService>();
 
         return services;
     }

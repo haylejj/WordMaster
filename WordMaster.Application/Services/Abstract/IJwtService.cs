@@ -15,8 +15,9 @@ public interface IJwtService
     /// <param name="userId">Kullanıcı ID'si</param>
     /// <param name="email">Kullanıcı email adresi</param>
     /// <param name="roles">Kullanıcının rolleri</param>
+    /// <param name="securityStamp">Kullanıcının security stamp'i (şifre değişince token geçersiz olur)</param>
     /// <returns>JWT access token string içeren ServiceResult</returns>
-    ServiceResult<string> GenerateAccessToken(string userId, string email, IList<string> roles);
+    ServiceResult<string> GenerateAccessToken(string userId, string email, IList<string> roles, string securityStamp);
 
     /// <summary>
     /// Güvenli bir refresh token oluşturur.

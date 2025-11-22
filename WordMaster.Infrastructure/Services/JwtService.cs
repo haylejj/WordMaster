@@ -21,9 +21,9 @@ public class JwtService(IOptions<JwtSettings> jwtSettings, IUserService userServ
 
     /// <summary>
     /// Kullanıcı için JWT access token oluşturur.
-    /// Token içinde kullanıcı ID, email ve roller claim olarak eklenir.
+    /// Token içinde kullanıcı ID, email, roller ve security stamp claim olarak eklenir.
     /// </summary>
-    public ServiceResult<string> GenerateAccessToken(string userId, string email, IList<string> roles)
+    public ServiceResult<string> GenerateAccessToken(string userId, string email, IList<string> roles, string securityStamp)
     {
         try
         {
@@ -33,6 +33,7 @@ public class JwtService(IOptions<JwtSettings> jwtSettings, IUserService userServ
                 new Claim(ClaimTypes.NameIdentifier, userId),  // Kullanıcı ID
                 new Claim(ClaimTypes.Email, email),            // Email
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()), // Token ID (her token için benzersiz)
+                new Claim("SecurityStamp", securityStamp),     // Security Stamp (şifre değişince token geçersiz olur)
             };
 
             // Kullanıcının her bir rolü için ayrı claim ekle
@@ -174,11 +175,12 @@ public class JwtService(IOptions<JwtSettings> jwtSettings, IUserService userServ
 
             var userWithRoles = userValidationResult.Data;
 
-            // 3. Yeni access token oluştur
+            // 3. Yeni access token oluştur (SecurityStamp ile)
             var accessTokenResult = GenerateAccessToken(
                 userWithRoles.User.Id.ToString(),
                 userWithRoles.User.Email!,
-                userWithRoles.Roles
+                userWithRoles.Roles,
+                userWithRoles.User.SecurityStamp ?? string.Empty  // SecurityStamp eklendi
             );
 
             if (!accessTokenResult.IsSuccess || accessTokenResult.Data == null)

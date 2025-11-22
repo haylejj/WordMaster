@@ -1,6 +1,11 @@
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 using WordMaster.API.Extensions;
 using WordMaster.API.Filters;
 using WordMaster.Domain.Configuration;
+using WordMaster.Infrastructure.EfCore;
+using WordMaster.Infrastructure.Extensions;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -11,8 +16,6 @@ builder.Services.AddControllers(configure =>
 {
     configure.Filters.Add<ValidationFilter>();
 });
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
 
 // Fluent Validation yapılandırması
 builder.Services.AddValidationConfigurations();
@@ -27,16 +30,37 @@ builder.Services.AddJwtConfigurations(builder.Configuration);
 
 // Application Services (DI)
 builder.Services.AddApplicationServices();
-
+// Redis Cache yapılandırması
+builder.Services.AddRedis(builder.Configuration);
 // Authorization
 builder.Services.AddAuthorization();
+// Forwarded Headers yapılandırması
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+// DbContext yapılandırması
+builder.Services.AddDbContext<AppDbContext>(x =>
+{
+    x.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer"), option =>
+    {
+        option.MigrationsAssembly(Assembly.GetAssembly(typeof(AppDbContext))!.GetName().Name);
+    });
+});
+// Identity yapılandırması
+builder.Services.AddIdentityConfigurations();
+// Swagger yapılandırması
+builder.Services.AddSwaggerConfigurations();
 
 WebApplication app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();

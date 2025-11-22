@@ -1,14 +1,20 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Net;
+using System.Reflection;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
+using WordMaster.Application.Services.Abstract;
 using WordMaster.Application.Validation.Word;
+using WordMaster.Domain.Entities;
 using WordMaster.Domain.Results;
+using WordMaster.Infrastructure.EfCore;
 
 namespace WordMaster.API.Extensions;
 
@@ -98,6 +104,49 @@ public static class ServiceCollectionExtensions
 
                 options.Events = new JwtBearerEvents
                 {
+                    // Token doğrulandıktan SONRA SecurityStamp kontrolü yap
+                    OnTokenValidated = async context =>
+                    {
+                        // Gerekli servisleri DI'dan al
+                        UserManager<AppUser> userManager = context.HttpContext.RequestServices.GetRequiredService<UserManager<AppUser>>();
+                        ICacheService cacheService = context.HttpContext.RequestServices.GetRequiredService<ICacheService>();
+
+                        // Token'daki kullanıcı ID'sini al
+                        string? userId = context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                        if (!string.IsNullOrEmpty(userId))
+                        {
+                            string cacheKey = $"security_stamp:{userId}";
+                            string? dbSecurityStamp = await cacheService.GetAsync<string>(cacheKey);
+
+                            // Cache'de yoksa veritabanından al
+                            if (string.IsNullOrEmpty(dbSecurityStamp))
+                            {
+                                AppUser? user = await userManager.FindByIdAsync(userId);
+                                if (user != null)
+                                {
+                                    dbSecurityStamp = user.SecurityStamp;
+                                    // Cache'e kaydet (30 dakika geçerli)
+                                    await cacheService.SetAsync(cacheKey, dbSecurityStamp, TimeSpan.FromHours(1));
+                                }
+                                else
+                                {
+                                    context.Fail("Kullanıcı bulunamadı.");
+                                    return;
+                                }
+                            }
+
+                            // Token'daki SecurityStamp ile karşılaştır
+                            string? tokenSecurityStamp = context.Principal?.FindFirst("SecurityStamp")?.Value;
+
+                            if (tokenSecurityStamp != dbSecurityStamp)
+                            {
+                                // SecurityStamp uyuşmuyorsa token geçersiz (kullanıcı şifresini değiştirmiş)
+                                context.Fail("Security stamp geçersiz. Lütfen tekrar giriş yapın.");
+                            }
+                        }
+                    },
+
                     OnChallenge = context =>
                     {
                         context.HandleResponse(); // Default davranışı engelle
@@ -151,6 +200,86 @@ public static class ServiceCollectionExtensions
                     },
                 };
             });
+        return services;
+    }
+    public static IServiceCollection AddIdentityConfigurations(this IServiceCollection services)
+    {
+        // Email doğrulama, şifre sıfırlama gibi token'ların geçerlilik süresi (1 saat)
+        services.Configure<DataProtectionTokenProviderOptions>(options =>
+        {
+            options.TokenLifespan = TimeSpan.FromHours(1);
+        });
+
+        services.AddIdentity<AppUser, AppRole>(options =>
+        {
+            options.User.RequireUniqueEmail = true;
+            options.Password.RequireDigit = true;
+            options.Password.RequireLowercase = true;
+            options.Password.RequireUppercase = true;
+            options.Password.RequiredLength = 6;
+            options.Password.RequireNonAlphanumeric = true;
+            options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(10);
+            options.Lockout.MaxFailedAccessAttempts = 4;
+        })
+        .AddDefaultTokenProviders()
+        .AddEntityFrameworkStores<AppDbContext>();
+
+        // Security Stamp: Kullanıcı şifresi değiştiğinde veya önemli bir güvenlik olayında tüm oturumları sonlandırmak için kullanılır
+        // Her 30 dakikada bir kontrol edilir, değişmişse kullanıcı otomatik logout olur
+        services.Configure<SecurityStampValidatorOptions>(options =>
+        {
+            options.ValidationInterval = TimeSpan.FromMinutes(30);
+        });
+
+        return services;
+    }
+    /// <summary>
+    /// Swagger/OpenAPI dokümantasyon yapılandırmasını ekler.
+    /// API endpoint'lerini test etmek ve dokümante etmek için Swagger UI kullanılır.
+    /// JWT Bearer token authentication desteği ile birlikte yapılandırılır.
+    /// </summary>
+    /// <param name="services">Servis koleksiyonu</param>
+    /// <returns>Güncellenmiş servis koleksiyonu</returns>
+    public static IServiceCollection AddSwaggerConfigurations(this IServiceCollection services)
+    {
+        services.AddEndpointsApiExplorer();
+        services.AddSwaggerGen(c =>
+        {
+            string xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            string xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+            c.IncludeXmlComments(xmlPath);
+
+            c.SwaggerDoc("v1", new() { Title = "API", Version = "v1" });
+
+            c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            {
+                Name = "Authorization",
+                Type = SecuritySchemeType.ApiKey,
+                Scheme = "Bearer",
+                BearerFormat = "JWT",
+                In = ParameterLocation.Header,
+                Description = "JWT Authorization header. Örnek: 'Bearer {token}'"
+            });
+            // Bu ayar, Swagger'ın tanımlanan "Bearer" güvenlik şemasını tüm endpoint'lere otomatik olarak uygulamasını sağlar.
+            // Yani kullanıcı Swagger UI'da Authorize butonuna token girdikten sonra, tüm API isteklerine "Authorization: Bearer {token}" header'ı otomatik eklenir.
+            // Eğer bu ayarı koymazsak Swagger token'ı tanır ama çoğu endpoint'e göndermez.
+            c.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    Array.Empty<string>()
+                }
+            });
+
+        });
+
         return services;
     }
 }
