@@ -13,6 +13,10 @@ public class LoginRequestValidator : AbstractValidator<LoginRequest>
 
         RuleFor(x => x.Password)
             .NotEmpty().WithMessage("Şifre alanı boş bırakılamaz");
+
+        RuleFor(x => x.RememberMe)
+            .NotNull().WithMessage("RememberMe alanı boş olamaz.");
+
     }
 }
 

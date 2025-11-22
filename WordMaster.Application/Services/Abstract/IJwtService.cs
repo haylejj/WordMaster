@@ -40,5 +40,5 @@ public interface IJwtService
     /// <param name="expiredAccessToken">Süresi dolmuş access token</param>
     /// <param name="refreshToken">Geçerli refresh token</param>
     /// <returns>Yeni access token ve refresh token içeren ServiceResult</returns>
-    Task<ServiceResult<RefreshTokenResponse>> RefreshAccessTokenAsync(string expiredAccessToken, string refreshToken);
+    Task<ServiceResult<LoginResponse>> RefreshAccessTokenAsync(string expiredAccessToken, string refreshToken);
 }

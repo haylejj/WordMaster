@@ -156,10 +156,7 @@ public static class ServiceCollectionExtensions
                         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                         context.Response.ContentType = "application/json";
 
-                        string json = JsonSerializer.Serialize(result, new JsonSerializerOptions
-                        {
-                            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                        });
+                        string json = JsonSerializer.Serialize(result);
 
                         return context.Response.WriteAsync(json);
                     },
@@ -202,6 +199,13 @@ public static class ServiceCollectionExtensions
             });
         return services;
     }
+    /// <summary>
+    /// ASP.NET Core Identity yapılandırmasını ekler.
+    /// Kullanıcı yönetimi, şifre politikaları, hesap kilitleme (lockout) ve token ayarlarını içerir.
+    /// Ayrıca SecurityStamp validasyonu ile güvenlik kontrol sıklığını belirler.
+    /// </summary>
+    /// <param name="services">Servis koleksiyonu</param>
+    /// <returns>Güncellenmiş servis koleksiyonu</returns>
     public static IServiceCollection AddIdentityConfigurations(this IServiceCollection services)
     {
         // Email doğrulama, şifre sıfırlama gibi token'ların geçerlilik süresi (1 saat)

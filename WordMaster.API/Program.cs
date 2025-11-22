@@ -20,6 +20,9 @@ builder.Services.AddControllers(configure =>
 // Fluent Validation yapılandırması
 builder.Services.AddValidationConfigurations();
 
+// HttpContextAccessor (LoginService'te IP adresi almak için gerekli)
+builder.Services.AddHttpContextAccessor();
+
 // Configuration Settings
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.Configure<MailHogSettings>(builder.Configuration.GetSection("MailHog"));
