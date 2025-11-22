@@ -32,6 +32,9 @@ builder.Services.Configure<MailHogSettings>(builder.Configuration.GetSection("Ma
 // Redis
 builder.Services.AddRedis(builder.Configuration);
 
+// DataProtection
+builder.Services.AddDataProtection();
+
 // Application Services
 builder.Services.AddApplicationServices();
 

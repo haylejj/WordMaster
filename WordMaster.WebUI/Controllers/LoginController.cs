@@ -8,10 +8,12 @@ using WordMaster.Domain.Entities;
 using WordMaster.Domain.Results;
 using WordMaster.WebUI.Extensions;
 
+using WordMaster.Infrastructure.Helpers;
+
 namespace WordMaster.WebUI.Controllers;
 
 [Route("/Login")]
-public class LoginController(ILoginService loginService, UserManager<AppUser> userManager, IEmailService emailService, ILogHistoryService logHistoryService) : Controller
+public class LoginController(ILoginService loginService, UserManager<AppUser> userManager, IEmailService emailService, ILogHistoryService logHistoryService, IDataProtectionHelper dataProtectionHelper) : Controller
 {
     [HttpGet("")]
     public IActionResult Login()
@@ -100,7 +102,13 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
         // https://localhost:7289?userId=12213&token=aasdfasdfsdf
 
         // email e link gönderme metodu.
-        await emailService.SendResetPasswordLinkToEmailAsync(passwordResetLink!, user.Data.Email!);
+        ServiceResult emailResult = await emailService.SendResetPasswordLinkToEmailAsync(passwordResetLink!, user.Data.Email!);
+
+        if (!emailResult.IsSuccess)
+        {
+            ModelState.AddModelErrorList(new List<string> { "Email gönderilirken bir hata oluştu. Lütfen daha sonra tekrar deneyiniz." });
+            return View();
+        }
         //
         TempData["success"] = "Şifre yenileme linki e-posta adresinize gönderilmiştir.";
 
@@ -127,7 +135,16 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
         {
             throw new Exception("Bir hata meydana geldi");
         }
-        AppUser? hasUser = await userManager.FindByIdAsync(userId.ToString()!);
+
+        // UserId'yi çöz
+        string decryptedUserId = dataProtectionHelper.Decrypt(userId.ToString()!);
+        if (string.IsNullOrEmpty(decryptedUserId))
+        {
+            ModelState.AddModelErrorList(new List<string>() { "Geçersiz bağlantı." });
+            return View();
+        }
+
+        AppUser? hasUser = await userManager.FindByIdAsync(decryptedUserId);
         if (hasUser == null)
         {
             ModelState.AddModelErrorList(new List<string>() { "Kullanıcı bulunamamıştır." });

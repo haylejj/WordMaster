@@ -7,6 +7,7 @@ using WordMaster.Application.Services.Abstract;
 using WordMaster.Application.Services.Concrete;
 using WordMaster.Infrastructure.EfCore.Repositories;
 using WordMaster.Infrastructure.EfCore.UnitOfWork;
+using WordMaster.Infrastructure.Helpers;
 using WordMaster.Infrastructure.Services;
 
 namespace WordMaster.Infrastructure.Extensions;
@@ -45,7 +46,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IRegisterService, RegisterService>();
         services.AddScoped<ILoginService, LoginService>();
         services.AddScoped<IRoleService, RoleService>();
-        services.AddScoped<IEmailService, EmailService>();
+        //services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IEmailService, MailHogEmailService>();
         services.AddScoped<ICacheService, RedisCacheService>();
         services.AddScoped<ILogHistoryService, LogHistoryService>();
@@ -53,6 +54,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAllowedIpAddressService, AllowedIpAddressService>();
         services.AddScoped<IExcelService, ExcelService>();
         services.AddScoped<IJwtService, JwtService>();
+
+        // Helpers
+        services.AddScoped<IDataProtectionHelper, DataProtectionHelper>();
 
         return services;
     }

@@ -333,7 +333,13 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
             await unitOfWork.CommitAsync();
 
             // Şifreyi email olarak gönder
-            await emailService.SendPasswordToEmailAsync(newPassword, user.Email, user.UserName ?? "Kullanıcı");
+            ServiceResult emailResult = await emailService.SendPasswordToEmailAsync(newPassword, user.Email, user.UserName ?? "Kullanıcı");
+
+            if (!emailResult.IsSuccess)
+            {
+                await unitOfWork.RollbackTransactionAsync();
+                return ServiceResult<string>.Failure($"Şifre oluşturuldu ancak email gönderilemedi: {emailResult.ErrorList?.FirstOrDefault() ?? "Bilinmeyen hata"}", HttpStatusCode.InternalServerError);
+            }
 
             // Email başarılı oldu, transaction'ı commit et
             await unitOfWork.CommitTransactionAsync();

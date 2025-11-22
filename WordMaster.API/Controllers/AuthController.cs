@@ -49,4 +49,33 @@ public class AuthController(ILoginService loginService) : BaseController
         ServiceResult<LoginResponse> result = await loginService.LoginAsync(request);
         return CreateResult(result);
     }
+    /// <summary>
+    /// Şifremi unuttum işlemi için şifre sıfırlama linki gönderir.
+    /// </summary>
+    /// <param name="request">Kullanıcının email adresini içeren istek.</param>
+    /// <returns>İşlem sonucunu döner.</returns>
+    /// <remarks>
+    /// Bu endpoint, verilen email adresi sistemde kayıtlıysa o adrese şifre sıfırlama bağlantısı içeren bir e-posta gönderir.
+    /// Güvenlik nedeniyle, e-posta adresi sistemde kayıtlı olmasa bile başarılı sonuç döner (User Enumeration saldırılarını önlemek için).
+    /// </remarks>
+    /// <response code="200">İşlem başarılı (Mail gönderildi veya kullanıcı bulunamadı)</response>
+    [HttpPost("forget-password")]
+    public async Task<IActionResult> ForgetPassword([FromBody] ForgetPasswordRequest request)
+    {
+        ServiceResult result = await loginService.ForgetPasswordAsync(request);
+        return CreateResult(result);
+    }
+    /// <summary>
+    /// Şifre sıfırlama işlemini gerçekleştirir.
+    /// </summary>
+    /// <param name="request">Şifreli kullanıcı ID'si, token ve yeni şifre bilgilerini içeren istek.</param>
+    /// <returns>İşlem sonucunu döner.</returns>
+    /// <response code="200">Şifre başarıyla sıfırlandı.</response>
+    /// <response code="400">Geçersiz istek (token hatalı, şifreler uyuşmuyor veya kullanıcı bulunamadı).</response>
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+    {
+        ServiceResult result = await loginService.ResetPasswordAsync(request);
+        return CreateResult(result);
+    }
 }
