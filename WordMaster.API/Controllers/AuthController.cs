@@ -12,7 +12,7 @@ namespace WordMaster.API.Controllers;
 /// Login, Register, Token yenileme gibi işlemleri içerir.
 /// </summary>
 [Route("api/auth")]
-public class AuthController(ILoginService loginService) : BaseController
+public class AuthController(ILoginService loginService, IRegisterService registerService) : BaseController
 {
     /// <summary>
     /// API'nin ayakta olup olmadığını kontrol etmek için basit bir endpoint.
@@ -78,4 +78,28 @@ public class AuthController(ILoginService loginService) : BaseController
         ServiceResult result = await loginService.ResetPasswordAsync(request);
         return CreateResult(result);
     }
+
+    /// <summary>
+    /// Yeni bir kullanıcı kaydı oluşturur.
+    /// </summary>
+    /// <param name="request">Kullanıcı adı, email, şifre telefon bilgileri ve cinsiyet içeren kayıt isteği.</param>
+    /// <returns>İşlem sonucunu döner.</returns>
+    /// <remarks>
+    /// Bu endpoint yeni bir kullanıcı oluşturur ve varsayılan olarak 'user' rolünü atar.
+    /// </remarks>
+    /// <response code="201">Kullanıcı başarıyla oluşturuldu.</response>
+    /// <response code="400">Geçersiz istek veya validasyon hatası.</response>
+    [HttpPost("register")]
+    public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+    {
+        ServiceResult result = await registerService.RegisterAsync(request);
+        return CreateResult(result);
+    }
+
+    // [HttpPost("refresh-token")]
+    // public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
+    // {
+    //     ServiceResult result = await registerService.RefreshTokenAsync(request);
+    //     return CreateResult(result);
+    // }
 }

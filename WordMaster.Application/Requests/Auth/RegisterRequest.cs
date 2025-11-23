@@ -1,3 +1,5 @@
+using WordMaster.Domain.Entities;
+
 namespace WordMaster.Application.Requests.Auth;
 
 public class RegisterRequest
@@ -7,5 +9,6 @@ public class RegisterRequest
     public string? Password { get; set; }
     public string? PasswordConfirm { get; set; }
     public string? Phone { get; set; }
+    public Gender Gender { get; set; }
 }
 
