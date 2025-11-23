@@ -4,6 +4,7 @@ using WordMaster.Application.Dto.Practice;
 using WordMaster.Application.Dto.Word;
 using WordMaster.Application.Persistence;
 using WordMaster.Application.Persistence.Repositories;
+using WordMaster.Application.Requests.Favorite;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Results;
@@ -52,18 +53,18 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
         }).ToList();
     }
 
-    public async Task<ServiceResult<bool>> ToggleFavoriteAsync(long wordId, Guid userId)
+    public async Task<ServiceResult<bool>> ToggleFavoriteAsync(ToggleFavoriteRequest request, Guid userId)
     {
-        ServiceResult<WordDto> wordExists = await wordService.GetWordForUserAsync(wordId, userId);
+        ServiceResult<WordDto> wordExists = await wordService.GetWordForUserAsync(request.WordId, userId);
         if (!wordExists.IsSuccess || wordExists.Data == null)
         {
             return ServiceResult<bool>.Failure("Kelime bulunamadı.", HttpStatusCode.NotFound);
         }
 
-        Favorite? existingFavorite = await favoriteRepository.GetByWordForUserAsync(wordId, userId);
+        Favorite? existingFavorite = await favoriteRepository.GetByWordForUserAsync(request.WordId, userId);
         if (existingFavorite == null)
         {
-            Favorite favorite = new() { WordId = wordId, UserId = userId, CreatedTime = DateTime.UtcNow };
+            Favorite favorite = new() { WordId = request.WordId, UserId = userId, CreatedTime = DateTime.UtcNow };
             await favoriteRepository.AddAsync(favorite);
             await unitOfWork.CommitAsync();
 

@@ -1,0 +1,58 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using WordMaster.API.Extensions;
+using WordMaster.Application.Dto.Favorite;
+using WordMaster.Application.Requests.Favorite;
+using WordMaster.Application.Services.Abstract;
+using WordMaster.Domain.Results;
+
+namespace WordMaster.API.Controllers;
+
+/// <summary>
+/// Favori kelime işlemlerini (Listeleme, Ekleme/Çıkarma) yöneten controller.
+/// </summary>
+[Authorize]
+[Route("api/favorites")]
+public class FavoriteController(IFavoriteService favoriteService) : BaseController
+{
+    /// <summary>
+    /// Kullanıcının favori kelimelerini listeler.
+    /// </summary>
+    /// <param name="search">Aranacak kelime (isteğe bağlı).</param>
+    /// <param name="page">Sayfa numarası (varsayılan 1).</param>
+    /// <param name="pageSize">Sayfa boyutu (varsayılan 10).</param>
+    /// <returns>Sayfalanmış favori kelime listesi.</returns>
+    [HttpGet]
+    public async Task<IActionResult> GetFavorites([FromQuery] string? search, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    {
+        Guid userId = User.GetUserId();
+        ServiceResult<PagedResult<FavoriteWithWordDto>> result = await favoriteService.GetPagedFavoritesAsync(userId, search, page, pageSize);
+        return CreateResult(result);
+    }
+
+    /// <summary>
+    /// Bir kelimeyi favorilere ekler veya favorilerden çıkarır.
+    /// </summary>
+    /// <param name="request">İşlem yapılacak kelime ID'si.</param>
+    /// <returns>İşlem sonucu (true: Eklendi, false: Çıkarıldı).</returns>
+    [HttpPost("toggle")]
+    public async Task<IActionResult> ToggleFavorite([FromBody] ToggleFavoriteRequest request)
+    {
+        Guid userId = User.GetUserId();
+        ServiceResult<bool> result = await favoriteService.ToggleFavoriteAsync(request, userId);
+        return CreateResult(result);
+    }
+
+    /// <summary>
+    /// Belirtilen favori kaydını siler.
+    /// </summary>
+    /// <param name="id">Favori ID'si.</param>
+    /// <returns>İşlem sonucu.</returns>
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteFavorite(int id)
+    {
+        Guid userId = User.GetUserId();
+        ServiceResult result = await favoriteService.DeleteFavoriteAsync(id, userId);
+        return CreateResult(result);
+    }
+}

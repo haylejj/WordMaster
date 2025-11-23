@@ -1,4 +1,5 @@
 using WordMaster.Application.Dto.Favorite;
+using WordMaster.Application.Requests.Favorite;
 using WordMaster.Domain.Results;
 
 namespace WordMaster.Application.Services.Abstract;
@@ -6,7 +7,7 @@ namespace WordMaster.Application.Services.Abstract;
 public interface IFavoriteService
 {
     Task<List<FavoriteWithWordDto>> GetUserFavoritesAsync(Guid userId);
-    Task<ServiceResult<bool>> ToggleFavoriteAsync(long wordId, Guid userId);
+    Task<ServiceResult<bool>> ToggleFavoriteAsync(ToggleFavoriteRequest request, Guid userId);
     Task<ServiceResult<FavoriteWithWordDto>> GetFavoriteWithWordAsync(int favoriteId, Guid userId);
     Task<ServiceResult> DeleteFavoriteAsync(int favoriteId, Guid userId);
     Task<ServiceResult<string>> GetRandomWordFromFavoritesAsync(Guid userId);

@@ -3,6 +3,7 @@ using WordMaster.Application.Dto.Practice;
 using WordMaster.Application.Dto.Word;
 using WordMaster.Application.Persistence;
 using WordMaster.Application.Persistence.Repositories;
+using WordMaster.Application.Requests.Word;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Extensions;
@@ -41,17 +42,17 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
         return ServiceResult<WordDto>.Success(wordDto, HttpStatusCode.OK);
     }
 
-    public async Task<ServiceResult> AddWordAsync(WordDto wordDto, Guid userId)
+    public async Task<ServiceResult> AddWordAsync(CreateWordRequest request, Guid userId)
     {
-        wordDto.EnglishWord = wordDto.EnglishWord?.NormalizeEnglishWord();
-        wordDto.TurkishWord = wordDto.TurkishWord?.NormalizeTurkishWord();
+        request.EnglishWord = request.EnglishWord?.NormalizeEnglishWord()!;
+        request.TurkishWord = request.TurkishWord?.NormalizeTurkishWord()!;
 
-        if (string.IsNullOrWhiteSpace(wordDto.EnglishWord))
+        if (string.IsNullOrWhiteSpace(request.EnglishWord))
         {
             return ServiceResult.Failure("İngilizce kelime boş olamaz.", HttpStatusCode.BadRequest);
         }
 
-        ServiceResult<bool> isDuplicate = await IsWordDuplicateAsync(wordDto.EnglishWord, userId);
+        ServiceResult<bool> isDuplicate = await IsWordDuplicateAsync(request.EnglishWord, userId);
         if (isDuplicate.Data == true)
         {
             return ServiceResult.Failure("Bu kelime zaten sözlüğünüzde mevcut.", HttpStatusCode.Conflict);
@@ -59,8 +60,8 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
 
         Word word = new()
         {
-            EnglishWord = wordDto.EnglishWord,
-            TurkishWord = wordDto.TurkishWord,
+            EnglishWord = request.EnglishWord,
+            TurkishWord = request.TurkishWord,
             UserId = userId,
             CreatedTime = DateTime.UtcNow
         };
@@ -74,7 +75,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
         return ServiceResult.SuccessAsCreated();
     }
 
-    public async Task<ServiceResult> UpdateWordAsync(long wordId, WordDto wordDto, Guid userId)
+    public async Task<ServiceResult> UpdateWordAsync(long wordId, UpdateWordRequest request, Guid userId)
     {
         Word? existingWord = await wordRepository.GetWordForUserTrackedAsync(wordId, userId);
         if (existingWord == null)
@@ -82,10 +83,10 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
             return ServiceResult.Failure("Kelime bulunamadı veya size ait değil.", HttpStatusCode.NotFound);
         }
 
-        wordDto.EnglishWord = wordDto.EnglishWord?.NormalizeEnglishWord();
-        wordDto.TurkishWord = wordDto.TurkishWord?.NormalizeTurkishWord();
+        request.EnglishWord = request.EnglishWord?.NormalizeEnglishWord()!;
+        request.TurkishWord = request.TurkishWord?.NormalizeTurkishWord()!;
 
-        if (string.IsNullOrWhiteSpace(wordDto.EnglishWord))
+        if (string.IsNullOrWhiteSpace(request.EnglishWord))
         {
             return ServiceResult.Failure("İngilizce kelime boş olamaz.", HttpStatusCode.BadRequest);
         }
@@ -94,15 +95,15 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
             x.Id != wordId &&
             x.UserId == userId &&
             x.EnglishWord != null &&
-            x.EnglishWord == wordDto.EnglishWord);
+            x.EnglishWord == request.EnglishWord);
 
         if (isDuplicate)
         {
             return ServiceResult.Failure("Bu kelime zaten sözlüğünüzde mevcut.", HttpStatusCode.Conflict);
         }
 
-        existingWord.EnglishWord = wordDto.EnglishWord;
-        existingWord.TurkishWord = wordDto.TurkishWord;
+        existingWord.EnglishWord = request.EnglishWord;
+        existingWord.TurkishWord = request.TurkishWord;
 
         wordRepository.Update(existingWord);
         await unitOfWork.CommitAsync();

@@ -4,6 +4,7 @@ using WordMaster.Application.Dto.Unknows;
 using WordMaster.Application.Dto.Word;
 using WordMaster.Application.Persistence;
 using WordMaster.Application.Persistence.Repositories;
+using WordMaster.Application.Requests.Unknows;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Results;
@@ -90,18 +91,18 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
         }).ToList();
     }
 
-    public async Task<ServiceResult<bool>> ToggleUnknowsAsync(long wordId, Guid userId)
+    public async Task<ServiceResult<bool>> ToggleUnknowsAsync(ToggleUnknowsRequest request, Guid userId)
     {
-        ServiceResult<WordDto> wordExists = await wordService.GetWordForUserAsync(wordId, userId);
+        ServiceResult<WordDto> wordExists = await wordService.GetWordForUserAsync(request.WordId, userId);
         if (!wordExists.IsSuccess || wordExists.Data == null)
         {
             return ServiceResult<bool>.Failure("Kelime bulunamadı.", HttpStatusCode.NotFound);
         }
 
-        Unknows? existingUnknow = await unknowsRepository.GetByWordForUserAsync(wordId, userId);
+        Unknows? existingUnknow = await unknowsRepository.GetByWordForUserAsync(request.WordId, userId);
         if (existingUnknow == null)
         {
-            Unknows unknow = new() { WordId = wordId, UserId = userId, CreatedTime = DateTime.UtcNow };
+            Unknows unknow = new() { WordId = request.WordId, UserId = userId, CreatedTime = DateTime.UtcNow };
             await unknowsRepository.AddAsync(unknow);
             await unitOfWork.CommitAsync();
 
