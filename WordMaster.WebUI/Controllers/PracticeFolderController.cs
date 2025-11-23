@@ -1,13 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WordMaster.Application.Services.Abstract;
-using WordMaster.Application.ViewModels.Practice;
-using WordMaster.Domain.Entities;
-using WordMaster.Domain.Results;
-using WordMaster.WebUI.Extensions;
-
 using WordMaster.Application.Dto.Folder;
 using WordMaster.Application.Dto.Word;
+using WordMaster.Application.Services.Abstract;
+using WordMaster.Application.ViewModels.Practice;
+using WordMaster.Domain.Results;
+using WordMaster.WebUI.Extensions;
 
 namespace WordMaster.WebUI.Controllers;
 

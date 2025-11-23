@@ -151,7 +151,7 @@ public class WordController(IWordService wordService, IExcelService excelService
     public async Task<IActionResult> CheckTranslation([FromBody] CheckTranslationRequest request)
     {
         Guid userId = User.GetUserId();
-        ServiceResult<bool> result = await wordService.CheckTranslationAndUpdateAsync(userId, request.TurkishWord, request.EnglishWord);
+        ServiceResult<bool> result = await wordService.CheckTranslationAndUpdateAsync(userId, request);
         return CreateResult(result);
     }
 }

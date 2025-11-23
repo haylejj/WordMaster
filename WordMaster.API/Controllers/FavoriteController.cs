@@ -78,7 +78,7 @@ public class FavoriteController(IFavoriteService favoriteService) : BaseControll
     public async Task<IActionResult> CheckTranslation([FromBody] CheckTranslationRequest request)
     {
         Guid userId = User.GetUserId();
-        ServiceResult<bool> result = await favoriteService.CheckTranslationAndUpdateAsync(userId, request.TurkishWord, request.EnglishWord);
+        ServiceResult<bool> result = await favoriteService.CheckTranslationAndUpdateAsync(userId, request);
         return CreateResult(result);
     }
 }

@@ -4,6 +4,7 @@ using WordMaster.API.Extensions;
 using WordMaster.Application.Dto.Folder;
 using WordMaster.Application.Dto.Word;
 using WordMaster.Application.Requests.Folder;
+using WordMaster.Application.Requests.Word;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Results;
 
@@ -116,6 +117,19 @@ public class FolderController(IFolderService folderService) : BaseController
     {
         Guid userId = User.GetUserId();
         ServiceResult result = await folderService.RemoveWordFromFolderAsync(request, userId);
+        return CreateResult(result);
+    }
+
+    /// <summary>
+    /// Klasör pratiği sırasında girilen çeviriyi kontrol eder ve istatistikleri günceller.
+    /// </summary>
+    /// <param name="request">Kontrol edilecek kelime bilgileri.</param>
+    /// <returns>Doğru/Yanlış bilgisi.</returns>
+    [HttpPost("practice/check")]
+    public async Task<IActionResult> CheckTranslation([FromBody] CheckTranslationRequest request)
+    {
+        Guid userId = User.GetUserId();
+        ServiceResult<bool> result = await folderService.CheckTranslationAndUpdateAsync(userId, request);
         return CreateResult(result);
     }
 }

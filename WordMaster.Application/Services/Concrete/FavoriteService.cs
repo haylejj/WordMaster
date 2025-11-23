@@ -5,6 +5,7 @@ using WordMaster.Application.Dto.Word;
 using WordMaster.Application.Persistence;
 using WordMaster.Application.Persistence.Repositories;
 using WordMaster.Application.Requests.Favorite;
+using WordMaster.Application.Requests.Word;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Results;
@@ -148,9 +149,9 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
         return ServiceResult<string>.Success(practiceFavorites[index].EnglishWord ?? string.Empty, HttpStatusCode.OK);
     }
 
-    public Task<ServiceResult<bool>> CheckTranslationAndUpdateAsync(Guid userId, string turkishWord, string englishWord)
+    public Task<ServiceResult<bool>> CheckTranslationAndUpdateAsync(Guid userId, CheckTranslationRequest request)
     {
-        return wordService.CheckTranslationAndUpdateAsync(userId, turkishWord, englishWord);
+        return wordService.CheckTranslationAndUpdateAsync(userId, request);
     }
 
     public async Task<ServiceResult<PagedResult<FavoriteWithWordDto>>> GetPagedFavoritesAsync(Guid userId, string? search, int page, int pageSize)

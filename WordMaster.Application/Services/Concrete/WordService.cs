@@ -180,9 +180,9 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
         return ServiceResult<string>.Success(practiceWords[index].EnglishWord ?? string.Empty, HttpStatusCode.OK);
     }
 
-    public async Task<ServiceResult<bool>> CheckTranslationAndUpdateAsync(Guid userId, string turkishWord, string englishWord)
+    public async Task<ServiceResult<bool>> CheckTranslationAndUpdateAsync(Guid userId, CheckTranslationRequest request)
     {
-        string? normalizedEnglishWord = englishWord?.NormalizeEnglishWord();
+        string? normalizedEnglishWord = request.EnglishWord?.NormalizeEnglishWord();
 
         Word? word = normalizedEnglishWord == null
             ? null
@@ -193,7 +193,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
             return ServiceResult<bool>.Failure("Kelime bulunamadı.", HttpStatusCode.NotFound);
         }
 
-        string? normalizedTurkishWord = turkishWord?.NormalizeTurkishWord();
+        string? normalizedTurkishWord = request.TurkishWord?.NormalizeTurkishWord();
         bool isCorrect = word.TurkishWord == normalizedTurkishWord;
 
         word.IsLastAnswerCorrect = isCorrect;

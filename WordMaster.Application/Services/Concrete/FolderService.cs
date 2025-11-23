@@ -1,9 +1,11 @@
 using System.Net;
 using WordMaster.Application.Dto.Folder;
+using WordMaster.Application.Dto.Practice;
 using WordMaster.Application.Dto.Word;
 using WordMaster.Application.Persistence;
 using WordMaster.Application.Persistence.Repositories;
 using WordMaster.Application.Requests.Folder;
+using WordMaster.Application.Requests.Word;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Results;
@@ -14,9 +16,12 @@ public class FolderService(
     IFolderRepository folderRepository,
     IWordRepository wordRepository,
     IWordFolderRepository wordFolderRepository,
-    IUnitOfWork unitOfWork
+    IUnitOfWork unitOfWork,
+    IWordService wordService
 ) : IFolderService
 {
+    private static readonly Random _random = new();
+
     public async Task<ServiceResult<List<FolderDto>>> GetUserFoldersAsync(Guid userId)
     {
         List<Folder> folders = await folderRepository.GetUserFoldersAsync(userId);
@@ -169,5 +174,10 @@ public class FolderService(
         wordFolderRepository.Remove(link);
         await unitOfWork.CommitAsync();
         return ServiceResult.Success(HttpStatusCode.NoContent);
+    }
+
+    public Task<ServiceResult<bool>> CheckTranslationAndUpdateAsync(Guid userId, CheckTranslationRequest request)
+    {
+        return wordService.CheckTranslationAndUpdateAsync(userId, request);
     }
 }

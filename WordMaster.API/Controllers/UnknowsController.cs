@@ -78,7 +78,7 @@ public class UnknowsController(IUnknowsService unknowsService) : BaseController
     public async Task<IActionResult> CheckTranslation([FromBody] CheckTranslationRequest request)
     {
         Guid userId = User.GetUserId();
-        ServiceResult<bool> result = await unknowsService.CheckTranslationAndUpdateAsync(userId, request.TurkishWord, request.EnglishWord);
+        ServiceResult<bool> result = await unknowsService.CheckTranslationAndUpdateAsync(userId, request);
         return CreateResult(result);
     }
 }

@@ -5,6 +5,7 @@ using WordMaster.Application.Dto.Word;
 using WordMaster.Application.Persistence;
 using WordMaster.Application.Persistence.Repositories;
 using WordMaster.Application.Requests.Unknows;
+using WordMaster.Application.Requests.Word;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Results;
@@ -68,9 +69,9 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
         return ServiceResult<string>.Success(practiceUnknows[index].EnglishWord ?? string.Empty, HttpStatusCode.OK);
     }
 
-    public Task<ServiceResult<bool>> CheckTranslationAndUpdateAsync(Guid userId, string turkishWord, string englishWord)
+    public Task<ServiceResult<bool>> CheckTranslationAndUpdateAsync(Guid userId, CheckTranslationRequest request)
     {
-        return wordService.CheckTranslationAndUpdateAsync(userId, turkishWord, englishWord);
+        return wordService.CheckTranslationAndUpdateAsync(userId, request);
     }
 
     public async Task<List<UnknowsWithWordDto>> GetUserUnknowsAsync(Guid userId)

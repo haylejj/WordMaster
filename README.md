@@ -114,6 +114,7 @@ Klasör işlemleri `/api/folders` altında toplanmıştır.
 | `GET` | `/api/folders/{id}/words` | Klasör içeriğindeki kelimeleri listeler. | **User** |
 | `POST` | `/api/folders/words` | Klasöre kelime ekler. | **User** |
 | `DELETE` | `/api/folders/words` | Klasörden kelime çıkarır. | **User** |
+| `POST` | `/api/folders/practice/check` | Klasör pratik çeviri kontrolü yapar. | **User** |
 
 ### Favorite & Unknowns Endpoint'leri
 

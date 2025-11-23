@@ -12,7 +12,7 @@ public interface IWordService
     Task<ServiceResult> DeleteWordAsync(long wordId, Guid userId);
     Task<ServiceResult<bool>> IsWordDuplicateAsync(string englishWord, Guid userId);
     Task<ServiceResult<string>> GetRandomWordAsync(Guid userId);
-    Task<ServiceResult<bool>> CheckTranslationAndUpdateAsync(Guid userId, string turkishWord, string englishWord);
+    Task<ServiceResult<bool>> CheckTranslationAndUpdateAsync(Guid userId, CheckTranslationRequest request);
     Task<ServiceResult<PagedResult<WordDto>>> GetPagedWordsAsync(Guid userId, string? search, int page, int pageSize);
     Task<ServiceResult<List<WordLookupDto>>> GetUserWordsAsync(Guid userId);
 }
