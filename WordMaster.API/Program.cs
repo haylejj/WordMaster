@@ -7,6 +7,7 @@ using WordMaster.API.Filters;
 using WordMaster.Domain.Configuration;
 using WordMaster.Infrastructure.EfCore;
 using WordMaster.Infrastructure.Extensions;
+using WordMaster.API.Middlewares;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -69,6 +70,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
 app.UseHttpsRedirection();
 
