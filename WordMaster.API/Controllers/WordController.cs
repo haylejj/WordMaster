@@ -114,4 +114,44 @@ public class WordController(IWordService wordService, IExcelService excelService
         ServiceResult result = await excelService.ImportWordsAsync(stream, userId);
         return CreateResult(result);
     }
+
+    /// <summary>
+    /// Kullanıcının tüm kelimelerini (dropdown için) listeler.
+    /// </summary>
+    /// <returns>Kelime listesi (ID ve İngilizce karşılık).</returns>
+    [Authorize]
+    [HttpGet("user-words")]
+    public async Task<IActionResult> GetUserWords()
+    {
+        Guid userId = User.GetUserId();
+        ServiceResult<List<WordLookupDto>> result = await wordService.GetUserWordsAsync(userId);
+        return CreateResult(result);
+    }
+
+    /// <summary>
+    /// Pratik yapmak için rastgele bir kelime getirir.
+    /// </summary>
+    /// <returns>İngilizce kelime.</returns>
+    [Authorize]
+    [HttpGet("practice/random")]
+    public async Task<IActionResult> GetRandomWord()
+    {
+        Guid userId = User.GetUserId();
+        ServiceResult<string> result = await wordService.GetRandomWordAsync(userId);
+        return CreateResult(result);
+    }
+
+    /// <summary>
+    /// Pratik sırasında girilen çeviriyi kontrol eder ve istatistikleri günceller.
+    /// </summary>
+    /// <param name="request">Kontrol edilecek kelime bilgileri.</param>
+    /// <returns>Doğru/Yanlış bilgisi.</returns>
+    [Authorize]
+    [HttpPost("practice/check")]
+    public async Task<IActionResult> CheckTranslation([FromBody] CheckTranslationRequest request)
+    {
+        Guid userId = User.GetUserId();
+        ServiceResult<bool> result = await wordService.CheckTranslationAndUpdateAsync(userId, request.TurkishWord, request.EnglishWord);
+        return CreateResult(result);
+    }
 }

@@ -14,4 +14,5 @@ public interface IWordService
     Task<ServiceResult<string>> GetRandomWordAsync(Guid userId);
     Task<ServiceResult<bool>> CheckTranslationAndUpdateAsync(Guid userId, string turkishWord, string englishWord);
     Task<ServiceResult<PagedResult<WordDto>>> GetPagedWordsAsync(Guid userId, string? search, int page, int pageSize);
+    Task<ServiceResult<List<WordLookupDto>>> GetUserWordsAsync(Guid userId);
 }

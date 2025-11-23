@@ -1,4 +1,5 @@
 using System.Net;
+using Microsoft.EntityFrameworkCore;
 using WordMaster.Application.Dto.Practice;
 using WordMaster.Application.Dto.Word;
 using WordMaster.Application.Persistence;
@@ -251,5 +252,30 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
         };
 
         return ServiceResult<PagedResult<WordDto>>.Success(pagedResult, HttpStatusCode.OK);
+    }
+
+    public async Task<ServiceResult<List<WordLookupDto>>> GetUserWordsAsync(Guid userId)
+    {
+        // Cache all user's words for dropdown usage; client will filter locally
+        string cacheKey = $"dropdown_words:user:{userId}";
+        List<WordLookupDto>? cached = await cacheService.GetAsync<List<WordLookupDto>>(cacheKey);
+        if (cached != null && cached.Count > 0)
+        {
+            return ServiceResult<List<WordLookupDto>>.Success(cached, HttpStatusCode.OK);
+        }
+
+        List<WordLookupDto> words = await wordRepository
+            .Where(x => x.UserId == userId)
+            .OrderBy(x => x.EnglishWord)
+            .Select(x => new WordLookupDto
+            {
+                Id = x.Id,
+                EnglishWord = x.EnglishWord
+            })
+            .AsNoTracking()
+            .ToListAsync();
+
+        await cacheService.SetAsync(cacheKey, words, TimeSpan.FromMinutes(10));
+        return ServiceResult<List<WordLookupDto>>.Success(words, HttpStatusCode.OK);
     }
 }

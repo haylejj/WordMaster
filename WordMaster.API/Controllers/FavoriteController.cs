@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using WordMaster.API.Extensions;
 using WordMaster.Application.Dto.Favorite;
 using WordMaster.Application.Requests.Favorite;
+using WordMaster.Application.Requests.Word;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Results;
 
@@ -53,6 +54,31 @@ public class FavoriteController(IFavoriteService favoriteService) : BaseControll
     {
         Guid userId = User.GetUserId();
         ServiceResult result = await favoriteService.DeleteFavoriteAsync(id, userId);
+        return CreateResult(result);
+    }
+
+    /// <summary>
+    /// Favorilerden pratik yapmak için rastgele bir kelime getirir.
+    /// </summary>
+    /// <returns>İngilizce kelime.</returns>
+    [HttpGet("practice/random")]
+    public async Task<IActionResult> GetRandomWord()
+    {
+        Guid userId = User.GetUserId();
+        ServiceResult<string> result = await favoriteService.GetRandomWordFromFavoritesAsync(userId);
+        return CreateResult(result);
+    }
+
+    /// <summary>
+    /// Favoriler pratiği sırasında girilen çeviriyi kontrol eder ve istatistikleri günceller.
+    /// </summary>
+    /// <param name="request">Kontrol edilecek kelime bilgileri.</param>
+    /// <returns>Doğru/Yanlış bilgisi.</returns>
+    [HttpPost("practice/check")]
+    public async Task<IActionResult> CheckTranslation([FromBody] CheckTranslationRequest request)
+    {
+        Guid userId = User.GetUserId();
+        ServiceResult<bool> result = await favoriteService.CheckTranslationAndUpdateAsync(userId, request.TurkishWord, request.EnglishWord);
         return CreateResult(result);
     }
 }

@@ -84,6 +84,54 @@ Tüm kimlik doğrulama işlemleri `/api/auth` altında toplanmıştır.
 | `POST` | `/api/auth/change-password`| Giriş yapmış kullanıcının şifresini değiştirir. | **User** |
 | `POST` | `/api/auth/logout` | Çıkış yapar (Refresh Token'ı sunucudan siler). | **User** |
 
+### Word Endpoint'leri
+
+Kelime işlemleri `/api/words` altında toplanmıştır. Tüm işlemler giriş yapmış kullanıcıya özeldir.
+
+| Metot | Endpoint | Açıklama | Yetki |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/words` | Kullanıcının kelimelerini sayfalı olarak listeler. | **User** |
+| `GET` | `/api/words/{id}` | Belirtilen ID'ye sahip kelimenin detaylarını getirir. | **User** |
+| `POST` | `/api/words` | Yeni bir kelime ekler. | **User** |
+| `PUT` | `/api/words` | Mevcut bir kelimeyi günceller. | **User** |
+| `DELETE` | `/api/words/{id}` | Belirtilen kelimeyi siler. | **User** |
+| `POST` | `/api/words/import-csv` | CSV dosyasından toplu kelime yükler. | **User** |
+| `GET` | `/api/words/user-words` | Tüm kelimeleri basit liste olarak (Dropdown için) getirir. | **User** |
+| `GET` | `/api/words/practice/random` | Pratik için rastgele kelime getirir. | **User** |
+| `POST` | `/api/words/practice/check` | Pratik çeviri kontrolü yapar. | **User** |
+
+### Folder Endpoint'leri
+
+Klasör işlemleri `/api/folders` altında toplanmıştır.
+
+| Metot | Endpoint | Açıklama | Yetki |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/folders` | Kullanıcının klasörlerini listeler. | **User** |
+| `GET` | `/api/folders/{id}` | Klasör detaylarını getirir. | **User** |
+| `POST` | `/api/folders` | Yeni klasör oluşturur. | **User** |
+| `PUT` | `/api/folders` | Klasör ismini günceller. | **User** |
+| `DELETE` | `/api/folders/{id}` | Klasörü siler. | **User** |
+| `GET` | `/api/folders/{id}/words` | Klasör içeriğindeki kelimeleri listeler. | **User** |
+| `POST` | `/api/folders/words` | Klasöre kelime ekler. | **User** |
+| `DELETE` | `/api/folders/words` | Klasörden kelime çıkarır. | **User** |
+
+### Favorite & Unknowns Endpoint'leri
+
+Favori ve bilinmeyen kelime yönetimi için kullanılır.
+
+| Metot | Endpoint | Açıklama | Yetki |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/favorites` | Favori kelimeleri sayfalı listeler. | **User** |
+| `POST` | `/api/favorites/toggle` | Kelimeyi favorilere ekler/çıkarır. | **User** |
+| `DELETE` | `/api/favorites/{id}` | Favori kaydını siler. | **User** |
+| `GET` | `/api/favorites/practice/random` | Favorilerden pratik için rastgele kelime getirir. | **User** |
+| `POST` | `/api/favorites/practice/check` | Favori pratik çeviri kontrolü yapar. | **User** |
+| `GET` | `/api/unknows` | Bilinmeyen kelimeleri sayfalı listeler. | **User** |
+| `POST` | `/api/unknows/toggle` | Kelimeyi bilinmeyenlere ekler/çıkarır. | **User** |
+| `DELETE` | `/api/unknows/{id}` | Bilinmeyen kaydını siler. | **User** |
+| `GET` | `/api/unknows/practice/random` | Bilinmeyenlerden pratik için rastgele kelime getirir. | **User** |
+| `POST` | `/api/unknows/practice/check` | Bilinmeyen pratik çeviri kontrolü yapar. | **User** |
+
 
 
 ##  Kod Standartları
