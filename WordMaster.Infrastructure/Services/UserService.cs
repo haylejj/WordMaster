@@ -16,7 +16,16 @@ using WordMaster.Domain.Results;
 
 namespace WordMaster.Infrastructure.Services;
 
-public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, ILogHistoryService logHistoryService, IWordRepository wordRepository, IFavoriteRepository favoriteRepository, IUnknowsRepository unknowsRepository, IEmailService emailService, IUnitOfWork unitOfWork) : IUserService
+public class UserService(
+    UserManager<AppUser> userManager,
+    SignInManager<AppUser> signInManager,
+    ILogHistoryService logHistoryService,
+    IWordRepository wordRepository,
+    IFavoriteRepository favoriteRepository,
+    IUnknowsRepository unknowsRepository,
+    IEmailService emailService,
+    IUnitOfWork unitOfWork,
+    ICacheService cacheService) : IUserService
 {
     public async Task LogOutAsync()
     {
@@ -114,6 +123,9 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
 
         // Security Stamp'i güncelle (bu işlem mevcut JWT token'ları geçersiz kılar)
         await userManager.UpdateSecurityStampAsync(currentUser);
+
+        // SecurityStamp cache'ini temizle
+        await cacheService.RemoveAsync($"security_stamp:{currentUser.Id}");
 
         return ServiceResult.Success(HttpStatusCode.NoContent);
     }
@@ -351,6 +363,9 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
 
             // Email başarılı oldu, transaction'ı commit et
             await unitOfWork.CommitTransactionAsync();
+
+            // SecurityStamp cache'ini temizle (şifre değiştiği için stamp de değişti)
+            await cacheService.RemoveAsync($"security_stamp:{user.Id}");
 
             return ServiceResult<string>.Success(newPassword, HttpStatusCode.OK);
         }

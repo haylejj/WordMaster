@@ -19,7 +19,8 @@ public class LoginService(
     ILogHistoryService logHistoryService,
     IHttpContextAccessor httpContextAccessor,
     IEmailService emailService,
-    IDataProtectionHelper dataProtectionHelper) : ILoginService
+    IDataProtectionHelper dataProtectionHelper,
+    ICacheService cacheService) : ILoginService
 {
     /// <summary>
     /// Verilen email adresiyle kullanıcıyı bulur.
@@ -74,7 +75,18 @@ public class LoginService(
             return ServiceResult<LoginResponse>.Failure("Email veya şifre yanlış", HttpStatusCode.Unauthorized);
         }
 
+        ServiceResult<string> refreshTokenResult = jwtService.GenerateRefreshToken();
+
+        user.RefreshToken = refreshTokenResult.Data;
+        user.RefreshTokenExpires = DateTime.UtcNow.AddDays(7);
+        await userManager.UpdateAsync(user);
+
+        // SecurityStamp cache'ini set et
+        await cacheService.SetAsync($"security_stamp:{user.Id}", user.SecurityStamp, TimeSpan.FromHours(1));
+
         IList<string> roles = await userManager.GetRolesAsync(user);
+
+        // Token'ı en son kullanıcı durumuyla oluştur (UpdateAsync sonrası)
         ServiceResult<string> accessTokenResult = jwtService.GenerateAccessToken(user.Id.ToString(), user.UserName!, user.Email!, roles, user.SecurityStamp!);
 
         if (!accessTokenResult.IsSuccess)
@@ -82,12 +94,6 @@ public class LoginService(
             await logHistoryService.RecordAsync(user.Id.ToString(), request.Email, ipAddress, false, "PublicLogin");
             return ServiceResult<LoginResponse>.Failure("Token oluşturulamadı.", HttpStatusCode.InternalServerError);
         }
-
-        ServiceResult<string> refreshTokenResult = jwtService.GenerateRefreshToken();
-
-        user.RefreshToken = refreshTokenResult.Data;
-        user.RefreshTokenExpires = DateTime.UtcNow.AddDays(7);
-        await userManager.UpdateAsync(user);
 
         // Başarılı login kaydı
         await logHistoryService.RecordAsync(user.Id.ToString(), request.Email, ipAddress, true, "PublicLogin");
@@ -182,6 +188,9 @@ public class LoginService(
 
         // Güvenlik damgasını güncelle (eski oturumları sonlandırabilir)
         await userManager.UpdateSecurityStampAsync(user);
+        // SecurityStamp cache'ini temizle
+        await cacheService.RemoveAsync($"security_stamp:{user.Id}");
+
         return ServiceResult.Success(HttpStatusCode.OK);
     }
 
@@ -202,7 +211,12 @@ public class LoginService(
         user.RefreshToken = null;
         user.RefreshTokenExpires = null;
 
-        await userManager.UpdateAsync(user);
+        // Security Stamp'i güncelle (Bu işlem mevcut Access Token'ı anında geçersiz kılar)
+        // Not: UpdateSecurityStampAsync, user nesnesindeki diğer değişiklikleri de (RefreshToken=null) kaydeder.
+        await userManager.UpdateSecurityStampAsync(user);
+
+        // SecurityStamp cache'ini temizle (Middleware yeni stamp'i DB'den okusun)
+        await cacheService.RemoveAsync($"security_stamp:{user.Id}");
 
         return ServiceResult.Success(HttpStatusCode.OK);
     }

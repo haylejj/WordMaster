@@ -20,6 +20,7 @@ public class AuthController(ILoginService loginService, IRegisterService registe
     /// API'nin ayakta olup olmadığını kontrol etmek için basit bir endpoint.
     /// </summary>
     /// <returns>200 OK durumu döner.</returns>
+    [Authorize]
     [HttpGet("ping")]
     public IActionResult Ping()
     {
@@ -155,8 +156,8 @@ public class AuthController(ILoginService loginService, IRegisterService registe
     /// </remarks>
     /// <response code="200">Çıkış işlemi başarılı.</response>
     /// <response code="401">Yetkisiz erişim (Token geçersiz veya yok).</response>
-    [HttpPost("logout")]
     [Authorize]
+    [HttpPost("logout")]
     public async Task<IActionResult> Logout()
     {
         string? userName = User.GetUserName();

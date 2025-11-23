@@ -72,6 +72,7 @@ public static class ServiceCollectionExtensions
                 // Yetkisiz erişim durumunda kullanılacak şema
                 // 401 Unauthorized yanıtı döndürülürken JWT Bearer challenge mekanizması devreye girer
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
             })
             .AddJwtBearer(options =>
             {
@@ -98,13 +99,14 @@ public static class ServiceCollectionExtensions
                     ClockSkew = TimeSpan.Zero,
 
                     // Claim type mapping (User.Identity.Name ve User.IsInRole için gerekli)
-                    NameClaimType = ClaimTypes.Name,
+                    NameClaimType = ClaimTypes.NameIdentifier,
                     RoleClaimType = ClaimTypes.Role
                 };
 
                 options.Events = new JwtBearerEvents
                 {
-                    // Token doğrulandıktan SONRA SecurityStamp kontrolü yap
+                    // 1. OnTokenValidated: Token teknik olarak geçerli (imza/süre tamam). 
+                    // Burada veritabanı/cache kontrolü (SecurityStamp) ile oturumun mantıksal geçerliliğini (Logout olmuş mu? Şifre değişmiş mi?) teyit ediyoruz.
                     OnTokenValidated = async context =>
                     {
                         // Gerekli servisleri DI'dan al
@@ -146,9 +148,17 @@ public static class ServiceCollectionExtensions
                         }
                     },
 
+                    // 2. OnChallenge: Yetkilendirme hatası olduğunda (Token yok veya geçersiz) devreye girer. 
+                    // Standart davranışı ezip, istemciye kendi formatımızda 401 JSON cevabı dönmemizi sağlar.
                     OnChallenge = context =>
                     {
                         context.HandleResponse(); // Default davranışı engelle
+
+                        // Response başlamışsa işlem yapma
+                        if (context.Response.HasStarted)
+                        {
+                            return Task.CompletedTask;
+                        }
 
                         ServiceResult result = ServiceResult.Failure("Yetkisiz erişim. Lütfen geçerli bir JWT token sağlayın.", HttpStatusCode.Unauthorized);
 
@@ -159,6 +169,10 @@ public static class ServiceCollectionExtensions
 
                         return context.Response.WriteAsync(json);
                     },
+                    // 3. OnForbidden: Kullanıcı giriş yapmış ama yetkisi yetmiyorsa (Örn: Admin rolü gerekiyor ama User rolünde) devreye girer.
+                    // 403 Forbidden hatasını JSON formatında döner.
+                    // 3. OnForbidden: Kullanıcı giriş yapmış ama yetkisi yetmiyorsa (Örn: Admin rolü gerekiyor ama User rolünde) devreye girer.
+                    // 403 Forbidden hatasını JSON formatında döner.
                     OnForbidden = context =>
                     {
                         context.Response.StatusCode = StatusCodes.Status403Forbidden;
@@ -170,9 +184,10 @@ public static class ServiceCollectionExtensions
 
                         return context.Response.WriteAsync(json);
                     },
+                    // 4. OnAuthenticationFailed: Token'ın kendisinde bir sorun olduğunda (Süresi dolmuş, imza hatalı, format bozuk) devreye girer.
+                    // Exception'ı yakalayıp sebebini belirterek 401 hatası döner.
                     OnAuthenticationFailed = context =>
                     {
-                        // Token çözülürken hata oldu
                         context.NoResult(); // .NET’in kendi 401'i bastırılır
 
                         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
@@ -213,7 +228,8 @@ public static class ServiceCollectionExtensions
             options.TokenLifespan = TimeSpan.FromHours(1);
         });
 
-        services.AddIdentity<AppUser, AppRole>(options =>
+        // jwt için IdentityCore kullanıyoruz, AddIdentity değil.Çünkü cookie tabanlı auth kullanmıyoruz.
+        services.AddIdentityCore<AppUser>(options =>
         {
             options.User.RequireUniqueEmail = true;
             options.Password.RequireDigit = true;
@@ -224,15 +240,17 @@ public static class ServiceCollectionExtensions
             options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(10);
             options.Lockout.MaxFailedAccessAttempts = 4;
         })
-        .AddDefaultTokenProviders()
-        .AddEntityFrameworkStores<AppDbContext>();
+        .AddRoles<AppRole>()
+        .AddEntityFrameworkStores<AppDbContext>()
+        .AddSignInManager();
 
         // Security Stamp: Kullanıcı şifresi değiştiğinde veya önemli bir güvenlik olayında tüm oturumları sonlandırmak için kullanılır
         // Her 30 dakikada bir kontrol edilir, değişmişse kullanıcı otomatik logout olur
-        services.Configure<SecurityStampValidatorOptions>(options =>
-        {
-            options.ValidationInterval = TimeSpan.FromMinutes(30);
-        });
+        // burası cookie auth için kullanılıyor, JWT için değil.
+        //services.Configure<SecurityStampValidatorOptions>(options =>
+        //{
+        //    options.ValidationInterval = TimeSpan.FromMinutes(30);
+        //});
 
         return services;
     }
