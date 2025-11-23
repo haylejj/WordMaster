@@ -1,11 +1,12 @@
-using System.Net;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Net;
 using WordMaster.Application.Persistence;
 using WordMaster.Application.Persistence.Repositories;
 using WordMaster.Application.Requests.Auth;
 using WordMaster.Application.Requests.User;
+using WordMaster.Application.Responses;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Application.ViewModels.Admin;
 using WordMaster.Application.ViewModels.User;
@@ -61,7 +62,7 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
         IdentityResult updateResult = await userManager.UpdateAsync(currentUser);
         if (!updateResult.Succeeded)
         {
-            var errors = updateResult.Errors.Select(e => e.Description).ToList();
+            List<string> errors = updateResult.Errors.Select(e => e.Description).ToList();
             return ServiceResult.Failure(errors, HttpStatusCode.BadRequest);
         }
 
@@ -84,25 +85,36 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
         return ServiceResult<bool>.Success(ok, HttpStatusCode.OK);
     }
 
-    public async Task<ServiceResult> ChangePasswordAsync(PasswordChangeRequest request, string userName)
+    /// <summary>
+    /// Kullanıcının şifresini değiştirir.
+    /// </summary>
+    /// <param name="request">Eski ve yeni şifre bilgilerini içeren istek.</param>
+    /// <param name="userName">Şifresi değiştirilecek kullanıcının kullanıcı adı.</param>
+    /// <returns>İşlem sonucunu döner.</returns>
+    public async Task<ServiceResult> ChangePasswordAsync(ChangePasswordRequest request, string userName)
     {
         AppUser? currentUser = await userManager.FindByNameAsync(userName);
         if (currentUser == null)
         {
             return ServiceResult.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound);
         }
+        bool ok = await userManager.CheckPasswordAsync(currentUser, request.PasswordOld!);
+        if (!ok)
+        {
+            return ServiceResult.Failure("Mevcut şifre yanlış.", HttpStatusCode.BadRequest);
+        }
 
         IdentityResult resultChangePassword = await userManager.ChangePasswordAsync(currentUser, request.PasswordOld!, request.PasswordNew!);
 
         if (!resultChangePassword.Succeeded)
         {
-            var errors = resultChangePassword.Errors.Select(e => e.Description).ToList();
+            List<string> errors = resultChangePassword.Errors.Select(e => e.Description).ToList();
             return ServiceResult.Failure(errors, HttpStatusCode.BadRequest);
         }
 
+        // Security Stamp'i güncelle (bu işlem mevcut JWT token'ları geçersiz kılar)
         await userManager.UpdateSecurityStampAsync(currentUser);
-        await signInManager.SignOutAsync();
-        await signInManager.PasswordSignInAsync(currentUser, request.PasswordNew!, true, true);
+
         return ServiceResult.Success(HttpStatusCode.NoContent);
     }
 
@@ -269,7 +281,7 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
         IdentityResult updateResult = await userManager.UpdateAsync(user);
         if (!updateResult.Succeeded)
         {
-            var errors = updateResult.Errors.Select(e => e.Description).ToList();
+            List<string> errors = updateResult.Errors.Select(e => e.Description).ToList();
             return ServiceResult.Failure(errors, HttpStatusCode.BadRequest);
         }
 
@@ -285,12 +297,9 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
         }
 
         IdentityResult result = await userManager.DeleteAsync(user);
-        if (!result.Succeeded)
-        {
-            return ServiceResult.Failure("Kullanıcı silinirken bir hata oluştu.", HttpStatusCode.InternalServerError);
-        }
-
-        return ServiceResult.Success(HttpStatusCode.NoContent);
+        return !result.Succeeded
+            ? ServiceResult.Failure("Kullanıcı silinirken bir hata oluştu.", HttpStatusCode.InternalServerError)
+            : ServiceResult.Success(HttpStatusCode.NoContent);
     }
 
     public async Task<ServiceResult<string>> ResetUserPasswordAsync(string id)
@@ -332,7 +341,13 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
             await unitOfWork.CommitAsync();
 
             // Şifreyi email olarak gönder
-            await emailService.SendPasswordToEmailAsync(newPassword, user.Email, user.UserName ?? "Kullanıcı");
+            ServiceResult emailResult = await emailService.SendPasswordToEmailAsync(newPassword, user.Email, user.UserName ?? "Kullanıcı");
+
+            if (!emailResult.IsSuccess)
+            {
+                await unitOfWork.RollbackTransactionAsync();
+                return ServiceResult<string>.Failure($"Şifre oluşturuldu ancak email gönderilemedi: {emailResult.ErrorList?.FirstOrDefault() ?? "Bilinmeyen hata"}", HttpStatusCode.InternalServerError);
+            }
 
             // Email başarılı oldu, transaction'ı commit et
             await unitOfWork.CommitTransactionAsync();
@@ -345,5 +360,56 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
             await unitOfWork.RollbackTransactionAsync();
             return ServiceResult<string>.Failure($"Şifre sıfırlanırken bir hata oluştu: {ex.Message}", HttpStatusCode.InternalServerError);
         }
+    }
+
+    public async Task<ServiceResult<UserWithRolesResponse>> ValidateAndGetUserByRefreshTokenAsync(string userId, string refreshToken)
+    {
+        // Kullanıcıyı veritabanından getir
+        AppUser? user = await userManager.FindByIdAsync(userId);
+        if (user == null)
+        {
+            return ServiceResult<UserWithRolesResponse>.Failure("Kullanıcı bulunamadı", HttpStatusCode.NotFound);
+        }
+
+        // Veritabanındaki refresh token hash'i ile gelen refresh token'ı karşılaştır
+        if (string.IsNullOrEmpty(user.RefreshToken) || !RefreshTokenHasher.VerifyRefreshToken(refreshToken, user.RefreshToken))
+        {
+            return ServiceResult<UserWithRolesResponse>.Failure("Geçersiz refresh token", HttpStatusCode.Unauthorized);
+        }
+
+        // Refresh token'ın süresinin dolup dolmadığını kontrol et
+        if (user.RefreshTokenExpires == null || user.RefreshTokenExpires < DateTime.UtcNow)
+        {
+            return ServiceResult<UserWithRolesResponse>.Failure("Refresh token süresi dolmuş", HttpStatusCode.Unauthorized);
+        }
+
+        // Kullanıcının rollerini al
+        IList<string> roles = await userManager.GetRolesAsync(user);
+
+        UserWithRolesResponse response = new()
+        {
+            User = user,
+            Roles = roles
+        };
+
+        return ServiceResult<UserWithRolesResponse>.Success(response, HttpStatusCode.OK);
+    }
+
+    public async Task<ServiceResult> UpdateRefreshTokenAsync(string userId, string refreshToken, int expiresInDays)
+    {
+        AppUser? user = await userManager.FindByIdAsync(userId);
+        if (user == null)
+        {
+            return ServiceResult.Failure("Kullanıcı bulunamadı", HttpStatusCode.NotFound);
+        }
+
+        // Refresh token'ı hash'leyerek sakla (güvenlik için)
+        user.RefreshToken = RefreshTokenHasher.HashRefreshToken(refreshToken);
+        user.RefreshTokenExpires = DateTime.UtcNow.AddDays(expiresInDays);
+
+        IdentityResult result = await userManager.UpdateAsync(user);
+        return !result.Succeeded
+            ? ServiceResult.Failure("Refresh token güncellenirken hata oluştu", HttpStatusCode.InternalServerError)
+            : ServiceResult.Success(HttpStatusCode.NoContent);
     }
 }

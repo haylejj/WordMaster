@@ -3,63 +3,82 @@ using System.Net;
 using System.Net.Mail;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Configuration;
+using WordMaster.Domain.Results;
 
 namespace WordMaster.Infrastructure.Services;
 
 public class EmailService(IOptions<EmailSettings> settings) : IEmailService
 {
-    public async Task SendResetPasswordLinkToEmailAsync(string resetEmailLink, string toEmail)
+    public async Task<ServiceResult> SendResetPasswordLinkToEmailAsync(string resetEmailLink, string toEmail)
     {
-        SmtpClient smtpClient = new()
+        try
         {
-            Host = settings.Value.Host!,
-            DeliveryMethod = SmtpDeliveryMethod.Network,
-            UseDefaultCredentials = false,
-            Port = 587,
-            Credentials = new NetworkCredential(settings.Value.Email, settings.Value.Password),
-            EnableSsl = true
-        };
+            SmtpClient smtpClient = new()
+            {
+                Host = settings.Value.Host!,
+                DeliveryMethod = SmtpDeliveryMethod.Network,
+                UseDefaultCredentials = false,
+                Port = 587,
+                Credentials = new NetworkCredential(settings.Value.Email, settings.Value.Password),
+                EnableSsl = true
+            };
 
-        MailMessage mailMessage = new()
-        {
-            From = new MailAddress(settings.Value.Email!)
-        };
-        mailMessage.To.Add(toEmail);
+            MailMessage mailMessage = new()
+            {
+                From = new MailAddress(settings.Value.Email!)
+            };
+            mailMessage.To.Add(toEmail);
 
-        mailMessage.Subject = "Localhost | Şifre sıfırlama linki:";
-        mailMessage.Body = $@"
+            mailMessage.Subject = "Localhost | Şifre sıfırlama linki:";
+            mailMessage.Body = $@"
                         <h4> Şifrenizi yenilemek için aşağıdaki linke tıklayınız.</h4>
                         <p><a href='{resetEmailLink}'>Şifre Yenileme Linki</a><p/>";
-        mailMessage.IsBodyHtml = true;
-        await smtpClient.SendMailAsync(mailMessage);
+            mailMessage.IsBodyHtml = true;
+            await smtpClient.SendMailAsync(mailMessage);
+
+            return ServiceResult.Success(HttpStatusCode.OK);
+        }
+        catch (Exception ex)
+        {
+            return ServiceResult.Failure($"Email gönderilirken hata oluştu: {ex.Message}", HttpStatusCode.InternalServerError);
+        }
     }
 
-    public async Task SendPasswordToEmailAsync(string password, string toEmail, string userName)
+    public async Task<ServiceResult> SendPasswordToEmailAsync(string password, string toEmail, string userName)
     {
-        SmtpClient smtpClient = new()
+        try
         {
-            Host = settings.Value.Host!,
-            DeliveryMethod = SmtpDeliveryMethod.Network,
-            UseDefaultCredentials = false,
-            Port = 587,
-            Credentials = new NetworkCredential(settings.Value.Email, settings.Value.Password),
-            EnableSsl = true
-        };
+            SmtpClient smtpClient = new()
+            {
+                Host = settings.Value.Host!,
+                DeliveryMethod = SmtpDeliveryMethod.Network,
+                UseDefaultCredentials = false,
+                Port = 587,
+                Credentials = new NetworkCredential(settings.Value.Email, settings.Value.Password),
+                EnableSsl = true
+            };
 
-        MailMessage mailMessage = new()
-        {
-            From = new MailAddress(settings.Value.Email!)
-        };
-        mailMessage.To.Add(toEmail);
+            MailMessage mailMessage = new()
+            {
+                From = new MailAddress(settings.Value.Email!)
+            };
+            mailMessage.To.Add(toEmail);
 
-        mailMessage.Subject = "WordMaster | Şifre Sıfırlama";
-        mailMessage.Body = $@"
+            mailMessage.Subject = "WordMaster | Şifre Sıfırlama";
+            mailMessage.Body = $@"
                         <h4>Merhaba {userName},</h4>
                         <p>Hesabınızın şifresi başarıyla sıfırlanmıştır.</p>
                         <p><strong>Yeni Şifreniz:</strong> {password}</p>
                         <p>Güvenliğiniz için lütfen giriş yaptıktan sonra şifrenizi değiştirin.</p>
                         <p>İyi günler dileriz.</p>";
-        mailMessage.IsBodyHtml = true;
-        await smtpClient.SendMailAsync(mailMessage);
+            mailMessage.IsBodyHtml = true;
+            await smtpClient.SendMailAsync(mailMessage);
+
+            return ServiceResult.Success(HttpStatusCode.OK);
+        }
+        catch (Exception ex)
+        {
+            return ServiceResult.Failure($"Email gönderilirken hata oluştu: {ex.Message}", HttpStatusCode.InternalServerError);
+        }
     }
 }

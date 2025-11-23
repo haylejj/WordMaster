@@ -2,7 +2,7 @@ using FluentValidation;
 using WordMaster.Application.Requests.Auth;
 namespace WordMaster.Application.Validation.Auth;
 
-public class PasswordChangeRequestValidator : AbstractValidator<PasswordChangeRequest>
+public class PasswordChangeRequestValidator : AbstractValidator<ChangePasswordRequest>
 {
     public PasswordChangeRequestValidator()
     {
