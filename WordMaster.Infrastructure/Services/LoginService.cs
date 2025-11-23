@@ -60,7 +60,7 @@ public class LoginService(
             return ServiceResult<LoginResponse>.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound);
         }
 
-        SignInResult result = await signInManager.PasswordSignInAsync(user, request.Password!, request.RememberMe, true);
+        SignInResult result = await signInManager.CheckPasswordSignInAsync(user, request.Password!, true);
 
         if (result.IsLockedOut)
         {
@@ -75,7 +75,7 @@ public class LoginService(
         }
 
         IList<string> roles = await userManager.GetRolesAsync(user);
-        ServiceResult<string> accessTokenResult = jwtService.GenerateAccessToken(user.Id.ToString(), user.Email!, roles, user.SecurityStamp!);
+        ServiceResult<string> accessTokenResult = jwtService.GenerateAccessToken(user.Id.ToString(), user.UserName!, user.Email!, roles, user.SecurityStamp!);
 
         if (!accessTokenResult.IsSuccess)
         {
@@ -182,6 +182,27 @@ public class LoginService(
 
         // Güvenlik damgasını güncelle (eski oturumları sonlandırabilir)
         await userManager.UpdateSecurityStampAsync(user);
+        return ServiceResult.Success(HttpStatusCode.OK);
+    }
+
+    /// <summary>
+    /// Kullanıcı çıkış işlemini gerçekleştirir.
+    /// </summary>
+    /// <param name="userName">Çıkış yapacak kullanıcının kullanıcı adı.</param>
+    /// <returns>İşlem sonucunu döner.</returns>
+    public async Task<ServiceResult> LogoutAsync(string userName)
+    {
+        AppUser? user = await userManager.FindByNameAsync(userName);
+        if (user == null)
+        {
+            return ServiceResult.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound);
+        }
+
+        // Refresh token'ı silerek kullanıcının yeni access token almasını engelle
+        user.RefreshToken = null;
+        user.RefreshTokenExpires = null;
+
+        await userManager.UpdateAsync(user);
 
         return ServiceResult.Success(HttpStatusCode.OK);
     }

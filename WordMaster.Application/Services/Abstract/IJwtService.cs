@@ -17,7 +17,7 @@ public interface IJwtService
     /// <param name="roles">Kullanıcının rolleri</param>
     /// <param name="securityStamp">Kullanıcının security stamp'i (şifre değişince token geçersiz olur)</param>
     /// <returns>JWT access token string içeren ServiceResult</returns>
-    ServiceResult<string> GenerateAccessToken(string userId, string email, IList<string> roles, string securityStamp);
+    ServiceResult<string> GenerateAccessToken(string userId, string userName, string email, IList<string> roles, string securityStamp);
 
     /// <summary>
     /// Güvenli bir refresh token oluşturur.
@@ -40,5 +40,5 @@ public interface IJwtService
     /// <param name="expiredAccessToken">Süresi dolmuş access token</param>
     /// <param name="refreshToken">Geçerli refresh token</param>
     /// <returns>Yeni access token ve refresh token içeren ServiceResult</returns>
-    Task<ServiceResult<LoginResponse>> RefreshAccessTokenAsync(string expiredAccessToken, string refreshToken);
+    Task<ServiceResult<RefreshTokenResponse>> RefreshAccessTokenAsync(string expiredAccessToken, string refreshToken);
 }

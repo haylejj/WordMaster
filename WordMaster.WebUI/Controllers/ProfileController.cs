@@ -50,7 +50,7 @@ public class ProfileController(IUserService userService) : Controller
         return View();
     }
     [HttpPost]
-    public async Task<IActionResult> PasswordChange(PasswordChangeRequest request)
+    public async Task<IActionResult> PasswordChange(ChangePasswordRequest request)
     {
         if (!ModelState.IsValid)
         {

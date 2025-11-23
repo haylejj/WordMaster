@@ -23,7 +23,7 @@ public class JwtService(IOptions<JwtSettings> jwtSettings, IUserService userServ
     /// Kullanıcı için JWT access token oluşturur.
     /// Token içinde kullanıcı ID, email, roller ve security stamp claim olarak eklenir.
     /// </summary>
-    public ServiceResult<string> GenerateAccessToken(string userId, string email, IList<string> roles, string securityStamp)
+    public ServiceResult<string> GenerateAccessToken(string userId, string userName, string email, IList<string> roles, string securityStamp)
     {
         try
         {
@@ -31,6 +31,7 @@ public class JwtService(IOptions<JwtSettings> jwtSettings, IUserService userServ
             List<Claim> claims = new()
             {
                 new Claim(ClaimTypes.NameIdentifier, userId),  // Kullanıcı ID
+                new Claim(ClaimTypes.Name, userName),          // Kullanıcı Adı
                 new Claim(ClaimTypes.Email, email),            // Email
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()), // Token ID (her token için benzersiz)
                 new Claim("SecurityStamp", securityStamp),     // Security Stamp (şifre değişince token geçersiz olur)
@@ -144,7 +145,7 @@ public class JwtService(IOptions<JwtSettings> jwtSettings, IUserService userServ
     /// Refresh token kullanarak yeni bir access token oluşturur.
     /// Veritabanındaki refresh token'ı doğrular ve yeni token çifti döndürür.
     /// </summary>
-    public async Task<ServiceResult<LoginResponse>> RefreshAccessTokenAsync(string expiredAccessToken, string refreshToken)
+    public async Task<ServiceResult<RefreshTokenResponse>> RefreshAccessTokenAsync(string expiredAccessToken, string refreshToken)
     {
         try
         {
@@ -152,7 +153,7 @@ public class JwtService(IOptions<JwtSettings> jwtSettings, IUserService userServ
             var principalResult = GetPrincipalFromExpiredToken(expiredAccessToken);
             if (!principalResult.IsSuccess || principalResult.Data == null)
             {
-                return ServiceResult<LoginResponse>.Failure("Geçersiz access token", HttpStatusCode.Unauthorized);
+                return ServiceResult<RefreshTokenResponse>.Failure("Geçersiz access token", HttpStatusCode.Unauthorized);
             }
 
             ClaimsPrincipal principal = principalResult.Data;
@@ -160,14 +161,14 @@ public class JwtService(IOptions<JwtSettings> jwtSettings, IUserService userServ
 
             if (string.IsNullOrEmpty(userId))
             {
-                return ServiceResult<LoginResponse>.Failure("Token'da kullanıcı bilgisi bulunamadı", HttpStatusCode.Unauthorized);
+                return ServiceResult<RefreshTokenResponse>.Failure("Token'da kullanıcı bilgisi bulunamadı", HttpStatusCode.Unauthorized);
             }
 
             // 2. UserService ile refresh token'ı doğrula ve kullanıcı bilgilerini al
             var userValidationResult = await userService.ValidateAndGetUserByRefreshTokenAsync(userId, refreshToken);
             if (!userValidationResult.IsSuccess || userValidationResult.Data == null)
             {
-                return ServiceResult<LoginResponse>.Failure(
+                return ServiceResult<RefreshTokenResponse>.Failure(
                     userValidationResult.ErrorList?.FirstOrDefault() ?? "Refresh token doğrulanamadı",
                     userValidationResult.StatusCode
                 );
@@ -178,6 +179,7 @@ public class JwtService(IOptions<JwtSettings> jwtSettings, IUserService userServ
             // 3. Yeni access token oluştur (SecurityStamp ile)
             var accessTokenResult = GenerateAccessToken(
                 userWithRoles.User.Id.ToString(),
+                userWithRoles.User.UserName!,
                 userWithRoles.User.Email!,
                 userWithRoles.Roles,
                 userWithRoles.User.SecurityStamp ?? string.Empty  // SecurityStamp eklendi
@@ -185,14 +187,14 @@ public class JwtService(IOptions<JwtSettings> jwtSettings, IUserService userServ
 
             if (!accessTokenResult.IsSuccess || accessTokenResult.Data == null)
             {
-                return ServiceResult<LoginResponse>.Failure("Yeni access token oluşturulamadı", HttpStatusCode.InternalServerError);
+                return ServiceResult<RefreshTokenResponse>.Failure("Yeni access token oluşturulamadı", HttpStatusCode.InternalServerError);
             }
 
             // 4. Yeni refresh token oluştur
             var newRefreshTokenResult = GenerateRefreshToken();
             if (!newRefreshTokenResult.IsSuccess || newRefreshTokenResult.Data == null)
             {
-                return ServiceResult<LoginResponse>.Failure("Yeni refresh token oluşturulamadı", HttpStatusCode.InternalServerError);
+                return ServiceResult<RefreshTokenResponse>.Failure("Yeni refresh token oluşturulamadı", HttpStatusCode.InternalServerError);
             }
 
             // 5. Yeni refresh token'ı veritabanına kaydet
@@ -204,21 +206,21 @@ public class JwtService(IOptions<JwtSettings> jwtSettings, IUserService userServ
 
             if (!updateResult.IsSuccess)
             {
-                return ServiceResult<LoginResponse>.Failure("Refresh token güncellenemedi", HttpStatusCode.InternalServerError);
+                return ServiceResult<RefreshTokenResponse>.Failure("Refresh token güncellenemedi", HttpStatusCode.InternalServerError);
             }
 
             // 6. Yeni token çiftini döndür
-            LoginResponse response = new()
+            RefreshTokenResponse response = new()
             {
                 AccessToken = accessTokenResult.Data,
                 RefreshToken = newRefreshTokenResult.Data
             };
 
-            return ServiceResult<LoginResponse>.Success(response, HttpStatusCode.OK);
+            return ServiceResult<RefreshTokenResponse>.Success(response, HttpStatusCode.OK);
         }
         catch (Exception ex)
         {
-            return ServiceResult<LoginResponse>.Failure($"Refresh token işlemi sırasında hata: {ex.Message}", HttpStatusCode.InternalServerError);
+            return ServiceResult<RefreshTokenResponse>.Failure($"Refresh token işlemi sırasında hata: {ex.Message}", HttpStatusCode.InternalServerError);
         }
     }
 }

@@ -15,7 +15,7 @@ public interface IUserService
     Task<ServiceResult<UserEditViewModel>> GetUserEditViewModelAsync(string username);
     Task<ServiceResult> EditUserAsync(UserEditRequest request, string username);
     Task<ServiceResult<bool>> CheckPasswordAsync(string userName, string passwordOld);
-    Task<ServiceResult> ChangePasswordAsync(PasswordChangeRequest request, string userName);
+    Task<ServiceResult> ChangePasswordAsync(ChangePasswordRequest request, string userName);
     Task<List<UserViewModel>> GetUsersAsync();
     Task<ServiceResult<PagedResult<UserWithRolesViewModel>>> GetPagedUsersAsync(string? search, int page, int pageSize);
     Task<ServiceResult<UserWithRolesViewModel>> GetUserByIdAsync(string id);

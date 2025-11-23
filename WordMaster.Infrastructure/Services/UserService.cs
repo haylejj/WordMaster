@@ -1,7 +1,7 @@
-using System.Net;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Net;
 using WordMaster.Application.Persistence;
 using WordMaster.Application.Persistence.Repositories;
 using WordMaster.Application.Requests.Auth;
@@ -62,7 +62,7 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
         IdentityResult updateResult = await userManager.UpdateAsync(currentUser);
         if (!updateResult.Succeeded)
         {
-            var errors = updateResult.Errors.Select(e => e.Description).ToList();
+            List<string> errors = updateResult.Errors.Select(e => e.Description).ToList();
             return ServiceResult.Failure(errors, HttpStatusCode.BadRequest);
         }
 
@@ -85,25 +85,36 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
         return ServiceResult<bool>.Success(ok, HttpStatusCode.OK);
     }
 
-    public async Task<ServiceResult> ChangePasswordAsync(PasswordChangeRequest request, string userName)
+    /// <summary>
+    /// Kullanıcının şifresini değiştirir.
+    /// </summary>
+    /// <param name="request">Eski ve yeni şifre bilgilerini içeren istek.</param>
+    /// <param name="userName">Şifresi değiştirilecek kullanıcının kullanıcı adı.</param>
+    /// <returns>İşlem sonucunu döner.</returns>
+    public async Task<ServiceResult> ChangePasswordAsync(ChangePasswordRequest request, string userName)
     {
         AppUser? currentUser = await userManager.FindByNameAsync(userName);
         if (currentUser == null)
         {
             return ServiceResult.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound);
         }
+        bool ok = await userManager.CheckPasswordAsync(currentUser, request.PasswordOld!);
+        if (!ok)
+        {
+            return ServiceResult.Failure("Mevcut şifre yanlış.", HttpStatusCode.BadRequest);
+        }
 
         IdentityResult resultChangePassword = await userManager.ChangePasswordAsync(currentUser, request.PasswordOld!, request.PasswordNew!);
 
         if (!resultChangePassword.Succeeded)
         {
-            var errors = resultChangePassword.Errors.Select(e => e.Description).ToList();
+            List<string> errors = resultChangePassword.Errors.Select(e => e.Description).ToList();
             return ServiceResult.Failure(errors, HttpStatusCode.BadRequest);
         }
 
+        // Security Stamp'i güncelle (bu işlem mevcut JWT token'ları geçersiz kılar)
         await userManager.UpdateSecurityStampAsync(currentUser);
-        await signInManager.SignOutAsync();
-        await signInManager.PasswordSignInAsync(currentUser, request.PasswordNew!, true, true);
+
         return ServiceResult.Success(HttpStatusCode.NoContent);
     }
 
@@ -270,7 +281,7 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
         IdentityResult updateResult = await userManager.UpdateAsync(user);
         if (!updateResult.Succeeded)
         {
-            var errors = updateResult.Errors.Select(e => e.Description).ToList();
+            List<string> errors = updateResult.Errors.Select(e => e.Description).ToList();
             return ServiceResult.Failure(errors, HttpStatusCode.BadRequest);
         }
 
@@ -286,12 +297,9 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
         }
 
         IdentityResult result = await userManager.DeleteAsync(user);
-        if (!result.Succeeded)
-        {
-            return ServiceResult.Failure("Kullanıcı silinirken bir hata oluştu.", HttpStatusCode.InternalServerError);
-        }
-
-        return ServiceResult.Success(HttpStatusCode.NoContent);
+        return !result.Succeeded
+            ? ServiceResult.Failure("Kullanıcı silinirken bir hata oluştu.", HttpStatusCode.InternalServerError)
+            : ServiceResult.Success(HttpStatusCode.NoContent);
     }
 
     public async Task<ServiceResult<string>> ResetUserPasswordAsync(string id)
@@ -400,11 +408,8 @@ public class UserService(UserManager<AppUser> userManager, SignInManager<AppUser
         user.RefreshTokenExpires = DateTime.UtcNow.AddDays(expiresInDays);
 
         IdentityResult result = await userManager.UpdateAsync(user);
-        if (!result.Succeeded)
-        {
-            return ServiceResult.Failure("Refresh token güncellenirken hata oluştu", HttpStatusCode.InternalServerError);
-        }
-
-        return ServiceResult.Success(HttpStatusCode.NoContent);
+        return !result.Succeeded
+            ? ServiceResult.Failure("Refresh token güncellenirken hata oluştu", HttpStatusCode.InternalServerError)
+            : ServiceResult.Success(HttpStatusCode.NoContent);
     }
 }

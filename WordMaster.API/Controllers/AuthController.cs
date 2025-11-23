@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using WordMaster.API.Extensions;
 using WordMaster.Application.Requests.Auth;
 using WordMaster.Application.Responses;
 using WordMaster.Application.Services.Abstract;
@@ -12,7 +14,7 @@ namespace WordMaster.API.Controllers;
 /// Login, Register, Token yenileme gibi işlemleri içerir.
 /// </summary>
 [Route("api/auth")]
-public class AuthController(ILoginService loginService, IRegisterService registerService) : BaseController
+public class AuthController(ILoginService loginService, IRegisterService registerService, IUserService userService, IJwtService jwtService) : BaseController
 {
     /// <summary>
     /// API'nin ayakta olup olmadığını kontrol etmek için basit bir endpoint.
@@ -23,6 +25,25 @@ public class AuthController(ILoginService loginService, IRegisterService registe
     {
         return CreateResult(ServiceResult.Success(HttpStatusCode.OK));
     }
+
+    /// <summary>
+    /// Access Token süresi dolduğunda, Refresh Token kullanarak yeni bir Access Token alır.
+    /// </summary>
+    /// <param name="request">Süresi dolmuş Access Token ve geçerli Refresh Token içeren istek.</param>
+    /// <returns>Yeni Access Token ve Refresh Token bilgilerini döner.</returns>
+    /// <remarks>
+    /// Bu endpoint, süresi dolmuş bir Access Token'ı yenilemek için kullanılır.
+    /// İstemci, 401 Unauthorized hatası aldığında (veya token süresinin dolduğunu fark ettiğinde) bu endpoint'e başvurmalıdır.
+    /// </remarks>
+    /// <response code="200">Token yenileme başarılı.</response>
+    /// <response code="401">Refresh Token geçersiz veya süresi dolmuş.</response>
+    [HttpPost("refresh-token")]
+    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
+    {
+        ServiceResult<RefreshTokenResponse> result = await jwtService.RefreshAccessTokenAsync(request.AccessToken, request.RefreshToken);
+        return CreateResult(result);
+    }
+
     /// <summary>
     /// Kullanıcı giriş işlemini gerçekleştirir ve JWT token döndürür.
     /// </summary>
@@ -95,11 +116,56 @@ public class AuthController(ILoginService loginService, IRegisterService registe
         ServiceResult result = await registerService.RegisterAsync(request);
         return CreateResult(result);
     }
+    /// <summary>
+    /// Giriş yapmış kullanıcının şifresini değiştirir.
+    /// </summary>
+    /// <param name="request">Eski ve yeni şifre bilgilerini içeren istek.</param>
+    /// <returns>İşlem sonucunu döner.</returns>
+    /// <remarks>
+    /// Şifre değiştirme işlemi başarılı olursa, kullanıcının Security Stamp değeri güncellenir.
+    /// Bu işlem, mevcut tüm JWT token'larını (Access Token) geçersiz kılar.
+    /// Kullanıcının yeni şifresiyle tekrar giriş yapması gerekir.
+    /// </remarks>
+    /// <response code="204">Şifre başarıyla değiştirildi.</response>
+    /// <response code="400">Eski şifre yanlış veya yeni şifre kurallara uymuyor.</response>
+    /// <response code="401">Yetkisiz erişim.</response>
+    /// <response code="404">Kullanıcı bulunamadı.</response>
+    [HttpPost("change-password")]
+    [Authorize]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+    {
+        string? userName = User.GetUserName();
+        if (string.IsNullOrEmpty(userName))
+        {
+            return CreateResult(ServiceResult.Failure("Kullanıcı adı bulunamadı.", HttpStatusCode.Unauthorized));
+        }
 
-    // [HttpPost("refresh-token")]
-    // public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
-    // {
-    //     ServiceResult result = await registerService.RefreshTokenAsync(request);
-    //     return CreateResult(result);
-    // }
+        ServiceResult result = await userService.ChangePasswordAsync(request, userName);
+        return CreateResult(result);
+    }
+
+    /// <summary>
+    /// Kullanıcı çıkış işlemini gerçekleştirir.
+    /// </summary>
+    /// <returns>İşlem sonucunu döner.</returns>
+    /// <remarks>
+    /// Bu endpoint, kullanıcının sunucu tarafındaki Refresh Token'ını siler.
+    /// Böylece Access Token süresi dolduğunda kullanıcı yeni bir token alamaz ve tekrar giriş yapması gerekir.
+    /// Client tarafında da Access Token ve Refresh Token silinmelidir.
+    /// </remarks>
+    /// <response code="200">Çıkış işlemi başarılı.</response>
+    /// <response code="401">Yetkisiz erişim (Token geçersiz veya yok).</response>
+    [HttpPost("logout")]
+    [Authorize]
+    public async Task<IActionResult> Logout()
+    {
+        string? userName = User.GetUserName();
+        if (string.IsNullOrEmpty(userName))
+        {
+            return CreateResult(ServiceResult.Failure("Kullanıcı adı bulunamadı.", HttpStatusCode.Unauthorized));
+        }
+
+        ServiceResult result = await loginService.LogoutAsync(userName);
+        return CreateResult(result);
+    }
 }

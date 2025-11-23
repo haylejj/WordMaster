@@ -98,7 +98,7 @@ public static class ServiceCollectionExtensions
                     ClockSkew = TimeSpan.Zero,
 
                     // Claim type mapping (User.Identity.Name ve User.IsInRole için gerekli)
-                    NameClaimType = ClaimTypes.NameIdentifier,
+                    NameClaimType = ClaimTypes.Name,
                     RoleClaimType = ClaimTypes.Role
                 };
 
@@ -113,7 +113,6 @@ public static class ServiceCollectionExtensions
 
                         // Token'daki kullanıcı ID'sini al
                         string? userId = context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
                         if (!string.IsNullOrEmpty(userId))
                         {
                             string cacheKey = $"security_stamp:{userId}";
