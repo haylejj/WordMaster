@@ -17,7 +17,7 @@ public class RedisCacheService(IConnectionMultiplexer redis) : ICacheService
     {
         RedisValue value = await _database.StringGetAsync(key);
 
-        return !value.HasValue ? default : JsonSerializer.Deserialize<T>(value!, jsonSerializerOptions);
+        return !value.HasValue ? default : JsonSerializer.Deserialize<T>((string)value!, jsonSerializerOptions);
     }
 
     public async Task SetAsync<T>(string key, T value, TimeSpan? expiration = null)
@@ -26,7 +26,7 @@ public class RedisCacheService(IConnectionMultiplexer redis) : ICacheService
 
         if (expiration.HasValue)
         {
-            await _database.StringSetAsync(key, serializedValue, expiration);
+            await _database.StringSetAsync(key, serializedValue, expiration.Value);
         }
         else
         {
