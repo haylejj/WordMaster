@@ -130,11 +130,12 @@ public class UserService(
         return ServiceResult.Success(HttpStatusCode.NoContent);
     }
 
-    public async Task<List<UserViewModel>> GetUsersAsync()
+    public async Task<ServiceResult<List<UserViewModel>>> GetUsersAsync()
     {
         List<AppUser> users = await userManager.Users.ToListAsync();
 
-        return [.. users.Select(x => new UserViewModel { Id = x.Id.ToString(), UserName = x.UserName!, Email = x.Email! })];
+        List<UserViewModel> userList = users.Select(x => new UserViewModel { Id = x.Id.ToString(), UserName = x.UserName!, Email = x.Email! }).ToList();
+        return ServiceResult<List<UserViewModel>>.Success(userList, HttpStatusCode.OK);
     }
 
     public async Task<ServiceResult<PagedResult<UserWithRolesViewModel>>> GetPagedUsersAsync(string? search, int page, int pageSize)
@@ -276,9 +277,9 @@ public class UserService(
         return ServiceResult<UserDetailViewModel>.Success(detail, HttpStatusCode.OK);
     }
 
-    public async Task<ServiceResult> UpdateUserAsync(string id, UserEditRequest request)
+    public async Task<ServiceResult> UpdateUserAsync(UserUpdateRequest request)
     {
-        AppUser? user = await userManager.FindByIdAsync(id);
+        AppUser? user = await userManager.FindByIdAsync(request.Id);
         if (user == null)
         {
             return ServiceResult.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound);

@@ -16,12 +16,12 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
     private const string AllowedIpAddressesActiveCacheKey = "allowedipaddresses:active";
     private static readonly TimeSpan CacheExpiration = TimeSpan.FromMinutes(10);
 
-    public async Task<List<AllowedIpAddressViewModel>> GetAllAsync()
+    public async Task<ServiceResult<List<AllowedIpAddressViewModel>>> GetAllAsync()
     {
         List<AllowedIpAddressViewModel>? cached = await cacheService.GetAsync<List<AllowedIpAddressViewModel>>(AllowedIpAddressesCacheKey);
         if (cached != null)
         {
-            return cached;
+            return ServiceResult<List<AllowedIpAddressViewModel>>.Success(cached, HttpStatusCode.OK);
         }
 
         List<AllowedIpAddress> entities = await repository
@@ -39,7 +39,7 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
         }).ToList();
 
         await cacheService.SetAsync(AllowedIpAddressesCacheKey, viewModels, CacheExpiration);
-        return viewModels;
+        return ServiceResult<List<AllowedIpAddressViewModel>>.Success(viewModels, HttpStatusCode.OK);
     }
 
     public async Task<ServiceResult<AllowedIpAddressViewModel>> GetByIdAsync(int id)
@@ -139,18 +139,18 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
         return ServiceResult.Success(HttpStatusCode.NoContent);
     }
 
-    public async Task<bool> IsIpAllowedAsync(string ipAddress)
+    public async Task<ServiceResult<bool>> IsIpAllowedAsync(string ipAddress)
     {
         if (string.IsNullOrWhiteSpace(ipAddress))
         {
-            return false;
+            return ServiceResult<bool>.Success(false, HttpStatusCode.OK);
         }
 
         // Cache'den aktif IP'leri kontrol et
         List<string>? cachedActiveIps = await cacheService.GetAsync<List<string>>(AllowedIpAddressesActiveCacheKey);
         if (cachedActiveIps != null)
         {
-            return cachedActiveIps.Contains(ipAddress);
+            return ServiceResult<bool>.Success(cachedActiveIps.Contains(ipAddress), HttpStatusCode.OK);
         }
 
         // Cache'de yoksa veritabanından çek
@@ -162,6 +162,6 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
         // Cache'e kaydet
         await cacheService.SetAsync(AllowedIpAddressesActiveCacheKey, activeIps, CacheExpiration);
 
-        return activeIps.Contains(ipAddress);
+        return ServiceResult<bool>.Success(activeIps.Contains(ipAddress), HttpStatusCode.OK);
     }
 }

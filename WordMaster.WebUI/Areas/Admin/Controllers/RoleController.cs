@@ -18,10 +18,10 @@ public class RoleController(IRoleService roleService) : Controller
     [HttpGet("")]
     public async Task<IActionResult> Index()
     {
-        List<RoleViewModel> roles = await roleService.GetRoleListAsync();
+        ServiceResult<List<RoleViewModel>> result = await roleService.GetRoleListAsync();
         RoleListViewModel viewModel = new()
         {
-            Roles = roles
+            Roles = result.Data ?? []
         };
         return View(viewModel);
     }

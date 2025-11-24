@@ -7,11 +7,11 @@ namespace WordMaster.Application.Services.Abstract;
 
 public interface IRoleService
 {
-    Task<List<RoleViewModel>> GetRoleListAsync();
+    Task<ServiceResult<List<RoleViewModel>>> GetRoleListAsync();
     Task<ServiceResult> CreateRoleAsync(RoleCreateRequest request);
     Task<ServiceResult<RoleUpdateViewModel>> FindByIdReturnRoleUpdateViewModelAsync(string id);
     Task<ServiceResult> UpdateRoleAsync(RoleUpdateRequest request);
     Task<ServiceResult> DeleteRoleAsync(string id);
-    Task<List<AssignToRoleViewModel>> GetRoleByIdReturnAssignToRoleAsync(string id);
-    Task AssignRoleAsync(string id, List<AssignToRoleViewModel> request);
+    Task<ServiceResult<List<AssignToRoleViewModel>>> GetRoleByIdReturnAssignToRoleAsync(string id);
+    Task<ServiceResult> AssignRoleAsync(AssignRolesRequest request);
 }

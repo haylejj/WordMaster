@@ -14,19 +14,19 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
     private const string RolesCacheKey = "roles:list";
     private static readonly TimeSpan RolesCacheExpiration = TimeSpan.FromMinutes(10);
 
-    public async Task<List<RoleViewModel>> GetRoleListAsync()
+    public async Task<ServiceResult<List<RoleViewModel>>> GetRoleListAsync()
     {
         List<RoleViewModel>? cachedRoles = await cacheService.GetAsync<List<RoleViewModel>>(RolesCacheKey);
         if (cachedRoles != null)
         {
-            return cachedRoles;
+            return ServiceResult<List<RoleViewModel>>.Success(cachedRoles, HttpStatusCode.OK);
         }
 
         List<AppRole> roles = await roleManager.Roles.AsNoTracking().ToListAsync();
         List<RoleViewModel> roleViewModel = roles.Select(x => new RoleViewModel() { Id = x.Id.ToString(), Name = x.Name! }).ToList();
 
         await cacheService.SetAsync(RolesCacheKey, roleViewModel, RolesCacheExpiration);
-        return roleViewModel;
+        return ServiceResult<List<RoleViewModel>>.Success(roleViewModel, HttpStatusCode.OK);
     }
 
     public async Task<ServiceResult> CreateRoleAsync(RoleCreateRequest request)
@@ -94,12 +94,12 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
         return ServiceResult.Failure(errors, HttpStatusCode.BadRequest);
     }
 
-    public async Task<List<AssignToRoleViewModel>> GetRoleByIdReturnAssignToRoleAsync(string id)
+    public async Task<ServiceResult<List<AssignToRoleViewModel>>> GetRoleByIdReturnAssignToRoleAsync(string id)
     {
         AppUser? user = await userManager.FindByIdAsync(id);
         if (user == null)
         {
-            return [];
+            return ServiceResult<List<AssignToRoleViewModel>>.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound);
         }
 
         List<AppRole> roles = await roleManager.Roles.ToListAsync();
@@ -117,20 +117,20 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
             }
             roleViewModel.Add(assignToRoleViewModel);
         }
-        return roleViewModel;
+        return ServiceResult<List<AssignToRoleViewModel>>.Success(roleViewModel, HttpStatusCode.OK);
 
     }
-    public async Task AssignRoleAsync(string id, List<AssignToRoleViewModel> request)
+    public async Task<ServiceResult> AssignRoleAsync(AssignRolesRequest request)
     {
-        AppUser? user = await userManager.FindByIdAsync(id);
+        AppUser? user = await userManager.FindByIdAsync(request.UserId);
         if (user == null)
         {
-            return;
+            return ServiceResult.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound);
         }
 
         IList<string> userRoles = await userManager.GetRolesAsync(user);
 
-        foreach (AssignToRoleViewModel role in request)
+        foreach (AssignToRoleViewModel role in request.Roles)
         {
             bool isInRole = userRoles.Contains(role.Name);
 
@@ -143,5 +143,6 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
                 await userManager.RemoveFromRoleAsync(user, role.Name);
             }
         }
+        return ServiceResult.Success(HttpStatusCode.NoContent);
     }
 }

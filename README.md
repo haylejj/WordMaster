@@ -83,6 +83,7 @@ Tüm kimlik doğrulama işlemleri `/api/auth` altında toplanmıştır.
 | `POST` | `/api/auth/reset-password` | Şifre sıfırlama işlemini tamamlar. | Public |
 | `POST` | `/api/auth/change-password`| Giriş yapmış kullanıcının şifresini değiştirir. | **User** |
 | `POST` | `/api/auth/logout` | Çıkış yapar (Refresh Token'ı sunucudan siler). | **User** |
+| `POST` | `/api/auth/admin-login` | Admin girişi yapar. Sadece admin rolüne sahip kullanıcılar giriş yapabilir. | Public |
 
 ### Word Endpoint'leri
 
@@ -134,6 +135,50 @@ Favori ve bilinmeyen kelime yönetimi için kullanılır.
 | `POST` | `/api/unknows/practice/check` | Bilinmeyen pratik çeviri kontrolü yapar. | **User** |
 
 
+
+### Admin Endpoint'leri
+
+Admin paneli işlemleri `/api/admin` altında toplanmıştır. Tüm işlemler **admin** rolüne sahip kullanıcıya özeldir.
+
+#### Allowed IP Endpoint'leri
+
+| Metot | Endpoint | Açıklama | Yetki |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/admin/allowed-ips` | İzin verilen IP adreslerini listeler. | **Admin** |
+| `GET` | `/api/admin/allowed-ips/{id}` | Belirtilen ID'ye sahip IP adresini getirir. | **Admin** |
+| `POST` | `/api/admin/allowed-ips` | Yeni bir IP adresi ekler. | **Admin** |
+| `PUT` | `/api/admin/allowed-ips` | Mevcut bir IP adresini günceller. | **Admin** |
+| `DELETE` | `/api/admin/allowed-ips/{id}` | Belirtilen IP adresini siler. | **Admin** |
+
+#### Role Endpoint'leri
+
+| Metot | Endpoint | Açıklama | Yetki |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/admin/roles` | Tüm rolleri listeler. | **Admin** |
+| `GET` | `/api/admin/roles/{id}` | Belirtilen ID'ye sahip rolü getirir. | **Admin** |
+| `POST` | `/api/admin/roles` | Yeni bir rol oluşturur. | **Admin** |
+| `PUT` | `/api/admin/roles` | Mevcut bir rolü günceller. | **Admin** |
+| `DELETE` | `/api/admin/roles/{id}` | Belirtilen rolü siler. | **Admin** |
+| `GET` | `/api/admin/roles/assign/{userId}` | Kullanıcıya atanabilecek rolleri listeler. | **Admin** |
+| `POST` | `/api/admin/roles/assign` | Kullanıcıya rol ataması yapar. | **Admin** |
+
+#### Dashboard Endpoint'leri
+
+| Metot | Endpoint | Açıklama | Yetki |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/admin/dashboard` | Admin dashboard istatistiklerini getirir. | **Admin** |
+
+#### User Endpoint'leri
+
+| Metot | Endpoint | Açıklama | Yetki |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/admin/users` | Kullanıcıları sayfalı listeler (Arama destekler). | **Admin** |
+| `GET` | `/api/admin/users/all` | Tüm kullanıcıları listeler. | **Admin** |
+| `GET` | `/api/admin/users/{id}` | Kullanıcı detaylarını (Edit için) getirir. | **Admin** |
+| `GET` | `/api/admin/users/{id}/detail` | Kullanıcı detaylarını (View için) getirir. | **Admin** |
+| `PUT` | `/api/admin/users` | Kullanıcıyı günceller. | **Admin** |
+| `DELETE` | `/api/admin/users/{id}` | Kullanıcıyı siler. | **Admin** |
+| `POST` | `/api/admin/users/{id}/reset-password` | Kullanıcı şifresini sıfırlar. | **Admin** |
 
 ##  Kod Standartları
 

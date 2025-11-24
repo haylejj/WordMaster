@@ -22,6 +22,13 @@ public interface ILoginService
     Task<ServiceResult<LoginResponse>> LoginAsync(LoginRequest request);
 
     /// <summary>
+    /// Admin girişi yapar.
+    /// </summary>
+    /// <param name="request">Giriş bilgilerini içeren model.</param>
+    /// <returns>Başarılı giriş durumunda token bilgilerini döner.</returns>
+    Task<ServiceResult<LoginResponse>> AdminLoginAsync(LoginRequest request);
+
+    /// <summary>
     /// Şifre sıfırlama tokeni oluşturur.
     /// </summary>
     /// <param name="userId">Kullanıcı ID'si.</param>

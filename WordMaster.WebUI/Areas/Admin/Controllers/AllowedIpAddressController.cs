@@ -17,10 +17,10 @@ public class AllowedIpAddressController(IAllowedIpAddressService allowedIpAddres
     [HttpGet("")]
     public async Task<IActionResult> Index()
     {
-        List<AllowedIpAddressViewModel> allowedIpAddresses = await allowedIpAddressService.GetAllAsync();
+        ServiceResult<List<AllowedIpAddressViewModel>> result = await allowedIpAddressService.GetAllAsync();
         AllowedIpAddressListViewModel viewModel = new()
         {
-            AllowedIpAddresses = allowedIpAddresses
+            AllowedIpAddresses = result.Data ?? []
         };
         return View(viewModel);
     }

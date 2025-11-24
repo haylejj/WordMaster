@@ -71,6 +71,28 @@ public class AuthController(ILoginService loginService, IRegisterService registe
         ServiceResult<LoginResponse> result = await loginService.LoginAsync(request);
         return CreateResult(result);
     }
+
+    /// <summary>
+    /// Admin girişi yapar ve JWT token döndürür.
+    /// </summary>
+    /// <param name="request">Email, şifre ve beni hatırla bilgilerini içeren login request</param>
+    /// <returns>
+    /// Başarılı durumda AccessToken ve RefreshToken içeren LoginResponse döner.
+    /// Başarısız durumda hata mesajı ve uygun HTTP status code döner.
+    /// </returns>
+    /// <remarks>
+    /// Bu endpoint admin kimlik doğrulaması yapar. Normal kullanıcılar bu endpoint üzerinden giriş yapamaz.
+    /// Ayrıca IP adresi kontrolü yapılır.
+    /// </remarks>
+    /// <response code="200">Giriş başarılı, token bilgileri döndürülür</response>
+    /// <response code="401">Email veya şifre yanlış</response>
+    /// <response code="403">Yetkisiz erişim (Admin değil veya IP engelli)</response>
+    [HttpPost("admin-login")]
+    public async Task<IActionResult> AdminLogin([FromBody] LoginRequest request)
+    {
+        ServiceResult<LoginResponse> result = await loginService.AdminLoginAsync(request);
+        return CreateResult(result);
+    }
     /// <summary>
     /// Şifremi unuttum işlemi için şifre sıfırlama linki gönderir.
     /// </summary>
