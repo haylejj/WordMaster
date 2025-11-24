@@ -59,7 +59,7 @@ public class LoginService(
         if (user == null)
         {
             await logHistoryService.RecordAsync(null, request.Email, ipAddress, false, "APILogin");
-            return ServiceResult<LoginResponse>.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound);
+            return ServiceResult<LoginResponse>.Failure("Email veya şifre yanlış", HttpStatusCode.NotFound);
         }
 
         SignInResult result = await signInManager.CheckPasswordSignInAsync(user, request.Password!, true);
@@ -93,7 +93,7 @@ public class LoginService(
         if (!accessTokenResult.IsSuccess)
         {
             await logHistoryService.RecordAsync(user.Id.ToString(), request.Email, ipAddress, false, "PublicLogin");
-            return ServiceResult<LoginResponse>.Failure("Token oluşturulamadı.", HttpStatusCode.InternalServerError);
+            return ServiceResult<LoginResponse>.Failure("Email veya şifre yanlış.Beklenmeyen bir hata oluştu.", HttpStatusCode.InternalServerError);
         }
 
         // Başarılı login kaydı

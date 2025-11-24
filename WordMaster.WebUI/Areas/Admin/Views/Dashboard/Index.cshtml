@@ -1,0 +1,205 @@
+@model AdminDashboardViewModel
+@using System.Globalization
+@using System.Linq
+@using System.Text.Json
+@using WordMaster.Application.ViewModels.Admin
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-dashboard.css" asp-append-version="true" />
+}
+
+<div class="dashboard-wrapper">
+    <div class="row g-4">
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="stat-card primary">
+                <div class="stat-icon">
+                    <i class="fas fa-book"></i>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-label">Toplam Kelime</span>
+                    <span class="stat-value">@Model.TotalWords</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="stat-card success">
+                <div class="stat-icon">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-label">Favoriler</span>
+                    <span class="stat-value">@Model.TotalFavorites</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="stat-card warning">
+                <div class="stat-icon">
+                    <i class="fas fa-question-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-label">Bilinmeyenler</span>
+                    <span class="stat-value">@Model.TotalUnknows</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="stat-card info">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-label">Kullanıcılar</span>
+                    <span class="stat-value">@Model.TotalUsers</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-1">
+        <div class="col-12 col-lg-4">
+            <div class="stat-card accent">
+                <div class="stat-icon">
+                    <i class="fas fa-right-to-bracket"></i>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-label">Toplam Giriş Denemesi</span>
+                    <span class="stat-value">@Model.TotalLogins</span>
+                </div>
+                <div class="stat-footer">
+                    <span><i class="fas fa-circle text-success me-1"></i>Başarılı: @Model.SuccessfulLogins</span>
+                    <span><i class="fas fa-circle text-danger ms-3 me-1"></i>Başarısız: @Model.FailedLogins</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-lg-8">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h2>Son 7 Gün Giriş İstatistikleri</h2>
+                    <span class="chart-subtitle">Başarılı vs Başarısız</span>
+                </div>
+                <canvas id="loginChart" height="140"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-1">
+        <div class="col-12">
+            <div class="admin-table-container">
+                <div class="table-header mb-3">
+                    <h2 class="h5 text-white mb-1">Günlük Giriş Özeti</h2>
+                    <span class="text-muted small">Detaylı giriş denemeleri</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Tarih</th>
+                                <th>Başarılı</th>
+                                <th>Başarısız</th>
+                                <th>Toplam</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.DailyLoginStats.OrderByDescending(x => x.Date))
+                            {
+                                <tr>
+                                    <td>@item.Date.ToString("dd MMMM yyyy", CultureInfo.GetCultureInfo("tr-TR"))</td>
+                                    <td>
+                                        <span class="badge rounded-pill bg-success">@item.SuccessCount</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge rounded-pill bg-danger">@item.FailCount</span>
+                                    </td>
+                                    <td>@(item.SuccessCount + item.FailCount)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        (function () {
+            const chartSource = @Html.Raw(
+                            JsonSerializer.Serialize(new
+                            {
+                                                labels = Model.DailyLoginStats
+                                                                                    .Select(x => x.Date.ToString("dd MMM", CultureInfo.GetCultureInfo("tr-TR"))),
+                                                success = Model.DailyLoginStats.Select(x => x.SuccessCount),
+                                                fail = Model.DailyLoginStats.Select(x => x.FailCount)
+                            })
+                            );
+
+        const ctx = document.getElementById('loginChart');
+        if (!ctx) {
+            return;
+        }
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartSource.labels,
+                    datasets: [
+                        {
+                            label: 'Başarılı',
+                            data: chartSource.success,
+                            borderColor: '#22c55e',
+                            backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                            tension: 0.35,
+                            borderWidth: 3,
+                            fill: true,
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        },
+                        {
+                            label: 'Başarısız',
+                            data: chartSource.fail,
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                            tension: 0.35,
+                            borderWidth: 3,
+                            fill: true,
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#9ca3af'
+                            },
+                            grid: {
+                                color: 'rgba(148, 163, 184, 0.15)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#9ca3af'
+                            },
+                            grid: {
+                                color: 'rgba(148, 163, 184, 0.12)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#e5e7eb'
+                            }
+                        }
+                    }
+                }
+            });
+        })();
+    </script>
+}

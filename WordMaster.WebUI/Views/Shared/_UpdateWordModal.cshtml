@@ -1,0 +1,40 @@
+<!-- Update Modal -->
+<div class="modal fade" id="updateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit"></i> Kelime Güncelle
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="updateWordForm">
+                    <input type="hidden" id="updateWordId" name="Id" />
+                    <div class="modal-form-group">
+                        <label for="updateEnglishWord" class="modal-form-label">İngilizce</label>
+                        <div class="modal-input-group">
+                            <i class="fas fa-language modal-input-icon"></i>
+                            <input type="text" class="modal-form-control" id="updateEnglishWord" name="EnglishWord"
+                                required maxlength="30" placeholder="İngilizce kelimeyi giriniz..." />
+                        </div>
+                    </div>
+                    <div class="modal-form-group">
+                        <label for="updateTurkishWord" class="modal-form-label">Türkçe</label>
+                        <div class="modal-input-group">
+                            <i class="fas fa-align-left modal-input-icon"></i>
+                            <input type="text" class="modal-form-control" id="updateTurkishWord" name="TurkishWord"
+                                required maxlength="60" placeholder="Türkçe karşılığını giriniz..." />
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-modal-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn-modal-primary" onclick="updateWord()">
+                    <i class="fas fa-save me-2"></i>Güncelle
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

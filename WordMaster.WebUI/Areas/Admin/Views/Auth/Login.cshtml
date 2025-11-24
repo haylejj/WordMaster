@@ -1,0 +1,77 @@
+@model LoginViewModel
+@using System.Text.Json
+@using WordMaster.Application.ViewModels.Auth
+@{
+    Layout = null;
+    ViewData["Title"] = "Admin Login";
+}
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/admin-login.css" />
+</head>
+
+<body class="admin-login-body">
+    <div class="admin-login-container">
+        <div class="admin-card shadow">
+
+            <div class="admin-card-body">
+                <form action="/AdminArea/Login" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    <div class="mb-3">
+                        <label class="form-label" asp-for="Email">Kullanıcı Adı</label>
+                        <input class="form-control admin-input" asp-for="Email" type="email" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" asp-for="Password">Şifre</label>
+                        <input class="form-control admin-input" asp-for="Password" type="password" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input admin-check" asp-for="RememberMe" type="checkbox" />
+                            <label class="form-check-label" asp-for="RememberMe">Beni Hatırla</label>
+                        </div>
+                    </div>
+                    <button class="btn admin-btn w-100" type="submit">Giriş Yap</button>
+                </form>
+                <div class="text-center mt-3">
+                    <a class="admin-link" href="/Login">Normal giriş ekranına dön</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <partial name="_ValidationScriptsPartial" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const successMessage = @Html.Raw(JsonSerializer.Serialize(TempData["AdminLoginSuccess"]));
+
+            if (successMessage) {
+                Swal.fire({
+                    title: 'Hoş geldiniz',
+                    text: successMessage,
+                    icon: 'success',
+                    iconColor: '#22c55e',
+                    background: '#1a1d24',
+                    color: '#e6e8ee',
+                    confirmButtonText: 'Panele geç',
+                    confirmButtonColor: '#d32f2f'
+                }).then(() => {
+                    window.location.href = '/';
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

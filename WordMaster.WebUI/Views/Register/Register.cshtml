@@ -1,0 +1,65 @@
+@using WordMaster.Application.ViewModels.Auth
+@model RegisterViewModel
+@{
+    Layout = "_AuthLayout";
+    ViewData["Title"] = "Kayıt Ol";
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<form asp-controller="Register" asp-action="Register" method="post">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+    <div class="mb-3">
+        <label class="form-label" asp-for="UserName">Kullanıcı Adı</label>
+        <input asp-for="UserName" class="form-control"  />
+        <span asp-validation-for="UserName" class="text-danger small"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label" asp-for="Email">Email Adresi</label>
+        <input asp-for="Email" class="form-control" type="email" placeholder="ornek@email.com" />
+        <span asp-validation-for="Email" class="text-danger small"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label" asp-for="Phone">Telefon Numarası</label>
+        <input asp-for="Phone" class="form-control" type="tel" placeholder="555 123 45 67" />
+        <span asp-validation-for="Phone" class="text-danger small"></span>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label" asp-for="Password">Şifre</label>
+            <div class="input-group">
+                <input asp-for="Password" class="form-control" type="password" />
+                <button class="btn btn-toggle-password" type="button">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+            <span asp-validation-for="Password" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label class="form-label" asp-for="PasswordConfirm">Şifre Tekrar</label>
+            <div class="input-group">
+                <input asp-for="PasswordConfirm" class="form-control" type="password" />
+                <button class="btn btn-toggle-password" type="button">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+            <span asp-validation-for="PasswordConfirm" class="text-danger small"></span>
+        </div>
+    </div>
+
+    <button class="btn btn-primary w-100 mb-3" type="submit">Kayıt Ol</button>
+
+    <div class="auth-footer">
+        Zaten hesabınız var mı? <a href="/Login">Giriş Yap</a>
+    </div>
+</form>

@@ -1,0 +1,212 @@
+@using WordMaster.Application.ViewModels.Unknows
+@model UnknowsListViewModel
+@{
+    ViewData["Title"] = "Unknows";
+    Layout = "~/Views/Shared/Main_Layout.cshtml";
+}
+
+@section Scripts {
+    <script src="~/js/unknows/delete.js"></script>
+    <script src="~/js/unknows/update.js"></script>
+    <script src="~/js/word/toggle.js"></script>
+}
+
+
+<div class="modern-search-container">
+    <form method="get" asp-controller="Unknows" asp-action="Index" class="row g-3 align-items-end">
+        <div class="col-md-6">
+            <label for="search" class="modern-form-label">Ara</label>
+            <input type="text" id="search" name="search" value="@Model?.Search" class="form-control modern-form-control"
+                placeholder="İngilizce veya Türkçe ara..." />
+        </div>
+        <div class="col-md-3">
+            <label for="pageSize" class="modern-form-label">Sayfa başına</label>
+            <select id="pageSize" name="pageSize" class="form-select modern-form-control">
+                @if (Model?.PageSize == 10)
+                {
+                    <option value="10" selected>10</option>
+                }
+                else
+                {
+                    <option value="10">10</option>
+                }
+                @if (Model?.PageSize == 25)
+                {
+                    <option value="25" selected>25</option>
+                }
+                else
+                {
+                    <option value="25">25</option>
+                }
+                @if (Model?.PageSize == 50)
+                {
+                    <option value="50" selected>50</option>
+                }
+                else
+                {
+                    <option value="50">50</option>
+                }
+                @if (Model?.PageSize == 100)
+                {
+                    <option value="100" selected>100</option>
+                }
+                else
+                {
+                    <option value="100">100</option>
+                }
+            </select>
+        </div>
+        <input type="hidden" name="page" value="1" />
+        <div class="col-md-3">
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn-modern-primary flex-fill">
+                    <i class="fas fa-search me-2"></i>Uygula
+                </button>
+                <a href="@Url.Action("", "Unknows")"
+                    class="btn-modern-secondary flex-fill text-center text-decoration-none">
+                    <i class="fas fa-times me-2"></i>Temizle
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="modern-table-container">
+    <table class="custom-table">
+        <thead>
+            <tr>
+                <th>İngilizce</th>
+                <th>Türkçe</th>
+                <th class="text-center">Durum</th>
+                <th class="text-center" style="width: 80px;">Düzenle</th>
+                <th class="text-center" style="width: 80px;">Sil</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model == null || Model.Words == null || Model.Words.Count == 0)
+            {
+                <tr>
+                    <td colspan="5" class="text-center py-5">
+                        <div class="text-muted">
+                            <i class="fas fa-inbox fa-3x mb-3 opacity-50"></i>
+                            <p class="mb-0">Veri bulunmamaktadır.</p>
+                        </div>
+                    </td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var item in Model.Words)
+                {
+                    <tr>
+                        <td class="fw-bold text-primary">@item.EnglishWord</td>
+                        <td>@item.TurkishWord</td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-3">
+                                <div class="form-check form-switch" title="Bilinmeyenlere Ekle/Çıkar">
+                                    <input class="form-check-input unknows-checkbox" type="checkbox" data-word-id="@item.Id"
+                                        @(item.Unknows != null ? "checked" : "") id="unknows-@item.Id">
+                                    <label class="form-check-label" for="unknows-@item.Id">
+                                        <i class="fas fa-question-circle text-danger"></i>
+                                    </label>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <button type="button" class="btn-action btn-action-edit" onclick="openUpdateModal(@item.Id, event)"
+                                title="Düzenle">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </td>
+                        <td class="text-center">
+                            <button type="button" class="btn-action btn-action-delete" onclick="deleteUnknows(@item.Id, event)"
+                                title="Sil">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (Model != null && Model.TotalPages > 1)
+{
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 mt-4">
+        <div class="text-muted small">Toplam <strong>@Model.TotalCount</strong> kayıt</div>
+        <nav>
+            <ul class="pagination modern-pagination mb-0">
+                @{
+                    var currentPage = Model.Page <= 0 ? 1 : Model.Page;
+                    var totalPages = Model.TotalPages;
+                    var prevDisabled = currentPage <= 1 ? "disabled" : "";
+                    var nextDisabled = currentPage >= totalPages ? "disabled" : "";
+                }
+                <li class="page-item @prevDisabled">
+                    <a class="page-link"
+                        href="@Url.Action("", "Unknows", new { search = Model.Search, page = currentPage - 1, pageSize = Model.PageSize })">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+                @if (Model.TotalPages <= 7)
+                {
+                    for (int p = 1; p <= Model.TotalPages; p++)
+                    {
+                        var active = p == currentPage ? "active" : string.Empty;
+                        <li class="page-item @active">
+                            <a class="page-link"
+                                href="@Url.Action("", "Unknows", new { search = Model.Search, page = p, pageSize = Model.PageSize })">@p</a>
+                        </li>
+                    }
+                }
+                else
+                {
+                    var startPage = Math.Max(1, currentPage - 2);
+                    var endPage = Math.Min(Model.TotalPages, currentPage + 2);
+
+                    if (startPage > 1)
+                    {
+                        <li class="page-item">
+                            <a class="page-link"
+                                href="@Url.Action("", "Unknows", new { search = Model.Search, page = 1, pageSize = Model.PageSize })">1</a>
+                        </li>
+                        if (startPage > 2)
+                        {
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                        }
+                    }
+
+                    for (int p = startPage; p <= endPage; p++)
+                    {
+                        var active = p == currentPage ? "active" : string.Empty;
+                        <li class="page-item @active">
+                            <a class="page-link"
+                                href="@Url.Action("", "Unknows", new { search = Model.Search, page = p, pageSize = Model.PageSize })">@p</a>
+                        </li>
+                    }
+
+                    if (endPage < Model.TotalPages)
+                    {
+                        if (endPage < Model.TotalPages - 1)
+                        {
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                        }
+                        <li class="page-item">
+                            <a class="page-link"
+                                href="@Url.Action("", "Unknows", new { search = Model.Search, page = Model.TotalPages, pageSize = Model.PageSize })">@Model.TotalPages</a>
+                        </li>
+                    }
+                }
+                <li class="page-item @nextDisabled">
+                    <a class="page-link"
+                        href="@Url.Action("", "Unknows", new { search = Model.Search, page = currentPage + 1, pageSize = Model.PageSize })">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+}
+
+@await Html.PartialAsync("_UpdateWordModal")

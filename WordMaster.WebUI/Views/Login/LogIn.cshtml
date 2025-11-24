@@ -1,0 +1,49 @@
+@using WordMaster.Application.ViewModels.Auth
+@model LoginViewModel
+@{
+    Layout = "_AuthLayout";
+    ViewData["Title"] = "Giriş Yap";
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<form asp-controller="Login" asp-action="Login" asp-route-returnUrl="@Context.Request.Query["returnUrl"]" method="post">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+    <div class="mb-3">
+        <label class="form-label" asp-for="Email">Email Adresi</label>
+        <input asp-for="Email" class="form-control" type="email"/>
+        <span asp-validation-for="Email" class="text-danger small"></span>
+    </div>
+
+    <div class="mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+            <label class="form-label mb-0" asp-for="Password">Şifre</label>
+            <a href="/ForgetPassword" class="small text-decoration-none" style="color: #667eea;">Şifremi Unuttum</a>
+        </div>
+        <div class="input-group">
+            <input asp-for="Password" class="form-control" type="password"/>
+            <button class="btn btn-toggle-password" type="button">
+                <i class="fas fa-eye"></i>
+            </button>
+        </div>
+        <span asp-validation-for="Password" class="text-danger small"></span>
+    </div>
+
+    <div class="mb-4 form-check">
+        <input asp-for="RememberMe" class="form-check-input" type="checkbox" />
+        <label class="form-check-label small text-muted" asp-for="RememberMe">Beni Hatırla</label>
+    </div>
+
+    <button class="btn btn-primary w-100 mb-3" type="submit">Giriş Yap</button>
+
+    <div class="auth-footer">
+        Hesabınız yok mu? <a href="/Register">Kayıt Ol</a>
+    </div>
+</form>

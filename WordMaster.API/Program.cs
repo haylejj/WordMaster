@@ -62,6 +62,19 @@ builder.Services.AddIdentityConfigurations();
 // Swagger yapılandırması
 builder.Services.AddSwaggerConfigurations();
 
+// CORS Politikası
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigins",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5173", "https://localhost:5173") // Frontend URL
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        });
+});
+
 WebApplication app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -74,6 +87,8 @@ if (app.Environment.IsDevelopment())
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
 app.UseHttpsRedirection();
+
+app.UseCors("AllowSpecificOrigins");
 
 app.UseAuthentication();
 app.UseAuthorization();
