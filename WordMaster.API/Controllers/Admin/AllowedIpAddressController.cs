@@ -1,9 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WordMaster.API.Extensions;
 using WordMaster.Application.Requests.AllowedIpAddress;
+using WordMaster.Application.Responses.AllowedIpAddress;
 using WordMaster.Application.Services.Abstract;
-using WordMaster.Application.ViewModels.AllowedIpAddress;
 using WordMaster.Domain.Results;
 
 namespace WordMaster.API.Controllers.Admin;
@@ -22,7 +21,7 @@ public class AllowedIpAddressController(IAllowedIpAddressService allowedIpAddres
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        ServiceResult<List<AllowedIpAddressViewModel>> result = await allowedIpAddressService.GetAllAsync();
+        ServiceResult<List<AllowedIpAddressResponse>> result = await allowedIpAddressService.GetAllAsync();
         return CreateResult(result);
     }
 
@@ -34,7 +33,7 @@ public class AllowedIpAddressController(IAllowedIpAddressService allowedIpAddres
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
-        ServiceResult<AllowedIpAddressViewModel> result = await allowedIpAddressService.GetByIdAsync(id);
+        ServiceResult<AllowedIpAddressResponse> result = await allowedIpAddressService.GetByIdAsync(id);
         return CreateResult(result);
     }
 

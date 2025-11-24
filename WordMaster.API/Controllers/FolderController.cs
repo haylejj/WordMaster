@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WordMaster.API.Extensions;
-using WordMaster.Application.Dto.Folder;
-using WordMaster.Application.Dto.Word;
 using WordMaster.Application.Requests.Folder;
 using WordMaster.Application.Requests.Word;
+using WordMaster.Application.Responses.Folder;
+using WordMaster.Application.Responses.Word;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Results;
 
@@ -25,7 +25,7 @@ public class FolderController(IFolderService folderService) : BaseController
     public async Task<IActionResult> GetFolders()
     {
         Guid userId = User.GetUserId();
-        ServiceResult<List<FolderDto>> result = await folderService.GetUserFoldersAsync(userId);
+        ServiceResult<List<FolderResponse>> result = await folderService.GetUserFoldersAsync(userId);
         return CreateResult(result);
     }
 
@@ -38,7 +38,7 @@ public class FolderController(IFolderService folderService) : BaseController
     public async Task<IActionResult> GetFolder(long id)
     {
         Guid userId = User.GetUserId();
-        ServiceResult<FolderDto> result = await folderService.GetUserFolderAsync(id, userId);
+        ServiceResult<FolderResponse> result = await folderService.GetUserFolderAsync(id, userId);
         return CreateResult(result);
     }
 
@@ -90,7 +90,7 @@ public class FolderController(IFolderService folderService) : BaseController
     public async Task<IActionResult> GetWordsInFolder(long id)
     {
         Guid userId = User.GetUserId();
-        ServiceResult<List<WordDto>> result = await folderService.GetWordsInFolderAsync(id, userId);
+        ServiceResult<List<WordResponse>> result = await folderService.GetWordsInFolderAsync(id, userId);
         return CreateResult(result);
     }
 

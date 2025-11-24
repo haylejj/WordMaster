@@ -2,9 +2,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using System.Net;
 using WordMaster.Application.Requests.Auth;
-using WordMaster.Application.Responses;
+using WordMaster.Application.Responses.Auth;
+using WordMaster.Application.Responses.User;
 using WordMaster.Application.Services.Abstract;
-using WordMaster.Application.ViewModels.User;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Results;
 
@@ -28,22 +28,22 @@ public class LoginService(
     /// </summary>
     /// <param name="email">Aranacak kullanıcının email adresi.</param>
     /// <returns>Kullanıcı bulunursa kullanıcı bilgilerini, bulunamazsa hata döner.</returns>
-    public async Task<ServiceResult<UserViewModel>> FindByEmailAsync(string email)
+    public async Task<ServiceResult<UserResponse>> FindByEmailAsync(string email)
     {
         AppUser? user = await userManager.FindByEmailAsync(email);
         if (user == null)
         {
-            return ServiceResult<UserViewModel>.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound);
+            return ServiceResult<UserResponse>.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound);
         }
 
-        UserViewModel userViewModel = new()
+        UserResponse userViewModel = new()
         {
             Id = user.Id.ToString(),
             UserName = user.UserName!,
             Email = user.Email!
         };
 
-        return ServiceResult<UserViewModel>.Success(userViewModel, HttpStatusCode.OK);
+        return ServiceResult<UserResponse>.Success(userViewModel, HttpStatusCode.OK);
     }
 
     /// <summary>

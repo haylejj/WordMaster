@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WordMaster.API.Extensions;
+using WordMaster.Application.Responses.Admin;
 using WordMaster.Application.Services.Abstract;
-using WordMaster.Application.ViewModels.Admin;
 using WordMaster.Domain.Results;
 
 namespace WordMaster.API.Controllers.Admin;
@@ -21,7 +20,7 @@ public class DashboardController(IAdminDashboardService adminDashboardService) :
     [HttpGet]
     public async Task<IActionResult> GetDashboard()
     {
-        ServiceResult<AdminDashboardViewModel> result = await adminDashboardService.GetDashboardAsync();
+        ServiceResult<AdminDashboardResponse> result = await adminDashboardService.GetDashboardAsync();
         return CreateResult(result);
     }
 }

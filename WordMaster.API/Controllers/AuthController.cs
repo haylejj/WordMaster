@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using WordMaster.API.Extensions;
 using WordMaster.Application.Requests.Auth;
-using WordMaster.Application.Responses;
+using WordMaster.Application.Responses.Auth;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Results;
 

@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using WordMaster.Application.Responses;
+using WordMaster.Application.Responses.Auth;
 using WordMaster.Domain.Results;
 
 namespace WordMaster.Application.Services.Abstract;

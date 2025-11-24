@@ -1,9 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WordMaster.API.Extensions;
 using WordMaster.Application.Requests.Role;
+using WordMaster.Application.Responses.Role;
 using WordMaster.Application.Services.Abstract;
-using WordMaster.Application.ViewModels.Role;
 using WordMaster.Domain.Results;
 
 namespace WordMaster.API.Controllers.Admin;
@@ -22,7 +21,7 @@ public class RoleController(IRoleService roleService) : BaseController
     [HttpGet]
     public async Task<IActionResult> GetRoles()
     {
-        ServiceResult<List<RoleViewModel>> result = await roleService.GetRoleListAsync();
+        ServiceResult<List<RoleResponse>> result = await roleService.GetRoleListAsync();
         return CreateResult(result);
     }
 
@@ -34,7 +33,7 @@ public class RoleController(IRoleService roleService) : BaseController
     [HttpGet("{id}")]
     public async Task<IActionResult> GetRole(string id)
     {
-        ServiceResult<RoleUpdateViewModel> result = await roleService.FindByIdReturnRoleUpdateViewModelAsync(id);
+        ServiceResult<RoleUpdateResponse> result = await roleService.FindByIdReturnRoleUpdateViewModelAsync(id);
         return CreateResult(result);
     }
 
@@ -82,7 +81,7 @@ public class RoleController(IRoleService roleService) : BaseController
     [HttpGet("assign/{userId}")]
     public async Task<IActionResult> GetRolesForAssign(string userId)
     {
-        ServiceResult<List<AssignToRoleViewModel>> result = await roleService.GetRoleByIdReturnAssignToRoleAsync(userId);
+        ServiceResult<List<AssignToRoleResponse>> result = await roleService.GetRoleByIdReturnAssignToRoleAsync(userId);
         return CreateResult(result);
     }
 

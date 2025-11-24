@@ -1,11 +1,10 @@
 using System.Net;
-using WordMaster.Application.Dto.Folder;
-using WordMaster.Application.Dto.Practice;
-using WordMaster.Application.Dto.Word;
 using WordMaster.Application.Persistence;
 using WordMaster.Application.Persistence.Repositories;
 using WordMaster.Application.Requests.Folder;
 using WordMaster.Application.Requests.Word;
+using WordMaster.Application.Responses.Folder;
+using WordMaster.Application.Responses.Word;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Results;
@@ -22,10 +21,10 @@ public class FolderService(
 {
     private static readonly Random _random = new();
 
-    public async Task<ServiceResult<List<FolderDto>>> GetUserFoldersAsync(Guid userId)
+    public async Task<ServiceResult<List<FolderResponse>>> GetUserFoldersAsync(Guid userId)
     {
         List<Folder> folders = await folderRepository.GetUserFoldersAsync(userId);
-        List<FolderDto> folderDtos = folders.Select(f => new FolderDto
+        List<FolderResponse> folderDtos = folders.Select(f => new FolderResponse
         {
             Id = f.Id,
             Name = f.Name,
@@ -33,18 +32,18 @@ public class FolderService(
             WordCount = f.WordFolders.Count
         }).ToList();
 
-        return ServiceResult<List<FolderDto>>.Success(folderDtos, HttpStatusCode.OK);
+        return ServiceResult<List<FolderResponse>>.Success(folderDtos, HttpStatusCode.OK);
     }
 
-    public async Task<ServiceResult<FolderDto>> GetUserFolderAsync(long folderId, Guid userId)
+    public async Task<ServiceResult<FolderResponse>> GetUserFolderAsync(long folderId, Guid userId)
     {
         Folder? folder = await folderRepository.GetUserFolderAsync(folderId, userId);
         if (folder == null)
         {
-            return ServiceResult<FolderDto>.Failure("Klasör bulunamadı.", HttpStatusCode.NotFound);
+            return ServiceResult<FolderResponse>.Failure("Klasör bulunamadı.", HttpStatusCode.NotFound);
         }
 
-        FolderDto folderDto = new()
+        FolderResponse folderDto = new()
         {
             Id = folder.Id,
             Name = folder.Name,
@@ -52,7 +51,7 @@ public class FolderService(
             WordCount = folder.WordFolders.Count
         };
 
-        return ServiceResult<FolderDto>.Success(folderDto, HttpStatusCode.OK);
+        return ServiceResult<FolderResponse>.Success(folderDto, HttpStatusCode.OK);
     }
 
     public async Task<ServiceResult> AddFolderAsync(CreateFolderRequest request, Guid userId)
@@ -118,23 +117,23 @@ public class FolderService(
         return ServiceResult.Success(HttpStatusCode.NoContent);
     }
 
-    public async Task<ServiceResult<List<WordDto>>> GetWordsInFolderAsync(long folderId, Guid userId)
+    public async Task<ServiceResult<List<WordResponse>>> GetWordsInFolderAsync(long folderId, Guid userId)
     {
         // Ensure folder belongs to user
         Folder? folder = await folderRepository.GetUserFolderAsync(folderId, userId);
         if (folder == null)
         {
-            return ServiceResult<List<WordDto>>.Failure("Klasör bulunamadı.", HttpStatusCode.NotFound);
+            return ServiceResult<List<WordResponse>>.Failure("Klasör bulunamadı.", HttpStatusCode.NotFound);
         }
         List<Word> words = await wordFolderRepository.GetWordsInFolderAsync(folderId);
-        List<WordDto> wordDtos = words.Select(w => new WordDto
+        List<WordResponse> wordDtos = words.Select(w => new WordResponse
         {
             Id = w.Id,
             EnglishWord = w.EnglishWord,
             TurkishWord = w.TurkishWord
         }).ToList();
 
-        return ServiceResult<List<WordDto>>.Success(wordDtos, HttpStatusCode.OK);
+        return ServiceResult<List<WordResponse>>.Success(wordDtos, HttpStatusCode.OK);
     }
 
     public async Task<ServiceResult> AddWordToFolderAsync(AddWordToFolderRequest request, Guid userId)

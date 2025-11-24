@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WordMaster.API.Extensions;
-using WordMaster.Application.Dto.Unknows;
 using WordMaster.Application.Requests.Unknows;
 using WordMaster.Application.Requests.Word;
 using WordMaster.Application.Services.Abstract;
@@ -27,7 +26,7 @@ public class UnknowsController(IUnknowsService unknowsService) : BaseController
     public async Task<IActionResult> GetUnknows([FromQuery] string? search, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
         Guid userId = User.GetUserId();
-        ServiceResult<PagedResult<UnknowsWithWordDto>> result = await unknowsService.GetPagedUnknowsAsync(userId, search, page, pageSize);
+        var result = await unknowsService.GetPagedUnknowsAsync(userId, search, page, pageSize);
         return CreateResult(result);
     }
 

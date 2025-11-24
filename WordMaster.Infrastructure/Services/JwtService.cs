@@ -5,7 +5,8 @@ using System.Net;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using WordMaster.Application.Responses;
+using WordMaster.Application.Responses.Auth;
+using WordMaster.Application.Responses.User;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Configuration;
 using WordMaster.Domain.Results;
@@ -157,11 +158,11 @@ public class JwtService(IOptions<JwtSettings> jwtSettings, IUserService userServ
 
         // 3. Yeni access token oluştur (SecurityStamp ile)
         ServiceResult<string> accessTokenResult = GenerateAccessToken(
-            userWithRoles.User.Id.ToString(),
-            userWithRoles.User.UserName!,
-            userWithRoles.User.Email!,
+            userWithRoles.Id,
+            userWithRoles.UserName,
+            userWithRoles.Email,
             userWithRoles.Roles,
-            userWithRoles.User.SecurityStamp ?? string.Empty  // SecurityStamp eklendi
+            userWithRoles.SecurityStamp ?? string.Empty
         );
 
         if (!accessTokenResult.IsSuccess || accessTokenResult.Data == null)

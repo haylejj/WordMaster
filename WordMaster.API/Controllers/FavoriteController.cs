@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WordMaster.API.Extensions;
-using WordMaster.Application.Dto.Favorite;
 using WordMaster.Application.Requests.Favorite;
 using WordMaster.Application.Requests.Word;
+using WordMaster.Application.Responses.Favorite;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Results;
 
@@ -27,7 +27,7 @@ public class FavoriteController(IFavoriteService favoriteService) : BaseControll
     public async Task<IActionResult> GetFavorites([FromQuery] string? search, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
         Guid userId = User.GetUserId();
-        ServiceResult<PagedResult<FavoriteWithWordDto>> result = await favoriteService.GetPagedFavoritesAsync(userId, search, page, pageSize);
+        ServiceResult<PagedResult<FavoriteWithWordResponse>> result = await favoriteService.GetPagedFavoritesAsync(userId, search, page, pageSize);
         return CreateResult(result);
     }
 

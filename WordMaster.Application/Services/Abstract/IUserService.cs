@@ -1,9 +1,7 @@
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using WordMaster.Application.Requests.Auth;
 using WordMaster.Application.Requests.User;
-using WordMaster.Application.Responses;
-using WordMaster.Application.ViewModels.User;
+using WordMaster.Application.Responses.User;
 using WordMaster.Domain.Results;
 
 namespace WordMaster.Application.Services.Abstract;
@@ -12,15 +10,15 @@ public interface IUserService
 {
     Task LogOutAsync();
     SelectList GetGenderSelectList();
-    Task<ServiceResult<UserEditViewModel>> GetUserEditViewModelAsync(string username);
+    Task<ServiceResult<UserEditResponse>> GetUserEditViewModelAsync(string username);
     Task<ServiceResult> EditUserAsync(UserEditRequest request, string username);
     Task<ServiceResult<bool>> CheckPasswordAsync(string userName, string passwordOld);
     Task<ServiceResult> ChangePasswordAsync(ChangePasswordRequest request, string userName);
-    Task<ServiceResult<List<UserViewModel>>> GetUsersAsync();
-    Task<ServiceResult<PagedResult<UserWithRolesViewModel>>> GetPagedUsersAsync(string? search, int page, int pageSize);
-    Task<ServiceResult<UserWithRolesViewModel>> GetUserByIdAsync(string id);
-    Task<ServiceResult<UserEditViewModel>> GetUserEditViewModelByIdAsync(string id);
-    Task<ServiceResult<UserDetailViewModel>> GetUserDetailAsync(string id);
+    Task<ServiceResult<List<UserResponse>>> GetUsersAsync();
+    Task<ServiceResult<PagedResult<UserWithRolesResponse>>> GetPagedUsersAsync(string? search, int page, int pageSize);
+    Task<ServiceResult<UserWithRolesResponse>> GetUserByIdAsync(string id);
+    Task<ServiceResult<UserEditResponse>> GetUserEditViewModelByIdAsync(string id);
+    Task<ServiceResult<UserDetailResponse>> GetUserDetailAsync(string id);
     Task<ServiceResult> UpdateUserAsync(UserUpdateRequest request);
     Task<ServiceResult> DeleteUserAsync(string id);
     Task<ServiceResult<string>> ResetUserPasswordAsync(string id);

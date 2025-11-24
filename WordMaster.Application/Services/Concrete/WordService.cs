@@ -1,10 +1,10 @@
-using System.Net;
 using Microsoft.EntityFrameworkCore;
-using WordMaster.Application.Dto.Practice;
-using WordMaster.Application.Dto.Word;
+using System.Net;
+using WordMaster.Application.Key;
 using WordMaster.Application.Persistence;
 using WordMaster.Application.Persistence.Repositories;
 using WordMaster.Application.Requests.Word;
+using WordMaster.Application.Responses.Word;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Extensions;
@@ -18,29 +18,29 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
     private static readonly TimeSpan PracticeCacheExpiration = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan GetByIdCacheExpiration = TimeSpan.FromMinutes(10);
 
-    public async Task<ServiceResult<WordDto>> GetWordForUserAsync(long id, Guid userId)
+    public async Task<ServiceResult<WordResponse>> GetWordForUserAsync(long id, Guid userId)
     {
         string cacheKey = $"word:{id}:user:{userId}";
-        WordDto? cachedWordDto = await cacheService.GetAsync<WordDto>(cacheKey);
+        WordResponse? cachedWordDto = await cacheService.GetAsync<WordResponse>(cacheKey);
         if (cachedWordDto != null)
         {
-            return ServiceResult<WordDto>.Success(cachedWordDto, HttpStatusCode.OK);
+            return ServiceResult<WordResponse>.Success(cachedWordDto, HttpStatusCode.OK);
         }
 
         Word? word = await wordRepository.GetWordForUserAsync(id, userId);
         if (word == null)
         {
-            return ServiceResult<WordDto>.Failure("Kelime bulunamadı.", HttpStatusCode.NotFound);
+            return ServiceResult<WordResponse>.Failure("Kelime bulunamadı.", HttpStatusCode.NotFound);
         }
 
-        WordDto wordDto = new()
+        WordResponse wordDto = new()
         {
             Id = word.Id,
             EnglishWord = word.EnglishWord,
             TurkishWord = word.TurkishWord
         };
         await cacheService.SetAsync(cacheKey, wordDto, GetByIdCacheExpiration);
-        return ServiceResult<WordDto>.Success(wordDto, HttpStatusCode.OK);
+        return ServiceResult<WordResponse>.Success(wordDto, HttpStatusCode.OK);
     }
 
     public async Task<ServiceResult> AddWordAsync(CreateWordRequest request, Guid userId)
@@ -150,9 +150,9 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
     public async Task<ServiceResult<string>> GetRandomWordAsync(Guid userId)
     {
         string cacheKey = $"words:user:{userId}";
-        List<PracticeWordCacheDto>? cachedWords = await cacheService.GetAsync<List<PracticeWordCacheDto>>(cacheKey);
+        List<PracticeWordKey>? cachedWords = await cacheService.GetAsync<List<PracticeWordKey>>(cacheKey);
 
-        List<PracticeWordCacheDto> practiceWords;
+        List<PracticeWordKey> practiceWords;
         if (cachedWords != null && cachedWords.Count > 0)
         {
             practiceWords = cachedWords;
@@ -160,7 +160,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
         else
         {
             List<Word> words = await wordRepository.GetWordsByUserAsync(userId);
-            practiceWords = words.Select(w => new PracticeWordCacheDto
+            practiceWords = words.Select(w => new PracticeWordKey
             {
                 EnglishWord = w.EnglishWord
             }).ToList();
@@ -222,7 +222,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
         return ServiceResult<bool>.Success(isCorrect, HttpStatusCode.OK);
     }
 
-    public async Task<ServiceResult<PagedResult<WordDto>>> GetPagedWordsAsync(Guid userId, string? search, int page, int pageSize)
+    public async Task<ServiceResult<PagedResult<WordResponse>>> GetPagedWordsAsync(Guid userId, string? search, int page, int pageSize)
     {
         if (page < 1)
         {
@@ -236,14 +236,14 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
 
         (List<Word>? words, int totalCount) = await wordRepository.GetPagedWordsAsync(userId, search, page, pageSize);
 
-        List<WordDto> wordDtos = words.Select(w => new WordDto
+        List<WordResponse> wordDtos = words.Select(w => new WordResponse
         {
             Id = w.Id,
             EnglishWord = w.EnglishWord,
             TurkishWord = w.TurkishWord
         }).ToList();
 
-        PagedResult<WordDto> pagedResult = new()
+        PagedResult<WordResponse> pagedResult = new()
         {
             Items = wordDtos,
             PageNumber = page,
@@ -251,23 +251,23 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
             TotalCount = totalCount
         };
 
-        return ServiceResult<PagedResult<WordDto>>.Success(pagedResult, HttpStatusCode.OK);
+        return ServiceResult<PagedResult<WordResponse>>.Success(pagedResult, HttpStatusCode.OK);
     }
 
-    public async Task<ServiceResult<List<WordLookupDto>>> GetUserWordsAsync(Guid userId)
+    public async Task<ServiceResult<List<WordLookupResponse>>> GetUserWordsAsync(Guid userId)
     {
         // Cache all user's words for dropdown usage; client will filter locally
         string cacheKey = $"dropdown_words:user:{userId}";
-        List<WordLookupDto>? cached = await cacheService.GetAsync<List<WordLookupDto>>(cacheKey);
+        List<WordLookupResponse>? cached = await cacheService.GetAsync<List<WordLookupResponse>>(cacheKey);
         if (cached != null && cached.Count > 0)
         {
-            return ServiceResult<List<WordLookupDto>>.Success(cached, HttpStatusCode.OK);
+            return ServiceResult<List<WordLookupResponse>>.Success(cached, HttpStatusCode.OK);
         }
 
-        List<WordLookupDto> words = await wordRepository
+        List<WordLookupResponse> words = await wordRepository
             .Where(x => x.UserId == userId)
             .OrderBy(x => x.EnglishWord)
-            .Select(x => new WordLookupDto
+            .Select(x => new WordLookupResponse
             {
                 Id = x.Id,
                 EnglishWord = x.EnglishWord
@@ -276,6 +276,6 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
             .ToListAsync();
 
         await cacheService.SetAsync(cacheKey, words, TimeSpan.FromMinutes(10));
-        return ServiceResult<List<WordLookupDto>>.Success(words, HttpStatusCode.OK);
+        return ServiceResult<List<WordLookupResponse>>.Success(words, HttpStatusCode.OK);
     }
 }

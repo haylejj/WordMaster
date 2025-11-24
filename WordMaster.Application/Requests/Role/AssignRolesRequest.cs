@@ -1,10 +1,10 @@
-using WordMaster.Application.ViewModels.Role;
+using WordMaster.Application.Responses.Role;
 
 namespace WordMaster.Application.Requests.Role;
 
 public class AssignRolesRequest
 {
     public string UserId { get; set; } = null!;
-    public List<AssignToRoleViewModel> Roles { get; set; } = [];
+    public List<AssignToRoleResponse> Roles { get; set; } = [];
 }
 

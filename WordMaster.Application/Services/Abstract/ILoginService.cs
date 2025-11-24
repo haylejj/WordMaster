@@ -1,6 +1,6 @@
 using WordMaster.Application.Requests.Auth;
-using WordMaster.Application.Responses;
-using WordMaster.Application.ViewModels.User;
+using WordMaster.Application.Responses.Auth;
+using WordMaster.Application.Responses.User;
 using WordMaster.Domain.Results;
 
 namespace WordMaster.Application.Services.Abstract;
@@ -12,7 +12,7 @@ public interface ILoginService
     /// </summary>
     /// <param name="email">Aranacak kullanıcının email adresi.</param>
     /// <returns>Kullanıcı bulunursa kullanıcı bilgilerini, bulunamazsa hata döner.</returns>
-    Task<ServiceResult<UserViewModel>> FindByEmailAsync(string email);
+    Task<ServiceResult<UserResponse>> FindByEmailAsync(string email);
 
     /// <summary>
     /// Kullanıcı girişi yapar.

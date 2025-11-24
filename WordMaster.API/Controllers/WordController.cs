@@ -2,8 +2,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using WordMaster.API.Extensions;
-using WordMaster.Application.Dto.Word;
 using WordMaster.Application.Requests.Word;
+using WordMaster.Application.Responses.Word;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Results;
 
@@ -28,7 +28,7 @@ public class WordController(IWordService wordService, IExcelService excelService
     public async Task<IActionResult> GetWords([FromQuery] string? search, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
         Guid userId = User.GetUserId();
-        ServiceResult<PagedResult<WordDto>> result = await wordService.GetPagedWordsAsync(userId, search, page, pageSize);
+        ServiceResult<PagedResult<WordResponse>> result = await wordService.GetPagedWordsAsync(userId, search, page, pageSize);
         return CreateResult(result);
     }
 
@@ -42,7 +42,7 @@ public class WordController(IWordService wordService, IExcelService excelService
     public async Task<IActionResult> GetWord(long id)
     {
         Guid userId = User.GetUserId();
-        ServiceResult<WordDto> result = await wordService.GetWordForUserAsync(id, userId);
+        ServiceResult<WordResponse> result = await wordService.GetWordForUserAsync(id, userId);
         return CreateResult(result);
     }
 
@@ -124,7 +124,7 @@ public class WordController(IWordService wordService, IExcelService excelService
     public async Task<IActionResult> GetUserWords()
     {
         Guid userId = User.GetUserId();
-        ServiceResult<List<WordLookupDto>> result = await wordService.GetUserWordsAsync(userId);
+        ServiceResult<List<WordLookupResponse>> result = await wordService.GetUserWordsAsync(userId);
         return CreateResult(result);
     }
 

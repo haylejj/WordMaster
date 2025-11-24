@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using WordMaster.Application.Persistence;
 using WordMaster.Application.Persistence.Repositories;
+using WordMaster.Application.Responses.Admin;
+using WordMaster.Application.Responses.User;
 using WordMaster.Application.Services.Abstract;
-using WordMaster.Application.ViewModels.Admin;
-using WordMaster.Application.ViewModels.User;
 using WordMaster.Domain.Entities;
 
 namespace WordMaster.Application.Services.Concrete;
@@ -32,11 +32,11 @@ public class LogHistoryService(ILogHistoryRepository logHistoryRepository, IUnit
         await unitOfWork.CommitAsync();
     }
 
-    public async Task<UserLoginStatsViewModel> GetUserLoginStatsAsync(string userId)
+    public async Task<UserLoginStatsResponse> GetUserLoginStatsAsync(string userId)
     {
         if (!Guid.TryParse(userId, out Guid userGuid))
         {
-            return new UserLoginStatsViewModel();
+            return new UserLoginStatsResponse();
         }
 
         int totalLogins = await logHistoryRepository.CountAsync(x => x.AppUserId == userGuid);
@@ -44,7 +44,7 @@ public class LogHistoryService(ILogHistoryRepository logHistoryRepository, IUnit
         int successfulLogins = await logHistoryRepository.CountAsync(x => x.AppUserId == userGuid && x.IsSuccessful);
         int failedLogins = totalLogins - successfulLogins;
 
-        return new UserLoginStatsViewModel
+        return new UserLoginStatsResponse
         {
             TotalLogins = totalLogins,
             SuccessfulLogins = successfulLogins,
@@ -52,11 +52,11 @@ public class LogHistoryService(ILogHistoryRepository logHistoryRepository, IUnit
         };
     }
 
-    public async Task<LastLoginInfoViewModel> GetLastSuccessfulLoginAsync(string userId)
+    public async Task<LastLoginInfoResponse> GetLastSuccessfulLoginAsync(string userId)
     {
         if (!Guid.TryParse(userId, out Guid userGuid))
         {
-            return new LastLoginInfoViewModel
+            return new LastLoginInfoResponse
             {
                 LastLoginDate = null,
                 LastLoginIpAddress = null
@@ -66,19 +66,19 @@ public class LogHistoryService(ILogHistoryRepository logHistoryRepository, IUnit
         LogHistory? lastLogin = await logHistoryRepository.GetLastSuccessfulLoginAsync(userGuid);
 
         return lastLogin == null
-            ? new LastLoginInfoViewModel
+            ? new LastLoginInfoResponse
             {
                 LastLoginDate = null,
                 LastLoginIpAddress = null
             }
-            : new LastLoginInfoViewModel
+            : new LastLoginInfoResponse
             {
                 LastLoginDate = lastLogin.AttemptedAt,
                 LastLoginIpAddress = lastLogin.IpAddress
             };
     }
 
-    public async Task<LoginStatisticsViewModel> GetLoginStatisticsAsync()
+    public async Task<LoginStatisticsResponse> GetLoginStatisticsAsync()
     {
         int totalLogins = await logHistoryRepository.CountAsync();
         int successfulLogins = await logHistoryRepository.CountAsync(x => x.IsSuccessful);
@@ -97,22 +97,22 @@ public class LogHistoryService(ILogHistoryRepository logHistoryRepository, IUnit
             })
             .ToListAsync();
 
-        Dictionary<DateOnly, DailyLoginStatViewModel> dailyLookup = dailyStatsQuery.ToDictionary(
+        Dictionary<DateOnly, DailyLoginStatResponse> dailyLookup = dailyStatsQuery.ToDictionary(
             k => DateOnly.FromDateTime(k.Date),
-            v => new DailyLoginStatViewModel
+            v => new DailyLoginStatResponse
             {
                 Date = DateOnly.FromDateTime(v.Date),
                 SuccessCount = v.Success,
                 FailCount = v.Fail
             });
 
-        List<DailyLoginStatViewModel> dailyStats = new(7);
+        List<DailyLoginStatResponse> dailyStats = new(7);
         for (int i = 0; i < 7; i++)
         {
             DateOnly date = DateOnly.FromDateTime(startDate.AddDays(i));
-            if (!dailyLookup.TryGetValue(date, out DailyLoginStatViewModel? value))
+            if (!dailyLookup.TryGetValue(date, out DailyLoginStatResponse? value))
             {
-                value = new DailyLoginStatViewModel
+                value = new DailyLoginStatResponse
                 {
                     Date = date,
                     SuccessCount = 0,
@@ -122,7 +122,7 @@ public class LogHistoryService(ILogHistoryRepository logHistoryRepository, IUnit
             dailyStats.Add(value);
         }
 
-        return new LoginStatisticsViewModel
+        return new LoginStatisticsResponse
         {
             TotalLogins = totalLogins,
             SuccessfulLogins = successfulLogins,

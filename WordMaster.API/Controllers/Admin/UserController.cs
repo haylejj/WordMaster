@@ -1,11 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WordMaster.API.Extensions;
-using WordMaster.Application.Requests.Role;
 using WordMaster.Application.Requests.User;
+using WordMaster.Application.Responses.User;
 using WordMaster.Application.Services.Abstract;
-using WordMaster.Application.ViewModels.Role;
-using WordMaster.Application.ViewModels.User;
 using WordMaster.Domain.Results;
 
 namespace WordMaster.API.Controllers.Admin;
@@ -27,7 +24,7 @@ public class UserController(IUserService userService) : BaseController
     [HttpGet]
     public async Task<IActionResult> GetPagedUsers([FromQuery] string? search, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
-        ServiceResult<PagedResult<UserWithRolesViewModel>> result = await userService.GetPagedUsersAsync(search, page, pageSize);
+        ServiceResult<PagedResult<UserWithRolesResponse>> result = await userService.GetPagedUsersAsync(search, page, pageSize);
         return CreateResult(result);
     }
 
@@ -38,7 +35,7 @@ public class UserController(IUserService userService) : BaseController
     [HttpGet("all")]
     public async Task<IActionResult> GetAllUsers()
     {
-        ServiceResult<List<UserViewModel>> result = await userService.GetUsersAsync();
+        ServiceResult<List<UserResponse>> result = await userService.GetUsersAsync();
         return CreateResult(result);
     }
 
@@ -50,7 +47,7 @@ public class UserController(IUserService userService) : BaseController
     [HttpGet("{id}")]
     public async Task<IActionResult> GetUser(string id)
     {
-        ServiceResult<UserEditViewModel> result = await userService.GetUserEditViewModelByIdAsync(id);
+        ServiceResult<UserEditResponse> result = await userService.GetUserEditViewModelByIdAsync(id);
         return CreateResult(result);
     }
 
@@ -62,7 +59,7 @@ public class UserController(IUserService userService) : BaseController
     [HttpGet("{id}/detail")]
     public async Task<IActionResult> GetUserDetail(string id)
     {
-        ServiceResult<UserDetailViewModel> result = await userService.GetUserDetailAsync(id);
+        ServiceResult<UserDetailResponse> result = await userService.GetUserDetailAsync(id);
         return CreateResult(result);
     }
 

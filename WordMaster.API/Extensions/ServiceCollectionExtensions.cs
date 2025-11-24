@@ -29,7 +29,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddValidationConfigurations(this IServiceCollection services)
     {
         // Fluent Validation validator'larını assembly'den otomatik olarak kaydet
-        services.AddValidatorsFromAssemblyContaining<WordDtoValidator>();
+        services.AddValidatorsFromAssemblyContaining<CreateWordRequestValidator>();
 
         // Fluent Validation'ı otomatik validation için etkinleştir
         services.AddFluentValidationAutoValidation(o =>

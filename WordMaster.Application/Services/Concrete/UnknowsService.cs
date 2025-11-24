@@ -1,11 +1,11 @@
 using System.Net;
-using WordMaster.Application.Dto.Practice;
-using WordMaster.Application.Dto.Unknows;
-using WordMaster.Application.Dto.Word;
+using WordMaster.Application.Key;
 using WordMaster.Application.Persistence;
 using WordMaster.Application.Persistence.Repositories;
 using WordMaster.Application.Requests.Unknows;
 using WordMaster.Application.Requests.Word;
+using WordMaster.Application.Responses.Unknows;
+using WordMaster.Application.Responses.Word;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Results;
@@ -39,9 +39,9 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
     public async Task<ServiceResult<string>> GetRandomWordFromUnknowsAsync(Guid userId)
     {
         string cacheKey = $"unknows:user:{userId}";
-        List<PracticeUnknowsCacheDto>? cachedUnknows = await cacheService.GetAsync<List<PracticeUnknowsCacheDto>>(cacheKey);
+        List<PracticeUnknowsKey>? cachedUnknows = await cacheService.GetAsync<List<PracticeUnknowsKey>>(cacheKey);
 
-        List<PracticeUnknowsCacheDto> practiceUnknows;
+        List<PracticeUnknowsKey> practiceUnknows;
         if (cachedUnknows != null && cachedUnknows.Count > 0)
         {
             practiceUnknows = cachedUnknows;
@@ -49,7 +49,7 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
         else
         {
             List<Unknows> unknows = await unknowsRepository.GetUserUnknowsWithWordAsync(userId);
-            practiceUnknows = unknows.Select(u => new PracticeUnknowsCacheDto
+            practiceUnknows = unknows.Select(u => new PracticeUnknowsKey
             {
                 EnglishWord = u.Word?.EnglishWord
             }).ToList();
@@ -74,16 +74,16 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
         return wordService.CheckTranslationAndUpdateAsync(userId, request);
     }
 
-    public async Task<List<UnknowsWithWordDto>> GetUserUnknowsAsync(Guid userId)
+    public async Task<List<UnknowsWithWordResponse>> GetUserUnknowsAsync(Guid userId)
     {
         List<Unknows> unknows = await unknowsRepository.GetUserUnknowsWithWordAsync(userId);
-        return unknows.Select(u => new UnknowsWithWordDto
+        return unknows.Select(u => new UnknowsWithWordResponse
         {
             Id = u.Id,
             CreatedTime = u.CreatedTime,
             WordId = u.WordId,
             UserId = u.UserId,
-            Word = u.Word != null ? new WordDto
+            Word = u.Word != null ? new WordResponse
             {
                 Id = u.Word.Id,
                 EnglishWord = u.Word.EnglishWord,
@@ -94,7 +94,7 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
 
     public async Task<ServiceResult<bool>> ToggleUnknowsAsync(ToggleUnknowsRequest request, Guid userId)
     {
-        ServiceResult<WordDto> wordExists = await wordService.GetWordForUserAsync(request.WordId, userId);
+        ServiceResult<WordResponse> wordExists = await wordService.GetWordForUserAsync(request.WordId, userId);
         if (!wordExists.IsSuccess || wordExists.Data == null)
         {
             return ServiceResult<bool>.Failure("Kelime bulunamadı.", HttpStatusCode.NotFound);
@@ -122,28 +122,28 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
         return ServiceResult<bool>.Success(false, HttpStatusCode.OK);
     }
 
-    public async Task<ServiceResult<UnknowsWithWordDto>> GetUnknowsWithWordAsync(int unknowsId, Guid userId)
+    public async Task<ServiceResult<UnknowsWithWordResponse>> GetUnknowsWithWordAsync(int unknowsId, Guid userId)
     {
         string cacheKey = $"unknows:{unknowsId}:user:{userId}";
-        UnknowsWithWordDto? cachedUnknowDto = await cacheService.GetAsync<UnknowsWithWordDto>(cacheKey);
+        UnknowsWithWordResponse? cachedUnknowDto = await cacheService.GetAsync<UnknowsWithWordResponse>(cacheKey);
         if (cachedUnknowDto != null)
         {
-            return ServiceResult<UnknowsWithWordDto>.Success(cachedUnknowDto, HttpStatusCode.OK);
+            return ServiceResult<UnknowsWithWordResponse>.Success(cachedUnknowDto, HttpStatusCode.OK);
         }
 
         Unknows? unknow = await unknowsRepository.GetUnknowsWithWordAsync(unknowsId, userId);
         if (unknow == null)
         {
-            return ServiceResult<UnknowsWithWordDto>.Failure("Kayıt bulunamadı.", HttpStatusCode.NotFound);
+            return ServiceResult<UnknowsWithWordResponse>.Failure("Kayıt bulunamadı.", HttpStatusCode.NotFound);
         }
 
-        UnknowsWithWordDto unknowDto = new()
+        UnknowsWithWordResponse unknowDto = new()
         {
             Id = unknow.Id,
             CreatedTime = unknow.CreatedTime,
             WordId = unknow.WordId,
             UserId = unknow.UserId,
-            Word = unknow.Word != null ? new WordDto
+            Word = unknow.Word != null ? new WordResponse
             {
                 Id = unknow.Word.Id,
                 EnglishWord = unknow.Word.EnglishWord,
@@ -151,10 +151,10 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
             } : null
         };
         await cacheService.SetAsync(cacheKey, unknowDto, GetByIdCacheExpiration);
-        return ServiceResult<UnknowsWithWordDto>.Success(unknowDto, HttpStatusCode.OK);
+        return ServiceResult<UnknowsWithWordResponse>.Success(unknowDto, HttpStatusCode.OK);
     }
 
-    public async Task<ServiceResult<PagedResult<UnknowsWithWordDto>>> GetPagedUnknowsAsync(Guid userId, string? search, int page, int pageSize)
+    public async Task<ServiceResult<PagedResult<UnknowsWithWordResponse>>> GetPagedUnknowsAsync(Guid userId, string? search, int page, int pageSize)
     {
         if (page < 1)
         {
@@ -168,13 +168,13 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
 
         (List<Unknows>? items, int totalCount) = await unknowsRepository.GetPagedUnknowsAsync(userId, search, page, pageSize);
 
-        List<UnknowsWithWordDto> itemDtos = items.Select(u => new UnknowsWithWordDto
+        List<UnknowsWithWordResponse> itemDtos = items.Select(u => new UnknowsWithWordResponse
         {
             Id = u.Id,
             CreatedTime = u.CreatedTime,
             WordId = u.WordId,
             UserId = u.UserId,
-            Word = u.Word != null ? new WordDto
+            Word = u.Word != null ? new WordResponse
             {
                 Id = u.Word.Id,
                 EnglishWord = u.Word.EnglishWord,
@@ -182,7 +182,7 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
             } : null
         }).ToList();
 
-        PagedResult<UnknowsWithWordDto> pagedResult = new()
+        PagedResult<UnknowsWithWordResponse> pagedResult = new()
         {
             Items = itemDtos,
             PageNumber = page,
@@ -190,6 +190,6 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
             TotalCount = totalCount
         };
 
-        return ServiceResult<PagedResult<UnknowsWithWordDto>>.Success(pagedResult, HttpStatusCode.OK);
+        return ServiceResult<PagedResult<UnknowsWithWordResponse>>.Success(pagedResult, HttpStatusCode.OK);
     }
 }

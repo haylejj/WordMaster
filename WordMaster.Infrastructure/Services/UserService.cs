@@ -6,10 +6,8 @@ using WordMaster.Application.Persistence;
 using WordMaster.Application.Persistence.Repositories;
 using WordMaster.Application.Requests.Auth;
 using WordMaster.Application.Requests.User;
-using WordMaster.Application.Responses;
+using WordMaster.Application.Responses.User;
 using WordMaster.Application.Services.Abstract;
-using WordMaster.Application.ViewModels.Admin;
-using WordMaster.Application.ViewModels.User;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Helpers;
 using WordMaster.Domain.Results;
@@ -37,13 +35,13 @@ public class UserService(
         return new(Enum.GetNames<Gender>());
     }
 
-    public async Task<ServiceResult<UserEditViewModel>> GetUserEditViewModelAsync(string username)
+    public async Task<ServiceResult<UserEditResponse>> GetUserEditViewModelAsync(string username)
     {
         AppUser? currentUser = await userManager.FindByNameAsync(username);
 
         return currentUser == null
-            ? ServiceResult<UserEditViewModel>.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound)
-            : ServiceResult<UserEditViewModel>.Success(new UserEditViewModel
+            ? ServiceResult<UserEditResponse>.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound)
+            : ServiceResult<UserEditResponse>.Success(new UserEditResponse
             {
                 UserName = currentUser.UserName,
                 Email = currentUser.Email,
@@ -130,15 +128,15 @@ public class UserService(
         return ServiceResult.Success(HttpStatusCode.NoContent);
     }
 
-    public async Task<ServiceResult<List<UserViewModel>>> GetUsersAsync()
+    public async Task<ServiceResult<List<UserResponse>>> GetUsersAsync()
     {
         List<AppUser> users = await userManager.Users.ToListAsync();
 
-        List<UserViewModel> userList = users.Select(x => new UserViewModel { Id = x.Id.ToString(), UserName = x.UserName!, Email = x.Email! }).ToList();
-        return ServiceResult<List<UserViewModel>>.Success(userList, HttpStatusCode.OK);
+        List<UserResponse> userList = users.Select(x => new UserResponse { Id = x.Id.ToString(), UserName = x.UserName!, Email = x.Email! }).ToList();
+        return ServiceResult<List<UserResponse>>.Success(userList, HttpStatusCode.OK);
     }
 
-    public async Task<ServiceResult<PagedResult<UserWithRolesViewModel>>> GetPagedUsersAsync(string? search, int page, int pageSize)
+    public async Task<ServiceResult<PagedResult<UserWithRolesResponse>>> GetPagedUsersAsync(string? search, int page, int pageSize)
     {
         if (page < 1)
         {
@@ -164,13 +162,13 @@ public class UserService(
             .Take(pageSize)
             .ToListAsync();
 
-        List<UserWithRolesViewModel> userViewModels = new();
+        List<UserWithRolesResponse> userViewModels = new();
 
         foreach (AppUser user in users)
         {
             IList<string> userRoles = await userManager.GetRolesAsync(user);
 
-            userViewModels.Add(new UserWithRolesViewModel
+            userViewModels.Add(new UserWithRolesResponse
             {
                 Id = user.Id.ToString(),
                 UserName = user.UserName!,
@@ -179,7 +177,7 @@ public class UserService(
             });
         }
 
-        PagedResult<UserWithRolesViewModel> pagedResult = new()
+        PagedResult<UserWithRolesResponse> pagedResult = new()
         {
             Items = userViewModels,
             PageNumber = page,
@@ -187,19 +185,19 @@ public class UserService(
             TotalCount = totalCount
         };
 
-        return ServiceResult<PagedResult<UserWithRolesViewModel>>.Success(pagedResult, HttpStatusCode.OK);
+        return ServiceResult<PagedResult<UserWithRolesResponse>>.Success(pagedResult, HttpStatusCode.OK);
     }
 
-    public async Task<ServiceResult<UserWithRolesViewModel>> GetUserByIdAsync(string id)
+    public async Task<ServiceResult<UserWithRolesResponse>> GetUserByIdAsync(string id)
     {
         AppUser? user = await userManager.FindByIdAsync(id);
         if (user == null)
         {
-            return ServiceResult<UserWithRolesViewModel>.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound);
+            return ServiceResult<UserWithRolesResponse>.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound);
         }
 
         IList<string> roles = await userManager.GetRolesAsync(user);
-        UserWithRolesViewModel userWithRoles = new()
+        UserWithRolesResponse userWithRoles = new()
         {
             Id = user.Id.ToString(),
             UserName = user.UserName!,
@@ -207,15 +205,15 @@ public class UserService(
             Roles = [.. roles]
         };
 
-        return ServiceResult<UserWithRolesViewModel>.Success(userWithRoles, HttpStatusCode.OK);
+        return ServiceResult<UserWithRolesResponse>.Success(userWithRoles, HttpStatusCode.OK);
     }
 
-    public async Task<ServiceResult<UserEditViewModel>> GetUserEditViewModelByIdAsync(string id)
+    public async Task<ServiceResult<UserEditResponse>> GetUserEditViewModelByIdAsync(string id)
     {
         AppUser? user = await userManager.FindByIdAsync(id);
         return user == null
-            ? ServiceResult<UserEditViewModel>.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound)
-            : ServiceResult<UserEditViewModel>.Success(new UserEditViewModel
+            ? ServiceResult<UserEditResponse>.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound)
+            : ServiceResult<UserEditResponse>.Success(new UserEditResponse
             {
                 UserName = user.UserName,
                 Email = user.Email,
@@ -225,11 +223,11 @@ public class UserService(
             }, HttpStatusCode.OK);
     }
 
-    public async Task<ServiceResult<UserDetailViewModel>> GetUserDetailAsync(string id)
+    public async Task<ServiceResult<UserDetailResponse>> GetUserDetailAsync(string id)
     {
         if (!Guid.TryParse(id, out Guid userId))
         {
-            return ServiceResult<UserDetailViewModel>.Failure("Geçersiz ID formatı.", HttpStatusCode.BadRequest);
+            return ServiceResult<UserDetailResponse>.Failure("Geçersiz ID formatı.", HttpStatusCode.BadRequest);
         }
 
         AppUser? user = await userManager.Users
@@ -237,12 +235,12 @@ public class UserService(
 
         if (user == null)
         {
-            return ServiceResult<UserDetailViewModel>.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound);
+            return ServiceResult<UserDetailResponse>.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound);
         }
 
         // Login Statistics
-        UserLoginStatsViewModel userLoginStats = await logHistoryService.GetUserLoginStatsAsync(id);
-        LastLoginInfoViewModel lastLoginInfo = await logHistoryService.GetLastSuccessfulLoginAsync(id);
+        UserLoginStatsResponse userLoginStats = await logHistoryService.GetUserLoginStatsAsync(id);
+        LastLoginInfoResponse lastLoginInfo = await logHistoryService.GetLastSuccessfulLoginAsync(id);
 
         // Word Statistics
         int wordCount = await wordRepository.CountAsync(x => x.UserId == userId);
@@ -255,7 +253,7 @@ public class UserService(
             .Select(x => x.LastPracticeDate)
             .FirstOrDefaultAsync();
 
-        UserDetailViewModel detail = new()
+        UserDetailResponse detail = new()
         {
             Id = user.Id.ToString(),
             UserName = user.UserName!,
@@ -274,7 +272,7 @@ public class UserService(
             LastPracticeDate = lastPracticeDate
         };
 
-        return ServiceResult<UserDetailViewModel>.Success(detail, HttpStatusCode.OK);
+        return ServiceResult<UserDetailResponse>.Success(detail, HttpStatusCode.OK);
     }
 
     public async Task<ServiceResult> UpdateUserAsync(UserUpdateRequest request)
@@ -404,8 +402,11 @@ public class UserService(
 
         UserWithRolesResponse response = new()
         {
-            User = user,
-            Roles = roles
+            Id = user.Id.ToString(),
+            UserName = user.UserName!,
+            Email = user.Email!,
+            SecurityStamp = user.SecurityStamp,
+            Roles = roles.ToList()
         };
 
         return ServiceResult<UserWithRolesResponse>.Success(response, HttpStatusCode.OK);
