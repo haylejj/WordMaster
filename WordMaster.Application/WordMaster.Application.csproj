@@ -5,6 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 	<RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+	  <NoWarn>IDE0305;IDE0028</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
 	  <GenerateDocumentationFile>true</GenerateDocumentationFile>
+	  <NoWarn>IDE0305;IDE0028</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

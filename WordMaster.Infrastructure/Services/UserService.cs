@@ -173,6 +173,7 @@ public class UserService(
                 Id = user.Id.ToString(),
                 UserName = user.UserName!,
                 Email = user.Email!,
+                SecurityStamp=user.SecurityStamp,
                 Roles = userRoles.ToList()
             });
         }
