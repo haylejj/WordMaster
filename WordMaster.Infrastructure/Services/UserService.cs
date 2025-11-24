@@ -363,7 +363,9 @@ public class UserService(
             // Email başarılı oldu, transaction'ı commit et
             await unitOfWork.CommitTransactionAsync();
 
-            // SecurityStamp cache'ini temizle (şifre değiştiği için stamp de değişti)
+            // Güvenlik damgasını güncelle (eski oturumları sonlandırır)
+            await userManager.UpdateSecurityStampAsync(user);
+            // SecurityStamp cache'ini temizle
             await cacheService.RemoveAsync($"security_stamp:{user.Id}");
 
             return ServiceResult<string>.Success(newPassword, HttpStatusCode.OK);
