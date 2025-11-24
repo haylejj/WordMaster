@@ -1,5 +1,4 @@
-@using WordMaster.Application.ViewModels.Word
-@model WordListViewModel
+@model WordListResponse
 @{
     ViewData["Title"] = "Index";
     Layout = "~/Views/Shared/Main_Layout.cshtml";
@@ -115,14 +114,14 @@
                             <div class="d-flex justify-content-center gap-3">
                                 <div class="form-check form-switch" title="Favorilere Ekle/Çıkar">
                                     <input class="form-check-input favorite-checkbox" type="checkbox" data-word-id="@item.Id"
-                                        @(item.Favorite != null ? "checked" : "") id="favorite-@item.Id">
+                                        @(item.FavoriteId != null ? "checked" : "") id="favorite-@item.Id">
                                     <label class="form-check-label" for="favorite-@item.Id">
                                         <i class="fas fa-star text-warning"></i>
                                     </label>
                                 </div>
                                 <div class="form-check form-switch" title="Bilinmeyenlere Ekle/Çıkar">
                                     <input class="form-check-input unknows-checkbox" type="checkbox" data-word-id="@item.Id"
-                                        @(item.Unknows != null ? "checked" : "") id="unknows-@item.Id">
+                                        @(item.UnknowsId != null ? "checked" : "") id="unknows-@item.Id">
                                     <label class="form-check-label" for="unknows-@item.Id">
                                         <i class="fas fa-question-circle text-danger"></i>
                                     </label>

@@ -1,11 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using WordMaster.Application.Requests.Role;
+using WordMaster.Application.Responses.Role;
 using WordMaster.Application.Services.Abstract;
-using WordMaster.Application.ViewModels.Role;
 using WordMaster.Domain.Results;
-
 using WordMaster.WebUI.Extensions;
 
 namespace WordMaster.WebUI.Areas.Admin.Controllers;
@@ -18,8 +16,8 @@ public class RoleController(IRoleService roleService) : Controller
     [HttpGet("")]
     public async Task<IActionResult> Index()
     {
-        ServiceResult<List<RoleViewModel>> result = await roleService.GetRoleListAsync();
-        RoleListViewModel viewModel = new()
+        ServiceResult<List<RoleResponse>> result = await roleService.GetRoleListAsync();
+        RoleListResponse viewModel = new()
         {
             Roles = result.Data ?? []
         };
@@ -34,14 +32,14 @@ public class RoleController(IRoleService roleService) : Controller
             return Json(new { success = false, message = "Rol ID gerekli." });
         }
 
-        ServiceResult<RoleUpdateViewModel> result = await roleService.FindByIdReturnRoleUpdateViewModelAsync(id);
+        ServiceResult<RoleUpdateResponse> result = await roleService.FindByIdReturnRoleUpdateViewModelAsync(id);
 
         if (!result.IsSuccess || result.Data == null)
         {
             return Json(new { success = false, message = "Rol bulunamadı." });
         }
 
-        RoleUpdateViewModel role = result.Data;
+        RoleUpdateResponse role = result.Data;
 
         return Json(new
         {
@@ -114,4 +112,3 @@ public class RoleController(IRoleService roleService) : Controller
         return Json(new { success = true, message = "Rol başarıyla oluşturuldu." });
     }
 }
-

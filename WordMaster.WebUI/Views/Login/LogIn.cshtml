@@ -1,5 +1,4 @@
-@using WordMaster.Application.ViewModels.Auth
-@model LoginViewModel
+@model LoginRequest
 @{
     Layout = "_AuthLayout";
     ViewData["Title"] = "Giriş Yap";
@@ -18,7 +17,7 @@
 
     <div class="mb-3">
         <label class="form-label" asp-for="Email">Email Adresi</label>
-        <input asp-for="Email" class="form-control" type="email"/>
+        <input asp-for="Email" class="form-control" type="email" />
         <span asp-validation-for="Email" class="text-danger small"></span>
     </div>
 
@@ -28,7 +27,7 @@
             <a href="/ForgetPassword" class="small text-decoration-none" style="color: #667eea;">Şifremi Unuttum</a>
         </div>
         <div class="input-group">
-            <input asp-for="Password" class="form-control" type="password"/>
+            <input asp-for="Password" class="form-control" type="password" />
             <button class="btn btn-toggle-password" type="button">
                 <i class="fas fa-eye"></i>
             </button>

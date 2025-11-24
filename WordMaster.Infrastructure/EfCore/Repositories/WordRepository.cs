@@ -9,6 +9,8 @@ public class WordRepository(AppDbContext context) : GenericRepository<Word>(cont
     public async Task<Word?> GetWordForUserAsync(long wordId, Guid userId)
     {
         return await _context.Words
+            .Include(x => x.Favorite)
+            .Include(x => x.Unknows)
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == wordId && x.UserId == userId);
     }

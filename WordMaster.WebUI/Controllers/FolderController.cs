@@ -1,18 +1,17 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WordMaster.Application.Dto.Word;
+using WordMaster.Application.Requests.Folder;
+using WordMaster.Application.Responses.Folder;
+using WordMaster.Application.Responses.Word;
 using WordMaster.Application.Services.Abstract;
-using WordMaster.Application.ViewModels.Folder;
-using WordMaster.Domain.Entities;
 using WordMaster.Domain.Results;
 using WordMaster.WebUI.Extensions;
-using WordMaster.Application.Dto.Folder;
 
 namespace WordMaster.WebUI.Controllers;
 
 [Authorize]
 [Route("/Folder")]
-public class FolderController(IFolderService folderService) : Controller
+public class FolderController(IFolderService folderService, IWordService wordService) : Controller
 {
 
     [HttpGet("")]
@@ -24,11 +23,11 @@ public class FolderController(IFolderService folderService) : Controller
             return RedirectToAction("LogIn", "Login");
         }
 
-        ServiceResult<List<FolderDto>> foldersResult = await folderService.GetUserFoldersAsync(userId);
+        ServiceResult<List<FolderResponse>> foldersResult = await folderService.GetUserFoldersAsync(userId);
         if (!foldersResult.IsSuccess)
         {
             TempData["ErrorMessage"] = foldersResult.ErrorMessage() ?? "Klasörler getirilirken hata oluştu.";
-            return View(new List<FolderDto>());
+            return View(new List<FolderResponse>());
         }
 
         return View(foldersResult.Data ?? []);
@@ -43,21 +42,21 @@ public class FolderController(IFolderService folderService) : Controller
             return RedirectToAction("LogIn", "Login");
         }
 
-        ServiceResult<FolderDto> folderResult = await folderService.GetUserFolderAsync(id, userId);
+        ServiceResult<FolderResponse> folderResult = await folderService.GetUserFolderAsync(id, userId);
         if (!folderResult.IsSuccess)
         {
             TempData["ErrorMessage"] = "Klasör bulunamadı.";
             return RedirectToAction(nameof(Index));
         }
 
-        ServiceResult<List<WordDto>> wordsResult = await folderService.GetWordsInFolderAsync(id, userId);
+        ServiceResult<List<WordResponse>> wordsResult = await folderService.GetWordsInFolderAsync(id, userId);
         if (!wordsResult.IsSuccess)
         {
             TempData["ErrorMessage"] = wordsResult.ErrorMessage() ?? "Klasör kelimeleri getirilemedi.";
             return RedirectToAction(nameof(Index));
         }
 
-        FolderDetailViewModel vm = new()
+        FolderDetailResponse vm = new()
         {
             FolderId = folderResult.Data!.Id,
             FolderName = folderResult.Data!.Name,
@@ -78,7 +77,7 @@ public class FolderController(IFolderService folderService) : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        ServiceResult result = await folderService.AddFolderAsync(name, userId);
+        ServiceResult result = await folderService.AddFolderAsync(new CreateFolderRequest { Name = name }, userId);
         if (!result.IsSuccess)
         {
             TempData["ErrorMessage"] = result.ErrorMessage() ?? "İşlem başarısız.";
@@ -100,7 +99,7 @@ public class FolderController(IFolderService folderService) : Controller
             return RedirectToAction(nameof(Detail), new { id = folderId });
         }
 
-        ServiceResult result = await folderService.AddWordToFolderAsync(folderId, wordId, userId);
+        ServiceResult result = await folderService.AddWordToFolderAsync(new AddWordToFolderRequest { FolderId = folderId, WordId = wordId }, userId);
         if (!result.IsSuccess)
         {
             TempData["ErrorMessage"] = result.ErrorMessage() ?? "İşlem başarısız.";
@@ -121,7 +120,7 @@ public class FolderController(IFolderService folderService) : Controller
             return RedirectToAction(nameof(Detail), new { id = folderId });
         }
 
-        ServiceResult result = await folderService.RemoveWordFromFolderAsync(folderId, wordId, userId);
+        ServiceResult result = await folderService.RemoveWordFromFolderAsync(new AddWordToFolderRequest { FolderId = folderId, WordId = wordId }, userId);
         if (!result.IsSuccess)
         {
             TempData["ErrorMessage"] = result.ErrorMessage() ?? "İşlem başarısız.";
@@ -139,7 +138,7 @@ public class FolderController(IFolderService folderService) : Controller
         {
             return Json(new { results = Array.Empty<object>() });
         }
-        ServiceResult<List<WordLookupDto>> wordsResult = await folderService.GetUserWordsAsync(userId);
+        ServiceResult<List<WordLookupResponse>> wordsResult = await wordService.GetUserWordsAsync(userId);
         if (!wordsResult.IsSuccess || wordsResult.Data == null)
         {
             return Json(new { results = Array.Empty<object>() });
@@ -157,7 +156,7 @@ public class FolderController(IFolderService folderService) : Controller
             return Json(new { success = false, message = "Kullanıcı oturumu bulunamadı." });
         }
 
-        ServiceResult<FolderDto> folderResult = await folderService.GetUserFolderAsync(id, userId);
+        ServiceResult<FolderResponse> folderResult = await folderService.GetUserFolderAsync(id, userId);
         if (!folderResult.IsSuccess || folderResult.Data == null)
         {
             return Json(new { success = false, message = folderResult.ErrorMessage() ?? "Klasör bulunamadı." });
@@ -176,7 +175,7 @@ public class FolderController(IFolderService folderService) : Controller
             return Json(new { success = false, message = "Kullanıcı oturumu bulunamadı." });
         }
 
-        ServiceResult result = await folderService.UpdateFolderAsync(id, name, userId);
+        ServiceResult result = await folderService.UpdateFolderAsync(id, new UpdateFolderRequest { Name = name }, userId);
         if (!result.IsSuccess)
         {
             return Json(new { success = false, message = result.ErrorMessage() ?? "Güncelleme başarısız." });
@@ -204,5 +203,3 @@ public class FolderController(IFolderService folderService) : Controller
         return Json(new { success = true, message = "Klasör silindi." });
     }
 }
-
-

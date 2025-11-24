@@ -1,13 +1,12 @@
 using Microsoft.AspNetCore.Identity;
-using WordMaster.Application.ViewModels.User;
+using WordMaster.Application.Responses.User;
 using Microsoft.AspNetCore.Mvc;
 using WordMaster.Application.Requests.Auth;
 using WordMaster.Application.Services.Abstract;
-using WordMaster.Application.ViewModels.Auth;
+using WordMaster.Application.Responses.Auth;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Results;
 using WordMaster.WebUI.Extensions;
-
 using WordMaster.Infrastructure.Helpers;
 
 namespace WordMaster.WebUI.Controllers;
@@ -23,40 +22,34 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
     }
 
     [HttpPost("")]
-    public async Task<IActionResult> Login(LoginViewModel viewModel, string? returnUrl = null)
+    public async Task<IActionResult> Login(LoginRequest request, string? returnUrl = null)
     {
         // 6 karakterden kısa şifre girilirse DB kontrolüne gitmeden direk hata dön
-        if (viewModel.Password?.Length < 6)
+        if (request.Password?.Length < 6)
         {
             ModelState.Remove("Password");
             ModelState.AddModelErrorList(new List<string>() { "Email veya şifre yanlış" });
-            return View(viewModel);
+            return View(request);
         }
 
         if (!ModelState.IsValid)
         {
-            return View(viewModel);
+            return View(request);
         }
         returnUrl ??= Url.Action("Index", "Word");
 
-        LoginRequest request = new()
-        {
-            Email = viewModel.Email,
-            Password = viewModel.Password,
-            RememberMe = viewModel.RememberMe
-        };
 
-        ServiceResult<UserViewModel> userResult = await loginService.FindByEmailAsync(request.Email!);
+        ServiceResult<UserResponse> userResult = await loginService.FindByEmailAsync(request.Email!);
         string? ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
 
         if (!userResult.IsSuccess || userResult.Data == null)
         {
             ModelState.AddModelErrorList(new List<string>() { "Email veya şifre yanlış" });
             await logHistoryService.RecordAsync(null, request.Email, ipAddress, false, "UserLogin");
-            return View(viewModel);
+            return View(request);
         }
 
-        ServiceResult login = await loginService.LoginAsync(request);
+        ServiceResult<LoginResponse> login = await loginService.LoginAsync(request);
 
         await logHistoryService.RecordAsync(userResult.Data.Id, request.Email, ipAddress, login.IsSuccess, "UserLogin");
 
@@ -66,7 +59,7 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
         }
 
         ModelState.AddModelErrorList(new List<string> { "Email veya şifre yanlış" });
-        return View(viewModel);
+        return View(request);
     }
     [HttpGet("/ForgetPassword")]
     public IActionResult ForgetPassword()
@@ -75,18 +68,14 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
     }
 
     [HttpPost("/ForgetPassword")]
-    public async Task<IActionResult> ForgetPassword(ForgetPasswordViewModel viewModel)
+    public async Task<IActionResult> ForgetPassword(ForgetPasswordRequest request)
     {
         if (!ModelState.IsValid)
         {
             return View();
         }
 
-        ForgetPasswordRequest request = new()
-        {
-            Email = viewModel.Email
-        };
-        ServiceResult<UserViewModel> user = await loginService.FindByEmailAsync(request.Email!);
+        ServiceResult<UserResponse> user = await loginService.FindByEmailAsync(request.Email!);
         if (!user.IsSuccess || user.Data == null)
         {
             // Güvenlik gereği, kullanıcı bulunamasa bile sanki işlem başarılıymış gibi mesaj dönüyoruz.
@@ -123,7 +112,7 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
     }
 
     [HttpPost("/ResetPassword")]
-    public async Task<IActionResult> ResetPassword(ResetPasswordViewModel viewModel)
+    public async Task<IActionResult> ResetPassword(ResetPasswordRequest request)
     {
         if (!ModelState.IsValid)
         {
@@ -150,11 +139,7 @@ public class LoginController(ILoginService loginService, UserManager<AppUser> us
             ModelState.AddModelErrorList(new List<string>() { "Kullanıcı bulunamamıştır." });
             return View();
         }
-        ResetPasswordRequest request = new()
-        {
-            Password = viewModel.Password,
-            PasswordConfirm = viewModel.PasswordConfirm
-        };
+
         IdentityResult result = await userManager.ResetPasswordAsync(hasUser, token!.ToString()!, request.Password!);
         if (result.Succeeded)
         {

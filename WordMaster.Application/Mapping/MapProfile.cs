@@ -10,8 +10,6 @@ public class MapProfile : Profile
 {
     public MapProfile()
     {
-        CreateMap<Word, WordResponse>().ReverseMap();
-        CreateMap<Favorite, FavoriteResponse>().ReverseMap();
-        CreateMap<Unknows, UnknowsResponse>().ReverseMap();
+        // Manual mapping kullanılıyor
     }
 }

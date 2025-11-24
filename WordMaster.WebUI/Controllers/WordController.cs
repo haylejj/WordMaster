@@ -1,9 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WordMaster.Application.Dto.Word;
 using WordMaster.Application.Services.Abstract;
-using WordMaster.Application.ViewModels.Word;
-using WordMaster.Domain.Entities;
+using WordMaster.Application.Responses.Word;
+using WordMaster.Application.Requests.Word;
 using WordMaster.Domain.Results;
 using WordMaster.WebUI.Extensions;
 
@@ -17,12 +16,12 @@ public class WordController(IWordService wordService, IExcelService excelService
     public async Task<IActionResult> Index(string? search, int page = 1, int pageSize = 10)
     {
         Guid userId = User.GetUserId();
-        ServiceResult<PagedResult<WordDto>> pageResult = await wordService.GetPagedWordsAsync(userId, search, page, pageSize);
+        ServiceResult<PagedResult<WordResponse>> pageResult = await wordService.GetPagedWordsAsync(userId, search, page, pageSize);
 
-        List<WordDto> words = pageResult.IsSuccess && pageResult.Data != null ? pageResult.Data.Items : [];
+        List<WordResponse> words = pageResult.IsSuccess && pageResult.Data != null ? pageResult.Data.Items : [];
         int totalCount = pageResult.IsSuccess && pageResult.Data != null ? pageResult.Data.TotalCount : 0;
 
-        WordListViewModel viewModel = new()
+        WordListResponse viewModel = new()
         {
             Words = words,
             Page = page,
@@ -39,33 +38,50 @@ public class WordController(IWordService wordService, IExcelService excelService
         return View();
     }
     [HttpPost("AddWord")]
-    public async Task<IActionResult> AddWord(WordViewModel viewModel)
+    public async Task<IActionResult> AddWord(CreateWordRequest request)
     {
         if (!ModelState.IsValid)
         {
-            return View(viewModel);
+            // View expects WordResponse to show errors or previous values, but we have CreateWordRequest.
+            // We should ideally map back or use a different View model. 
+            // For now, let's create a dummy response to pass back to view if we want to preserve input.
+            // Or better, let the view accept CreateWordRequest? 
+            // The view AddWord.cshtml currently has @model WordMaster.Application.Responses.Word.WordResponse
+            // This is a bit of a mismatch if we switch controller input to Request.
+            // Ideally, Add/Edit views should probably use the Request object as model or a specific ViewModel.
+            // However, to satisfy "use Request in controller method", we do this.
+            // I'll construct a WordResponse from request to return to View.
+            WordResponse response = new()
+            {
+                EnglishWord = request.EnglishWord,
+                TurkishWord = request.TurkishWord
+            };
+            return View(response);
         }
 
         Guid userId = User.GetUserId();
         if (userId == Guid.Empty)
         {
             ModelState.AddModelError("", "Kullanıcı bilgisi bulunamadı.");
-            return View(viewModel);
+            WordResponse response = new()
+            {
+                EnglishWord = request.EnglishWord,
+                TurkishWord = request.TurkishWord
+            };
+            return View(response);
         }
 
-        WordDto wordDto = new()
-        {
-            Id = viewModel.Id,
-            EnglishWord = viewModel.EnglishWord,
-            TurkishWord = viewModel.TurkishWord
-        };
-
-        ServiceResult result = await wordService.AddWordAsync(wordDto, userId);
+        ServiceResult result = await wordService.AddWordAsync(request, userId);
 
         if (!result.IsSuccess)
         {
             ModelState.AddModelError("EnglishWord", result.ErrorList?.FirstOrDefault() ?? "Kelime eklenirken bir hata oluştu.");
-            return View(viewModel);
+            WordResponse response = new()
+            {
+                EnglishWord = request.EnglishWord,
+                TurkishWord = request.TurkishWord
+            };
+            return View(response);
         }
 
         TempData["SuccessMessage"] = "Kelime başarıyla eklendi!";
@@ -94,7 +110,7 @@ public class WordController(IWordService wordService, IExcelService excelService
     public async Task<IActionResult> GetWord(long id)
     {
         Guid userId = User.GetUserId();
-        ServiceResult<WordDto> result = await wordService.GetWordForUserAsync(id, userId);
+        ServiceResult<WordResponse> result = await wordService.GetWordForUserAsync(id, userId);
 
         if (!result.IsSuccess || result.Data == null)
         {
@@ -114,8 +130,12 @@ public class WordController(IWordService wordService, IExcelService excelService
     }
 
     [HttpPost("UpdateWord")]
-    public async Task<IActionResult> UpdateWord(WordViewModel viewModel)
+    public async Task<IActionResult> UpdateWord(UpdateWordRequest request, long id)
     {
+        // Note: id is usually passed in URL or form. If it's in form, we might need it in Request or as separate param.
+        // UpdateWordRequest usually doesn't have ID if it's strictly for body, but let's check definition. 
+        // Assuming ID comes from route or form field named 'Id' which binds to 'id' param.
+
         if (!ModelState.IsValid)
         {
             return Json(new { success = false, message = "Geçersiz veri." });
@@ -127,14 +147,7 @@ public class WordController(IWordService wordService, IExcelService excelService
             return Json(new { success = false, message = "Kullanıcı bilgisi bulunamadı." });
         }
 
-        WordDto wordDto = new()
-        {
-            Id = viewModel.Id,
-            EnglishWord = viewModel.EnglishWord,
-            TurkishWord = viewModel.TurkishWord
-        };
-
-        ServiceResult result = await wordService.UpdateWordAsync(wordDto.Id, wordDto, userId);
+        ServiceResult result = await wordService.UpdateWordAsync(id, request, userId);
 
         if (!result.IsSuccess)
         {

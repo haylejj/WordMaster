@@ -1,10 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WordMaster.Application.Requests.AllowedIpAddress;
+using WordMaster.Application.Responses.AllowedIpAddress;
 using WordMaster.Application.Services.Abstract;
-using WordMaster.Application.ViewModels.AllowedIpAddress;
 using WordMaster.Domain.Results;
-
 using WordMaster.WebUI.Extensions;
 
 namespace WordMaster.WebUI.Areas.Admin.Controllers;
@@ -17,8 +16,8 @@ public class AllowedIpAddressController(IAllowedIpAddressService allowedIpAddres
     [HttpGet("")]
     public async Task<IActionResult> Index()
     {
-        ServiceResult<List<AllowedIpAddressViewModel>> result = await allowedIpAddressService.GetAllAsync();
-        AllowedIpAddressListViewModel viewModel = new()
+        ServiceResult<List<AllowedIpAddressResponse>> result = await allowedIpAddressService.GetAllAsync();
+        AllowedIpAddressListResponse viewModel = new()
         {
             AllowedIpAddresses = result.Data ?? []
         };
@@ -33,14 +32,14 @@ public class AllowedIpAddressController(IAllowedIpAddressService allowedIpAddres
             return Json(new { success = false, message = "IP adresi ID gerekli." });
         }
 
-        ServiceResult<AllowedIpAddressViewModel> result = await allowedIpAddressService.GetByIdAsync(id);
+        ServiceResult<AllowedIpAddressResponse> result = await allowedIpAddressService.GetByIdAsync(id);
 
         if (!result.IsSuccess || result.Data == null)
         {
             return Json(new { success = false, message = "IP adresi bulunamadı." });
         }
 
-        AllowedIpAddressViewModel allowedIpAddress = result.Data;
+        AllowedIpAddressResponse allowedIpAddress = result.Data;
 
         return Json(new
         {
@@ -115,4 +114,3 @@ public class AllowedIpAddressController(IAllowedIpAddressService allowedIpAddres
         return Json(new { success = true, message = "IP adresi başarıyla oluşturuldu." });
     }
 }
-

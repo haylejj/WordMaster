@@ -1,10 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using WordMaster.Application.Requests.Auth;
 using WordMaster.Application.Requests.User;
+using WordMaster.Application.Responses.User;
 using WordMaster.Application.Services.Abstract;
-using WordMaster.Application.ViewModels.User;
 using WordMaster.Domain.Results;
 using WordMaster.WebUI.Extensions;
 
@@ -24,7 +23,7 @@ public class ProfileController(IUserService userService) : Controller
     public async Task<IActionResult> UpdateProfile()
     {
         ViewBag.genderList = userService.GetGenderSelectList();
-        ServiceResult<UserEditViewModel> vm = await userService.GetUserEditViewModelAsync(User.Identity!.Name!);
+        ServiceResult<UserEditResponse> vm = await userService.GetUserEditViewModelAsync(User.Identity!.Name!);
         return View(vm.Data);
     }
 

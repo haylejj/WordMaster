@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using WordMaster.Application.Requests.Auth;
 using WordMaster.Application.Services.Abstract;
-using WordMaster.Application.ViewModels.Auth;
+using WordMaster.Application.Responses.Auth;
 using WordMaster.Domain.Results;
 using WordMaster.WebUI.Extensions;
 
@@ -18,20 +18,13 @@ public class RegisterController(IRegisterService registerService) : Controller
     }
 
     [HttpPost("")]
-    public async Task<IActionResult> Register(RegisterViewModel viewModel)
+    public async Task<IActionResult> Register(RegisterRequest request)
     {
         if (!ModelState.IsValid)
         {
             return View();
         }
-        RegisterRequest request = new()
-        {
-            UserName = viewModel.UserName,
-            Email = viewModel.Email,
-            Password = viewModel.Password,
-            PasswordConfirm = viewModel.PasswordConfirm,
-            Phone = viewModel.Phone
-        };
+
         ServiceResult result = await registerService.RegisterAsync(request);
 
         if (!result.IsSuccess)

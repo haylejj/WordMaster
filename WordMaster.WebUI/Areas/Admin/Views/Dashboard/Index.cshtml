@@ -1,8 +1,4 @@
-@model AdminDashboardViewModel
-@using System.Globalization
-@using System.Linq
-@using System.Text.Json
-@using WordMaster.Application.ViewModels.Admin
+@model AdminDashboardResponse
 
 @section Styles {
     <link rel="stylesheet" href="~/css/admin-dashboard.css" asp-append-version="true" />
@@ -127,19 +123,19 @@
     <script>
         (function () {
             const chartSource = @Html.Raw(
-                            JsonSerializer.Serialize(new
-                            {
-                                                labels = Model.DailyLoginStats
-                                                                                    .Select(x => x.Date.ToString("dd MMM", CultureInfo.GetCultureInfo("tr-TR"))),
-                                                success = Model.DailyLoginStats.Select(x => x.SuccessCount),
-                                                fail = Model.DailyLoginStats.Select(x => x.FailCount)
-                            })
-                            );
+                JsonSerializer.Serialize(new
+                {
+                                                                labels = Model.DailyLoginStats
+                                                                                                                                                                                                                                                                                                                        .Select(x => x.Date.ToString("dd MMM", CultureInfo.GetCultureInfo("tr-TR"))),
+                                                                success = Model.DailyLoginStats.Select(x => x.SuccessCount),
+                                                                fail = Model.DailyLoginStats.Select(x => x.FailCount)
+                })
+                        );
 
-        const ctx = document.getElementById('loginChart');
-        if (!ctx) {
-            return;
-        }
+            const ctx = document.getElementById('loginChart');
+            if (!ctx) {
+                return;
+            }
 
             new Chart(ctx, {
                 type: 'line',

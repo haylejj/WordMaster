@@ -1,5 +1,4 @@
-@using WordMaster.Application.ViewModels.Auth
-@model RegisterViewModel
+@model RegisterRequest
 @{
     Layout = "_AuthLayout";
     ViewData["Title"] = "Kayıt Ol";
@@ -18,7 +17,7 @@
 
     <div class="mb-3">
         <label class="form-label" asp-for="UserName">Kullanıcı Adı</label>
-        <input asp-for="UserName" class="form-control"  />
+        <input asp-for="UserName" class="form-control" />
         <span asp-validation-for="UserName" class="text-danger small"></span>
     </div>
 

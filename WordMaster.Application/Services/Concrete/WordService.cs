@@ -37,7 +37,9 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
         {
             Id = word.Id,
             EnglishWord = word.EnglishWord,
-            TurkishWord = word.TurkishWord
+            TurkishWord = word.TurkishWord,
+            FavoriteId = word.Favorite?.Id,
+            UnknowsId = word.Unknows?.Id
         };
         await cacheService.SetAsync(cacheKey, wordDto, GetByIdCacheExpiration);
         return ServiceResult<WordResponse>.Success(wordDto, HttpStatusCode.OK);
@@ -240,7 +242,9 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
         {
             Id = w.Id,
             EnglishWord = w.EnglishWord,
-            TurkishWord = w.TurkishWord
+            TurkishWord = w.TurkishWord,
+            FavoriteId = w.Favorite?.Id,
+            UnknowsId = w.Unknows?.Id
         }).ToList();
 
         PagedResult<WordResponse> pagedResult = new()

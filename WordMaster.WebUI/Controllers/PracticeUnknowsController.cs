@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WordMaster.Application.Requests.Word;
 using WordMaster.Application.Services.Abstract;
-using WordMaster.Application.ViewModels.Practice;
+using WordMaster.Application.Responses.Practice;
 using WordMaster.Domain.Results;
 using WordMaster.WebUI.Extensions;
 
@@ -22,13 +23,13 @@ public class PracticeUnknowsController(IUnknowsService unknowsService) : Control
         }
 
         ServiceResult<string> word = await unknowsService.GetRandomWordFromUnknowsAsync(userId);
-        PracticeViewModel viewModel = new()
+        PracticeResponse response = new()
         {
             EnglishWord = word.IsSuccess && word.Data != null ? word.Data : string.Empty,
             ErrorMessage = word.IsSuccess ? null : word.ErrorMessage()
         };
 
-        return View(viewModel);
+        return View(response);
     }
 
     [HttpGet("CheckTranslation")]
@@ -40,7 +41,13 @@ public class PracticeUnknowsController(IUnknowsService unknowsService) : Control
             return Json(new { isCorrect = false });
         }
 
-        ServiceResult<bool> result = await unknowsService.CheckTranslationAndUpdateAsync(userId, turkishWord, englishWord);
+        CheckTranslationRequest request = new()
+        {
+            TurkishWord = turkishWord,
+            EnglishWord = englishWord
+        };
+
+        ServiceResult<bool> result = await unknowsService.CheckTranslationAndUpdateAsync(userId, request);
         return Json(new { isCorrect = result.Data });
     }
 

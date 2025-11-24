@@ -1,12 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using WordMaster.Application.Requests.Role;
 using WordMaster.Application.Requests.User;
 using WordMaster.Application.Services.Abstract;
-using WordMaster.Application.ViewModels.Role;
-using WordMaster.Application.ViewModels.User;
+using WordMaster.Application.Responses.Role;
+using WordMaster.Application.Responses.User;
 using WordMaster.Domain.Results;
-
 using WordMaster.WebUI.Extensions;
 
 namespace WordMaster.WebUI.Areas.Admin.Controllers;
@@ -19,12 +18,12 @@ public class UserController(IUserService userService, IRoleService roleService) 
     [HttpGet("")]
     public async Task<IActionResult> Index(string? search, int page = 1, int pageSize = 10)
     {
-        ServiceResult<PagedResult<UserWithRolesViewModel>> pageResult = await userService.GetPagedUsersAsync(search, page, pageSize);
-        (List<UserWithRolesViewModel>? users, int totalCount) = pageResult.IsSuccess && pageResult.Data != null
+        ServiceResult<PagedResult<UserWithRolesResponse>> pageResult = await userService.GetPagedUsersAsync(search, page, pageSize);
+        (List<UserWithRolesResponse>? users, int totalCount) = pageResult.IsSuccess && pageResult.Data != null
             ? (pageResult.Data.Items, pageResult.Data.TotalCount)
-            : (new List<UserWithRolesViewModel>(), 0);
+            : (new List<UserWithRolesResponse>(), 0);
 
-        UserListViewModel viewModel = new()
+        UserListResponse viewModel = new()
         {
             Users = users,
             Page = page,
@@ -44,14 +43,14 @@ public class UserController(IUserService userService, IRoleService roleService) 
             return Json(new { success = false, message = "Kullanıcı ID gerekli." });
         }
 
-        ServiceResult<UserEditViewModel> result = await userService.GetUserEditViewModelByIdAsync(id);
+        ServiceResult<UserEditResponse> result = await userService.GetUserEditViewModelByIdAsync(id);
 
         if (!result.IsSuccess || result.Data == null)
         {
             return Json(new { success = false, message = "Kullanıcı bulunamadı." });
         }
 
-        UserEditViewModel user = result.Data;
+        UserEditResponse user = result.Data;
         string birthDateStr = user.BirthDate?.ToString("yyyy-MM-dd") ?? "";
 
         return Json(new
@@ -81,16 +80,7 @@ public class UserController(IUserService userService, IRoleService roleService) 
             return Json(new { success = false, message = string.Join(", ", errors) });
         }
 
-        UserEditRequest userEditRequest = new()
-        {
-            UserName = request.UserName,
-            Email = request.Email,
-            Phone = request.Phone,
-            BirthDate = request.BirthDate,
-            Gender = request.Gender
-        };
-
-        ServiceResult result = await userService.UpdateUserAsync(request.Id, userEditRequest);
+        ServiceResult result = await userService.UpdateUserAsync(request);
 
         if (!result.IsSuccess)
         {
@@ -122,14 +112,14 @@ public class UserController(IUserService userService, IRoleService roleService) 
             return Json(new { success = false, message = "Kullanıcı ID gerekli." });
         }
 
-        ServiceResult<UserDetailViewModel> result = await userService.GetUserDetailAsync(id);
+        ServiceResult<UserDetailResponse> result = await userService.GetUserDetailAsync(id);
 
         if (!result.IsSuccess || result.Data == null)
         {
             return Json(new { success = false, message = "Kullanıcı bulunamadı." });
         }
 
-        UserDetailViewModel detail = result.Data;
+        UserDetailResponse detail = result.Data;
 
         return Json(new
         {
@@ -163,9 +153,10 @@ public class UserController(IUserService userService, IRoleService roleService) 
             return Json(new { success = false, message = "Kullanıcı ID gerekli." });
         }
 
-        List<AssignToRoleViewModel> roles = await roleService.GetRoleByIdReturnAssignToRoleAsync(id);
+        ServiceResult<List<AssignToRoleResponse>> result = await roleService.GetRoleByIdReturnAssignToRoleAsync(id);
+        List<AssignToRoleResponse>? roles = result.Data;
 
-        if (roles == null || roles.Count == 0)
+        if (!result.IsSuccess || roles == null || roles.Count == 0)
         {
             return Json(new { success = false, message = "Roller bulunamadı." });
         }
@@ -195,14 +186,18 @@ public class UserController(IUserService userService, IRoleService roleService) 
             return Json(new { success = false, message = "Rol bilgisi gerekli." });
         }
 
-        List<AssignToRoleViewModel> assignToRoleViewModels = request.Roles.Select(r => new AssignToRoleViewModel
+        AssignRolesRequest assignRequest = new()
         {
-            Id = r.Id,
-            Name = r.Name,
-            Exist = r.Exist
-        }).ToList();
+            UserId = request.UserId,
+            Roles = request.Roles.Select(r => new AssignToRoleResponse
+            {
+                Id = r.Id,
+                Name = r.Name,
+                Exist = r.Exist
+            }).ToList()
+        };
 
-        await roleService.AssignRoleAsync(request.UserId, assignToRoleViewModels);
+        await roleService.AssignRoleAsync(assignRequest);
 
         return Json(new { success = true, message = "Kullanıcı rolleri başarıyla güncellendi." });
     }
@@ -225,5 +220,3 @@ public class UserController(IUserService userService, IRoleService roleService) 
         return Json(new { success = true, message = "Şifre başarıyla sıfırlandı ve kullanıcıya email olarak gönderildi." });
     }
 }
-
-
