@@ -3,29 +3,9 @@ import LoginPage from "@/pages/auth/LoginPage";
 import RegisterPage from "@/pages/auth/RegisterPage";
 import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
-import { Button } from "@/components/ui/button";
-import { authService } from "@/services/auth.service";
-import { useNavigate } from "react-router-dom";
-
-// Placeholder Dashboard
-function Dashboard() {
-  const navigate = useNavigate();
-  const handleLogout = async () => {
-    await authService.logout();
-    // localStorage items are no longer used with HttpOnly cookies
-    navigate("/login");
-  };
-
-  return (
-    <div className="p-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">WordMaster Dashboard</h1>
-        <Button variant="outline" onClick={handleLogout}>Çıkış Yap</Button>
-      </div>
-      <p>Hoşgeldiniz! Burası ana sayfa.</p>
-    </div>
-  );
-}
+import DashboardLayout from "@/layouts/DashboardLayout";
+import WordsPage from "@/pages/dashboard/WordsPage";
+import CreateWordPage from "@/pages/dashboard/CreateWordPage";
 
 function App() {
   return (
@@ -35,7 +15,15 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/ResetPassword" element={<ResetPasswordPage />} />
-        <Route path="/" element={<Dashboard />} />
+
+        {/* Protected Dashboard Routes */}
+        <Route path="/" element={<DashboardLayout />}>
+          <Route index element={<WordsPage />} />
+          <Route path="add-word" element={<CreateWordPage />} />
+          <Route path="favorites" element={<WordsPage variant="favorites" />} />
+          <Route path="unknowns" element={<WordsPage variant="unknowns" />} />
+        </Route>
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>

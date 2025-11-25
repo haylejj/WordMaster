@@ -9,6 +9,14 @@ export interface ServiceResultWithData<T> extends ServiceResult {
   data: T;
 }
 
+export interface PagedResult<T> {
+  items: T[];
+  pageNumber: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+}
+
 export interface LoginResponse {
   accessToken: string;
   refreshToken: string;

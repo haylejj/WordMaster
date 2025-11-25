@@ -20,7 +20,6 @@ public class AuthController(ILoginService loginService, IRegisterService registe
     /// API'nin ayakta olup olmadığını kontrol etmek için basit bir endpoint.
     /// </summary>
     /// <returns>200 OK durumu döner.</returns>
-    [Authorize]
     [HttpGet("ping")]
     public IActionResult Ping()
     {
@@ -43,6 +42,20 @@ public class AuthController(ILoginService loginService, IRegisterService registe
     {
         ServiceResult<RefreshTokenResponse> result = await jwtService.RefreshAccessTokenAsync(request.AccessToken, request.RefreshToken);
         return CreateResult(result);
+    }
+
+    /// <summary>
+    /// Geçerli access token'ı doğrulamak için basit bir endpoint.
+    /// </summary>
+    /// <remarks>
+    /// Frontend bu endpoint'i belirli aralıklarla çağırarak kullanıcının oturumunun hâlâ geçerli olup olmadığını kontrol eder.
+    /// Token geçerliyse 200 döner, aksi halde 401 döner.
+    /// </remarks>
+    [Authorize]
+    [HttpGet("session-check")]
+    public IActionResult SessionCheck()
+    {
+        return CreateResult(ServiceResult.Success(HttpStatusCode.OK));
     }
 
     /// <summary>

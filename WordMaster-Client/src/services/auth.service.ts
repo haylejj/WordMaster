@@ -37,4 +37,9 @@ export const authService = {
         const response = await api.post<ServiceResult>("/auth/logout");
         return response.data;
     },
+
+    checkSession: async () => {
+        const response = await api.get<ServiceResult>("/auth/session-check");
+        return response.data;
+    },
 };
