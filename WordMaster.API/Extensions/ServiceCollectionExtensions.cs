@@ -12,6 +12,7 @@ using System.Text;
 using System.Text.Json;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Application.Validation.Word;
+using WordMaster.Domain.Configuration;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Results;
 using WordMaster.Infrastructure.EfCore;
@@ -242,6 +243,7 @@ public static class ServiceCollectionExtensions
         })
         .AddRoles<AppRole>()
         .AddEntityFrameworkStores<AppDbContext>()
+        .AddDefaultTokenProviders()
         .AddSignInManager();
 
         // Security Stamp: Kullanıcı şifresi değiştiğinde veya önemli bir güvenlik olayında tüm oturumları sonlandırmak için kullanılır
@@ -302,5 +304,12 @@ public static class ServiceCollectionExtensions
         });
 
         return services;
+    }
+    public static void AddConfigurationSettings(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.Configure<EmailSettings>(configuration.GetSection("EmailSettings"));
+        services.Configure<MailHogSettings>(configuration.GetSection("MailHog"));
+        services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
+        services.Configure<UrlsSettings>(configuration.GetSection("URLs"));
     }
 }

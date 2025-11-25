@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 using System.Net;
 using WordMaster.Application.Requests.Auth;
 using WordMaster.Application.Responses.Auth;
 using WordMaster.Application.Responses.User;
 using WordMaster.Application.Services.Abstract;
+using WordMaster.Domain.Configuration;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Results;
 
@@ -21,7 +23,8 @@ public class LoginService(
     IEmailService emailService,
     IDataProtectionHelper dataProtectionHelper,
     ICacheService cacheService,
-    IAllowedIpAddressService allowedIpAddressService) : ILoginService
+    IAllowedIpAddressService allowedIpAddressService,
+    IOptions<UrlsSettings> urlSettings) : ILoginService
 {
     /// <summary>
     /// Verilen email adresiyle kullanıcıyı bulur.
@@ -218,8 +221,8 @@ public class LoginService(
 
         string token = await userManager.GeneratePasswordResetTokenAsync(user);
 
-        HttpRequest? requestContext = httpContextAccessor.HttpContext?.Request;
-        string baseUrl = $"{requestContext?.Scheme}://{requestContext?.Host}";
+        //string baseUrl = $"{requestContext?.Scheme}://{requestContext?.Host}";
+        string baseUrl = urlSettings.Value.Client;
 
         // UserId'yi şifrele
         string encryptedUserId = dataProtectionHelper.Encrypt(user.Id.ToString());

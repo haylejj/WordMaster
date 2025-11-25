@@ -1,5 +1,5 @@
 import api from "./api";
-import type { LoginRequest, RegisterRequest, ForgotPasswordRequest } from "@/types/auth";
+import type { LoginRequest, RegisterRequest, ForgotPasswordRequest, ResetPasswordRequest, ChangePasswordRequest } from "@/types/auth";
 import type { LoginResponse, ServiceResult, ServiceResultWithData } from "@/types/api";
 
 export const authService = {
@@ -20,6 +20,16 @@ export const authService = {
 
     forgotPassword: async (data: ForgotPasswordRequest) => {
         const response = await api.post<ServiceResult>("/auth/forget-password", data);
+        return response.data;
+    },
+
+    resetPassword: async (data: ResetPasswordRequest) => {
+        const response = await api.post<ServiceResult>("/auth/reset-password", data);
+        return response.data;
+    },
+
+    changePassword: async (data: ChangePasswordRequest) => {
+        const response = await api.post<ServiceResult>("/auth/change-password", data);
         return response.data;
     },
 

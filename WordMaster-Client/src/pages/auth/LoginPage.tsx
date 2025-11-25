@@ -113,8 +113,10 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-0 top-0 h-full px-3 bg-[#f8f9fa] border-2 border-[#e9ecef] border-l-0 rounded-r-lg text-[#6c757d] hover:bg-[#e9ecef] hover:text-primary-dark transition-colors flex items-center justify-center"
-              style={{ marginTop: '0', height: '100%' }}
+              className={cn(
+                "absolute right-0 top-0 h-full px-3 bg-[#f8f9fa] border-2 border-[#e9ecef] border-l-0 rounded-r-lg text-[#6c757d] hover:bg-[#e9ecef] hover:text-primary-dark transition-colors flex items-center justify-center",
+                errors.password && "border-destructive"
+              )}
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
