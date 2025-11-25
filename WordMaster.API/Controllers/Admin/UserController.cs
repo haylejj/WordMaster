@@ -47,7 +47,7 @@ public class UserController(IUserService userService) : BaseController
     [HttpGet("{id}")]
     public async Task<IActionResult> GetUser(string id)
     {
-        ServiceResult<UserEditResponse> result = await userService.GetUserEditViewModelByIdAsync(id);
+        ServiceResult<UserProfileResponse> result = await userService.GetProfileByIdAsync(id);
         return CreateResult(result);
     }
 

@@ -5,7 +5,7 @@ import { createWordSchema } from "@/types/word";
 import type { CreateWordRequest } from "@/types/word";
 import { wordService } from "@/services/word.service";
 import { X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, getErrorMessage } from "@/lib/utils";
 
 interface CreateWordModalProps {
   isOpen: boolean;
@@ -43,7 +43,7 @@ export default function CreateWordModal({ isOpen, onClose, onSuccess }: CreateWo
         setError(response.errorList?.join(" ") || "Kelime eklenemedi.");
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || "Bir hata oluştu.");
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -73,17 +73,17 @@ export default function CreateWordModal({ isOpen, onClose, onSuccess }: CreateWo
           <div className="space-y-1">
             <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">İNGİLİZCE</label>
             <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-gray-400 text-xs font-bold border border-gray-300 rounded px-1 bg-gray-50">A</span>
-                </div>
-                <input
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <span className="text-gray-400 text-xs font-bold border border-gray-300 rounded px-1 bg-gray-50">A</span>
+              </div>
+              <input
                 {...register("englishWord")}
                 className={cn(
-                    "w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-yellow focus:border-transparent",
-                    errors.englishWord && "border-red-500"
+                  "w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-yellow focus:border-transparent",
+                  errors.englishWord && "border-red-500"
                 )}
                 placeholder="word"
-                />
+              />
             </div>
             {errors.englishWord && <p className="text-xs text-red-500">{errors.englishWord.message}</p>}
           </div>
@@ -91,17 +91,17 @@ export default function CreateWordModal({ isOpen, onClose, onSuccess }: CreateWo
           <div className="space-y-1">
             <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">TÜRKÇE</label>
             <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-gray-400 text-xs font-bold border border-gray-300 rounded px-1 bg-gray-50">tr</span>
-                </div>
-                <input
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <span className="text-gray-400 text-xs font-bold border border-gray-300 rounded px-1 bg-gray-50">tr</span>
+              </div>
+              <input
                 {...register("turkishWord")}
                 className={cn(
-                    "w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-yellow focus:border-transparent",
-                    errors.turkishWord && "border-red-500"
+                  "w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-yellow focus:border-transparent",
+                  errors.turkishWord && "border-red-500"
                 )}
                 placeholder="kelime"
-                />
+              />
             </div>
             {errors.turkishWord && <p className="text-xs text-red-500">{errors.turkishWord.message}</p>}
           </div>

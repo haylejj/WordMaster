@@ -5,10 +5,10 @@ import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { resetPasswordSchema } from "@/types/auth";
 import type { ResetPasswordRequest } from "@/types/auth";
 import { authService } from "@/services/auth.service";
-import { cn } from "@/lib/utils";
+import { cn, getErrorMessage } from "@/lib/utils";
 import AuthLayout from "@/layouts/AuthLayout";
 import { Eye, EyeOff } from "lucide-react";
-import type { ServiceResult } from "@/types/api";
+
 
 export default function ResetPasswordPage() {
     const [searchParams] = useSearchParams();
@@ -66,12 +66,7 @@ export default function ResetPasswordPage() {
                 }
             }
         } catch (err: any) {
-            const errorResponse = err.response?.data as ServiceResult;
-            if (errorResponse?.errorList && errorResponse.errorList.length > 0) {
-                setError(errorResponse.errorList.join(" "));
-            } else {
-                setError(err.response?.data?.message || "Bir hata oluştu.");
-            }
+            setError(getErrorMessage(err));
         } finally {
             setLoading(false);
         }

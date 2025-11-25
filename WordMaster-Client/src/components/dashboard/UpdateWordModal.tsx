@@ -5,7 +5,7 @@ import { updateWordSchema } from "@/types/word";
 import type { UpdateWordRequest, WordResponse } from "@/types/word";
 import { wordService } from "@/services/word.service";
 import { X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, getErrorMessage } from "@/lib/utils";
 
 interface UpdateWordModalProps {
   isOpen: boolean;
@@ -57,7 +57,7 @@ export default function UpdateWordModal({ isOpen, onClose, onSuccess, word }: Up
         setError(response.errorList?.join(" ") || "Kelime güncellenemedi.");
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || "Bir hata oluştu.");
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }

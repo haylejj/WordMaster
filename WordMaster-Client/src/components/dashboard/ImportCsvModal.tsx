@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { X, UploadCloud, HelpCircle, Download, FileSpreadsheet } from "lucide-react";
 import { wordService } from "@/services/word.service";
+import { getErrorMessage } from "@/lib/utils";
 
 interface ImportCsvModalProps {
     isOpen: boolean;
@@ -65,7 +66,7 @@ export default function ImportCsvModal({ isOpen, onClose, onImported }: ImportCs
                 setError(response.errorList?.join(" ") || "İçe aktarma başarısız.");
             }
         } catch (err: any) {
-            setError(err.response?.data?.message || "Bir hata oluştu.");
+            setError(getErrorMessage(err));
         } finally {
             setLoading(false);
         }

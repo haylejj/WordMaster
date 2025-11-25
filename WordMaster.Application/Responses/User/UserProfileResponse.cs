@@ -1,13 +1,10 @@
-using WordMaster.Domain.Entities;
+namespace WordMaster.Application.Responses.User;
 
-namespace WordMaster.Application.Requests.User;
-
-public class UserEditRequest
+public class UserProfileResponse
 {
     public string? UserName { get; set; }
     public string? Email { get; set; }
     public string? Phone { get; set; }
     public DateTime? BirthDate { get; set; }
-    public Gender? Gender { get; set; }
+    public int? Gender { get; set; }
 }
-

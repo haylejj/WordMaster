@@ -40,7 +40,7 @@ public class UserController(IUserService userService, IRoleService roleService) 
             return Json(new { success = false, message = "Kullanıcı ID gerekli." });
         }
 
-        Result<UserEditViewModel> result = await userService.GetUserEditViewModelByIdAsync(id);
+        Result<UserEditViewModel> result = await userService.GetProfileByIdAsync(id);
 
         if (!result.IsSuccess || result.Data == null)
         {

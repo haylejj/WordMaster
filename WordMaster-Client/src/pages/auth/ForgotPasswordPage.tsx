@@ -5,10 +5,10 @@ import { Link } from "react-router-dom";
 import { forgotPasswordSchema } from "@/types/auth";
 import type { ForgotPasswordRequest } from "@/types/auth";
 import { authService } from "@/services/auth.service";
-import { cn } from "@/lib/utils";
+import { cn, getErrorMessage } from "@/lib/utils";
 import AuthLayout from "@/layouts/AuthLayout";
 import { ArrowLeft } from "lucide-react";
-import type { ServiceResult } from "@/types/api";
+
 
 export default function ForgotPasswordPage() {
   const [error, setError] = useState<string | null>(null);
@@ -42,12 +42,7 @@ export default function ForgotPasswordPage() {
         }
       }
     } catch (err: any) {
-      const errorResponse = err.response?.data as ServiceResult;
-      if (errorResponse?.errorList && errorResponse.errorList.length > 0) {
-        setError(errorResponse.errorList.join(" "));
-      } else {
-        setError(err.response?.data?.message || "Bir hata oluştu.");
-      }
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -65,9 +60,9 @@ export default function ForgotPasswordPage() {
             <span className="block sm:inline">{error}</span>
           </div>
         )}
-        
+
         {success && (
-           <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative text-sm" role="alert">
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative text-sm" role="alert">
             <span className="block sm:inline">{success}</span>
           </div>
         )}
@@ -101,8 +96,8 @@ export default function ForgotPasswordPage() {
         </button>
 
         <div className="text-center mt-6 pt-6 border-t border-[#eee]">
-          <Link 
-            to="/login" 
+          <Link
+            to="/login"
             className="inline-flex items-center text-primary-dark font-bold text-[0.9rem] hover:text-[#555] transition-colors group"
           >
             <ArrowLeft size={16} className="mr-2 group-hover:-translate-x-1 transition-transform" />

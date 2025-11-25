@@ -8,6 +8,8 @@ import WordsPage from "@/pages/dashboard/WordsPage";
 import CreateWordPage from "@/pages/dashboard/CreateWordPage";
 import FoldersPage from "@/pages/dashboard/FoldersPage";
 import FolderDetailPage from "@/pages/dashboard/FolderDetailPage";
+import ProfilePage from "@/pages/dashboard/ProfilePage";
+import ChangePasswordPage from "@/pages/dashboard/ChangePasswordPage";
 
 function App() {
   return (
@@ -26,6 +28,8 @@ function App() {
           <Route path="folders/:id" element={<FolderDetailPage />} />
           <Route path="favorites" element={<WordsPage variant="favorites" />} />
           <Route path="unknowns" element={<WordsPage variant="unknowns" />} />
+          <Route path="profile" element={<ProfilePage />} />
+          <Route path="change-password" element={<ChangePasswordPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

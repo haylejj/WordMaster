@@ -170,13 +170,8 @@ public class AuthController(ILoginService loginService, IRegisterService registe
     [Authorize]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
     {
-        string? userName = User.GetUserName();
-        if (string.IsNullOrEmpty(userName))
-        {
-            return CreateResult(ServiceResult.Failure("Kullanıcı adı bulunamadı.", HttpStatusCode.Unauthorized));
-        }
-
-        ServiceResult result = await userService.ChangePasswordAsync(request, userName);
+        string userId = User.GetUserId().ToString();
+        ServiceResult result = await userService.ChangePasswordAsync(request, userId);
         return CreateResult(result);
     }
 

@@ -305,6 +305,11 @@ public static class ServiceCollectionExtensions
 
         return services;
     }
+    /// <summary>
+    /// AppSettings.json'daki ayarları servis koleksiyonuna ekleyerek Options pattern'ini kullanır.
+    /// </summary>
+    /// <param name="services"></param>
+    /// <param name="configuration"></param>
     public static void AddConfigurationSettings(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<EmailSettings>(configuration.GetSection("EmailSettings"));

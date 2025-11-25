@@ -5,10 +5,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { registerSchema } from "@/types/auth";
 import type { RegisterRequest } from "@/types/auth";
 import { authService } from "@/services/auth.service";
-import { cn } from "@/lib/utils";
+import { cn, getErrorMessage } from "@/lib/utils";
 import AuthLayout from "@/layouts/AuthLayout";
 import { Eye, EyeOff } from "lucide-react";
-import type { ServiceResult } from "@/types/api";
+
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -48,12 +48,7 @@ export default function RegisterPage() {
         }
       }
     } catch (err: any) {
-      const errorResponse = err.response?.data as ServiceResult;
-      if (errorResponse?.errorList && errorResponse.errorList.length > 0) {
-        setError(errorResponse.errorList.join(" "));
-      } else {
-        setError(err.response?.data?.message || "Kayıt olurken bir hata oluştu.");
-      }
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }

@@ -6,16 +6,16 @@ public class PasswordChangeRequestValidator : AbstractValidator<ChangePasswordRe
 {
     public PasswordChangeRequestValidator()
     {
-        RuleFor(x => x.PasswordOld)
+        RuleFor(x => x.OldPassword)
             .NotEmpty().WithMessage("Eski Şifre alanı boş bırakılamaz");
 
-        RuleFor(x => x.PasswordNew)
+        RuleFor(x => x.NewPassword)
             .NotEmpty().WithMessage("Yeni Şifre alanı boş bırakılamaz")
             .MinimumLength(6).WithMessage("Şifre en az 6 karakter olmalıdır");
 
-        RuleFor(x => x.PasswordConfirm)
+        RuleFor(x => x.ConfirmNewPassword)
             .NotEmpty().WithMessage("Yeni Şifre tekrar alanı boş bırakılamaz")
-            .Equal(x => x.PasswordNew).WithMessage("Şifreler aynı değildir.");
+            .Equal(x => x.NewPassword).WithMessage("Şifreler aynı değildir.");
     }
 }
 

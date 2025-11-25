@@ -5,8 +5,8 @@ import { createWordSchema } from "@/types/word";
 import type { CreateWordRequest } from "@/types/word";
 import { wordService } from "@/services/word.service";
 import { Plus, FileDown } from "lucide-react";
-import { cn } from "@/lib/utils";
-import type { ServiceResult } from "@/types/api";
+import { cn, getErrorMessage } from "@/lib/utils";
+
 import ImportCsvModal from "@/components/dashboard/ImportCsvModal";
 
 export default function CreateWordPage() {
@@ -43,12 +43,7 @@ export default function CreateWordPage() {
             }
         } catch (err: any) {
             setSuccess(null);
-            const serviceResult = err.response?.data as ServiceResult;
-            if (serviceResult?.errorList?.length) {
-                setError(serviceResult.errorList.join(" "));
-            } else {
-                setError(err.response?.data?.message || "Bir hata oluştu.");
-            }
+            setError(getErrorMessage(err));
         } finally {
             setLoading(false);
         }

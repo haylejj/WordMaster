@@ -107,17 +107,17 @@ export default function DashboardLayout() {
             {isUserMenuOpen && (
               <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
                 <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
-                  <Settings size={16} className="mr-2" /> Update Your Profile
+                  <Settings size={16} className="mr-2" /> Profil Güncelle
                 </Link>
                 <Link to="/change-password" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
-                  <Key size={16} className="mr-2" /> Password Change
+                  <Key size={16} className="mr-2" /> Şifre Değiştir
                 </Link>
                 <div className="border-t border-gray-100 my-1"></div>
                 <button
                   onClick={handleLogout}
                   className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50 flex items-center"
                 >
-                  <LogOut size={16} className="mr-2" /> Log Out
+                  <LogOut size={16} className="mr-2" /> Çıkış Yap
                 </button>
               </div>
             )}
