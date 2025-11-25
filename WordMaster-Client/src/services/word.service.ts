@@ -115,6 +115,11 @@ export const wordService = {
     return response.data;
   },
 
+  getUserWords: async () => {
+    const response = await api.get<ServiceResultWithData<WordResponse[]>>("/words/user-words");
+    return response.data;
+  },
+
   importCsv: async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);

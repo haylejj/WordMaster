@@ -6,6 +6,8 @@ import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import WordsPage from "@/pages/dashboard/WordsPage";
 import CreateWordPage from "@/pages/dashboard/CreateWordPage";
+import FoldersPage from "@/pages/dashboard/FoldersPage";
+import FolderDetailPage from "@/pages/dashboard/FolderDetailPage";
 
 function App() {
   return (
@@ -20,6 +22,8 @@ function App() {
         <Route path="/" element={<DashboardLayout />}>
           <Route index element={<WordsPage />} />
           <Route path="add-word" element={<CreateWordPage />} />
+          <Route path="folders" element={<FoldersPage />} />
+          <Route path="folders/:id" element={<FolderDetailPage />} />
           <Route path="favorites" element={<WordsPage variant="favorites" />} />
           <Route path="unknowns" element={<WordsPage variant="unknowns" />} />
         </Route>

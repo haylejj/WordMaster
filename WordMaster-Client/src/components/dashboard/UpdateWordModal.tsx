@@ -16,6 +16,7 @@ interface UpdateWordModalProps {
 
 export default function UpdateWordModal({ isOpen, onClose, onSuccess, word }: UpdateWordModalProps) {
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const {
@@ -46,8 +47,12 @@ export default function UpdateWordModal({ isOpen, onClose, onSuccess, word }: Up
     try {
       const response = await wordService.updateWord(data);
       if (response.isSuccess) {
+        setSuccess("Kelime başarıyla güncellendi.");
         onSuccess();
-        onClose();
+        setTimeout(() => {
+          setSuccess(null);
+          onClose();
+        }, 1500);
       } else {
         setError(response.errorList?.join(" ") || "Kelime güncellenemedi.");
       }
@@ -76,6 +81,11 @@ export default function UpdateWordModal({ isOpen, onClose, onSuccess, word }: Up
           {error && (
             <div className="bg-red-100 text-red-700 p-3 rounded text-sm">
               {error}
+            </div>
+          )}
+          {success && (
+            <div className="bg-green-100 text-green-700 p-3 rounded text-sm">
+              {success}
             </div>
           )}
 

@@ -74,6 +74,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
 
         // Cache invalidation
         await cacheService.RemoveAsync($"words:user:{userId}");
+        await cacheService.RemoveAsync($"dropdown_words:user:{userId}");
 
         return ServiceResult.SuccessAsCreated();
     }
@@ -114,6 +115,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
         // Cache invalidation
         await cacheService.RemoveAsync($"word:{wordId}:user:{userId}");
         await cacheService.RemoveAsync($"words:user:{userId}");
+        await cacheService.RemoveAsync($"dropdown_words:user:{userId}");
 
         return ServiceResult.Success(HttpStatusCode.NoContent);
     }
@@ -132,6 +134,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
         // Cache invalidation
         await cacheService.RemoveAsync($"word:{wordId}:user:{userId}");
         await cacheService.RemoveAsync($"words:user:{userId}");
+        await cacheService.RemoveAsync($"dropdown_words:user:{userId}");
 
         return ServiceResult.Success(HttpStatusCode.NoContent);
     }

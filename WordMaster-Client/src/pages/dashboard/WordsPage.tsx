@@ -166,6 +166,9 @@ export default function WordsPage({ variant = "all" }: WordsPageProps) {
     </button>
   );
 
+  const showFavoriteToggle = variant !== "unknowns";
+  const showUnknownToggle = variant !== "favorites";
+
   return (
     <div className="space-y-6">
       <div>
@@ -174,48 +177,48 @@ export default function WordsPage({ variant = "all" }: WordsPageProps) {
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-          <div className="md:col-span-7 space-y-2">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div className="space-y-2 w-full md:max-w-xl">
             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Ara</label>
-            <div className="relative">
+            <div className="relative flex">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               <input
                 type="text"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder="İngilizce veya Türkçe ara..."
-                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-yellow focus:bg-white transition-all text-sm"
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary-yellow focus:bg-white transition-all text-sm"
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               />
+              <button
+                onClick={handleSearch}
+                className="px-4 text-sm font-semibold text-white bg-primary-yellow rounded-r-md hover:bg-[#FFC107] transition-colors flex items-center justify-center border border-l-0 border-primary-yellow"
+              >
+                Ara
+              </button>
             </div>
           </div>
-          <div className="md:col-span-2 space-y-2">
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Sayfa Başına</label>
-            <select
-              value={pageSize}
-              onChange={(e) => {
-                setPageSize(Number(e.target.value));
-                setPage(1);
-              }}
-              className="w-full px-3 py-3 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-yellow cursor-pointer text-sm"
-            >
-              {PAGE_SIZE_OPTIONS.map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="md:col-span-3 flex space-x-2">
-            <button
-              onClick={handleSearch}
-              className="flex-1 bg-primary-yellow text-primary-dark font-bold py-3 px-4 rounded-md hover:bg-[#FFC107] transition-colors flex items-center justify-center text-sm"
-            >
-              <Search size={16} className="mr-2" /> Uygula
-            </button>
+          <div className="flex flex-col gap-3 md:flex-row md:items-end md:gap-3 md:ml-auto">
+            <div className="space-y-2 w-full md:w-40">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Sayfa Başına</label>
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setPage(1);
+                }}
+                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-yellow cursor-pointer text-sm"
+              >
+                {PAGE_SIZE_OPTIONS.map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+                ))}
+              </select>
+            </div>
             <button
               onClick={handleClear}
-              className="flex-1 bg-white border border-gray-300 text-gray-700 font-semibold py-3 px-4 rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center text-sm"
+              className="w-full md:w-auto bg-white border border-gray-300 text-gray-700 font-semibold py-2.5 px-4 rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center text-sm"
             >
               <X size={16} className="mr-2" /> Temizle
             </button>
@@ -249,15 +252,19 @@ export default function WordsPage({ variant = "all" }: WordsPageProps) {
                         <td className="px-6 py-4 text-gray-600">{word.turkishWord}</td>
                         <td className="px-6 py-4">
                           <div className="flex items-center justify-center space-x-4">
-                            <div className="flex items-center space-x-2" title="Favorilere Ekle/Çıkar">
-                              <ToggleSwitch checked={!!word.favoriteId} onChange={() => handleToggleFavorite(word)} />
-                              <Star size={18} className={cn(word.favoriteId ? "fill-yellow-400 text-yellow-400" : "text-gray-300")} />
-                            </div>
-                            <div className="w-px h-4 bg-gray-200" />
-                            <div className="flex items-center space-x-2" title="Bilinmeyenlere Ekle/Çıkar">
-                              <ToggleSwitch checked={!!word.unknowsId} onChange={() => handleToggleUnknown(word)} />
-                              <HelpCircle size={18} className={cn(word.unknowsId ? "fill-red-500 text-red-500" : "text-gray-300")} />
-                            </div>
+                            {showFavoriteToggle && (
+                              <div className="flex items-center space-x-2" title="Favorilere Ekle/Çıkar">
+                                <ToggleSwitch checked={!!word.favoriteId} onChange={() => handleToggleFavorite(word)} />
+                                <Star size={18} className={cn(word.favoriteId ? "fill-yellow-400 text-yellow-400" : "text-gray-300")} />
+                              </div>
+                            )}
+                            {showFavoriteToggle && showUnknownToggle && <div className="w-px h-4 bg-gray-200" />}
+                            {showUnknownToggle && (
+                              <div className="flex items-center space-x-2" title="Bilinmeyenlere Ekle/Çıkar">
+                                <ToggleSwitch checked={!!word.unknowsId} onChange={() => handleToggleUnknown(word)} />
+                                <HelpCircle size={18} className={cn(word.unknowsId ? "fill-red-500 text-red-500" : "text-gray-300")} />
+                              </div>
+                            )}
                           </div>
                         </td>
                         <td className="px-6 py-4 text-center">

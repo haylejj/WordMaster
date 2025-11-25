@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
-import { Book, Plus, Star, HelpCircle, PlayCircle, User, LogOut, Settings, Key, ChevronDown } from "lucide-react";
+import { Book, Plus, Star, HelpCircle, PlayCircle, User, LogOut, Settings, Key, ChevronDown, Folder } from "lucide-react";
 import { authService } from "@/services/auth.service";
 import { cn } from "@/lib/utils";
 
@@ -40,7 +40,7 @@ export default function DashboardLayout() {
 
   const navItems = [
     { name: "Kelimelerim", icon: Book, path: "/" },
-    // { name: "Klasörlerim", icon: Folder, path: "/folders" },
+    { name: "Klasörlerim", icon: Folder, path: "/folders" },
     { name: "Favoriler", icon: Star, path: "/favorites" },
     { name: "Bilinmeyenler", icon: HelpCircle, path: "/unknowns" },
   ];
