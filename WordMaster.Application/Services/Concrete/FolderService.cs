@@ -11,16 +11,26 @@ using WordMaster.Domain.Results;
 
 namespace WordMaster.Application.Services.Concrete;
 
+using WordMaster.Application.Constants;
+
 public class FolderService(
     IFolderRepository folderRepository,
     IWordRepository wordRepository,
     IWordFolderRepository wordFolderRepository,
     IUnitOfWork unitOfWork,
-    IWordService wordService
+    IWordService wordService,
+    ICacheService cacheService
 ) : IFolderService
 {
     public async Task<ServiceResult<List<FolderResponse>>> GetUserFoldersAsync(Guid userId)
     {
+        string cacheKey = CacheKeys.Folders(userId);
+        List<FolderResponse>? cachedFolders = await cacheService.GetAsync<List<FolderResponse>>(cacheKey);
+        if (cachedFolders != null)
+        {
+            return ServiceResult<List<FolderResponse>>.Success(cachedFolders, HttpStatusCode.OK);
+        }
+
         List<Folder> folders = await folderRepository.GetUserFoldersAsync(userId);
         List<FolderResponse> folderDtos = folders.Select(f => new FolderResponse
         {
@@ -30,11 +40,19 @@ public class FolderService(
             WordCount = f.WordFolders.Count
         }).ToList();
 
+        await cacheService.SetAsync(cacheKey, folderDtos, TimeSpan.FromMinutes(10));
         return ServiceResult<List<FolderResponse>>.Success(folderDtos, HttpStatusCode.OK);
     }
 
     public async Task<ServiceResult<FolderResponse>> GetUserFolderAsync(long folderId, Guid userId)
     {
+        string cacheKey = CacheKeys.Folder(folderId, userId);
+        FolderResponse? cachedFolder = await cacheService.GetAsync<FolderResponse>(cacheKey);
+        if (cachedFolder != null)
+        {
+            return ServiceResult<FolderResponse>.Success(cachedFolder, HttpStatusCode.OK);
+        }
+
         Folder? folder = await folderRepository.GetUserFolderAsync(folderId, userId);
         if (folder == null)
         {
@@ -49,6 +67,7 @@ public class FolderService(
             WordCount = folder.WordFolders.Count
         };
 
+        await cacheService.SetAsync(cacheKey, folderDto, TimeSpan.FromMinutes(10));
         return ServiceResult<FolderResponse>.Success(folderDto, HttpStatusCode.OK);
     }
 
@@ -82,6 +101,8 @@ public class FolderService(
             CreatedTime = folder.CreatedTime,
             WordCount = 0
         };
+
+        await cacheService.RemoveAsync(CacheKeys.Folders(userId));
 
         return ServiceResult<FolderResponse>.SuccessAsCreated(response, null);
     }
@@ -117,6 +138,9 @@ public class FolderService(
             WordCount = folder.WordFolders.Count
         };
 
+        await cacheService.RemoveAsync(CacheKeys.Folder(folderId, userId));
+        await cacheService.RemoveAsync(CacheKeys.Folders(userId));
+
         return ServiceResult<FolderResponse>.Success(response, HttpStatusCode.OK);
     }
 
@@ -130,6 +154,10 @@ public class FolderService(
 
         folderRepository.Remove(folder);
         await unitOfWork.CommitAsync();
+        await cacheService.RemoveAsync(CacheKeys.Folder(folderId, userId));
+        await cacheService.RemoveAsync(CacheKeys.Folders(userId));
+        await cacheService.RemoveAsync(CacheKeys.FolderWords(folderId));
+
         return ServiceResult.Success(HttpStatusCode.NoContent);
     }
 
@@ -141,6 +169,13 @@ public class FolderService(
         {
             return ServiceResult<List<WordResponse>>.Failure("Klasör bulunamadı.", HttpStatusCode.NotFound);
         }
+        string cacheKey = CacheKeys.FolderWords(folderId);
+        List<WordResponse>? cachedWords = await cacheService.GetAsync<List<WordResponse>>(cacheKey);
+        if (cachedWords != null)
+        {
+            return ServiceResult<List<WordResponse>>.Success(cachedWords, HttpStatusCode.OK);
+        }
+
         List<Word> words = await wordFolderRepository.GetWordsInFolderAsync(folderId);
         List<WordResponse> wordDtos = words.Select(w => new WordResponse
         {
@@ -149,6 +184,7 @@ public class FolderService(
             TurkishWord = w.TurkishWord
         }).ToList();
 
+        await cacheService.SetAsync(cacheKey, wordDtos, TimeSpan.FromMinutes(10));
         return ServiceResult<List<WordResponse>>.Success(wordDtos, HttpStatusCode.OK);
     }
 
@@ -169,6 +205,11 @@ public class FolderService(
 
         await wordFolderRepository.AddAsync(new WordFolder { FolderId = request.FolderId, WordId = request.WordId });
         await unitOfWork.CommitAsync();
+
+        await cacheService.RemoveAsync(CacheKeys.FolderWords(request.FolderId));
+        await cacheService.RemoveAsync(CacheKeys.Folder(request.FolderId, userId));
+        await cacheService.RemoveAsync(CacheKeys.Folders(userId));
+
         return ServiceResult.SuccessAsCreated();
     }
 
@@ -188,6 +229,11 @@ public class FolderService(
 
         wordFolderRepository.Remove(link);
         await unitOfWork.CommitAsync();
+
+        await cacheService.RemoveAsync(CacheKeys.FolderWords(request.FolderId));
+        await cacheService.RemoveAsync(CacheKeys.Folder(request.FolderId, userId));
+        await cacheService.RemoveAsync(CacheKeys.Folders(userId));
+
         return ServiceResult.Success(HttpStatusCode.NoContent);
     }
 

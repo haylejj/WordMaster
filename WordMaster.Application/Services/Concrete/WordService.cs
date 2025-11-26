@@ -12,6 +12,8 @@ using WordMaster.Domain.Entities;
 using WordMaster.Domain.Extensions;
 using WordMaster.Domain.Results;
 
+using WordMaster.Application.Constants;
+
 namespace WordMaster.Application.Services.Concrete;
 
 public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork, ICacheService cacheService) : IWordService
@@ -22,7 +24,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
 
     public async Task<ServiceResult<WordResponse>> GetWordForUserAsync(long id, Guid userId)
     {
-        string cacheKey = $"word:{id}:user:{userId}";
+        string cacheKey = CacheKeys.Word(id, userId);
         WordResponse? cachedWordDto = await cacheService.GetAsync<WordResponse>(cacheKey);
         if (cachedWordDto != null)
         {
@@ -75,8 +77,8 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
         await unitOfWork.CommitAsync();
 
         // Cache invalidation
-        await cacheService.RemoveAsync($"words:user:{userId}");
-        await cacheService.RemoveAsync($"dropdown_words:user:{userId}");
+        await cacheService.RemoveAsync(CacheKeys.Words(userId));
+        await cacheService.RemoveAsync(CacheKeys.UserWordsDropdown(userId));
 
         return ServiceResult.SuccessAsCreated();
     }
@@ -115,9 +117,12 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
         await unitOfWork.CommitAsync();
 
         // Cache invalidation
-        await cacheService.RemoveAsync($"word:{wordId}:user:{userId}");
-        await cacheService.RemoveAsync($"words:user:{userId}");
-        await cacheService.RemoveAsync($"dropdown_words:user:{userId}");
+        await cacheService.RemoveAsync(CacheKeys.Word(wordId, userId));
+        await cacheService.RemoveAsync(CacheKeys.Words(userId));
+        await cacheService.RemoveAsync(CacheKeys.UserWordsDropdown(userId));
+        // Also invalidate practice lists that might contain this word
+        await cacheService.RemoveAsync(CacheKeys.Favorites(userId));
+        await cacheService.RemoveAsync(CacheKeys.Unknows(userId));
 
         WordResponse response = new()
         {
@@ -141,9 +146,12 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
         await unitOfWork.CommitAsync();
 
         // Cache invalidation
-        await cacheService.RemoveAsync($"word:{wordId}:user:{userId}");
-        await cacheService.RemoveAsync($"words:user:{userId}");
-        await cacheService.RemoveAsync($"dropdown_words:user:{userId}");
+        await cacheService.RemoveAsync(CacheKeys.Word(wordId, userId));
+        await cacheService.RemoveAsync(CacheKeys.Words(userId));
+        await cacheService.RemoveAsync(CacheKeys.UserWordsDropdown(userId));
+        // Also invalidate practice lists that might contain this word
+        await cacheService.RemoveAsync(CacheKeys.Favorites(userId));
+        await cacheService.RemoveAsync(CacheKeys.Unknows(userId));
 
         return ServiceResult.Success(HttpStatusCode.NoContent);
     }
@@ -163,7 +171,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
 
     public async Task<ServiceResult<PracticeWordResponse>> GetRandomWordAsync(Guid userId)
     {
-        string cacheKey = $"words:user:{userId}";
+        string cacheKey = CacheKeys.Words(userId);
         List<PracticeWordKey>? cachedWords = await cacheService.GetAsync<List<PracticeWordKey>>(cacheKey);
 
         List<PracticeWordKey> practiceWords;
@@ -237,8 +245,8 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
         await unitOfWork.CommitAsync();
 
         // Cache invalidation - kelime güncellendiği için cache'i temizle
-        await cacheService.RemoveAsync($"word:{word.Id}:user:{userId}");
-        await cacheService.RemoveAsync($"words:user:{userId}");
+        await cacheService.RemoveAsync(CacheKeys.Word(word.Id, userId));
+        await cacheService.RemoveAsync(CacheKeys.Words(userId));
 
         return ServiceResult<bool>.Success(isCorrect, HttpStatusCode.OK);
     }
@@ -280,7 +288,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
     public async Task<ServiceResult<List<WordLookupResponse>>> GetUserWordsAsync(Guid userId)
     {
         // Cache all user's words for dropdown usage; client will filter locally
-        string cacheKey = $"dropdown_words:user:{userId}";
+        string cacheKey = CacheKeys.UserWordsDropdown(userId);
         List<WordLookupResponse>? cached = await cacheService.GetAsync<List<WordLookupResponse>>(cacheKey);
         if (cached != null && cached.Count > 0)
         {
@@ -342,10 +350,10 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
 
         await unitOfWork.CommitAsync();
 
-        await cacheService.RemoveAsync($"words:user:{userId}");
+        await cacheService.RemoveAsync(CacheKeys.Words(userId));
         foreach (long id in wordIds)
         {
-            await cacheService.RemoveAsync($"word:{id}:user:{userId}");
+            await cacheService.RemoveAsync(CacheKeys.Word(id, userId));
         }
 
         return ServiceResult<bool>.Success(true, HttpStatusCode.OK);

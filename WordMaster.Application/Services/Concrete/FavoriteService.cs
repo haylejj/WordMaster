@@ -11,6 +11,8 @@ using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Results;
 
+using WordMaster.Application.Constants;
+
 namespace WordMaster.Application.Services.Concrete;
 
 public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork unitOfWork, IWordService wordService, ICacheService cacheService) : IFavoriteService
@@ -31,8 +33,8 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
         await unitOfWork.CommitAsync();
 
         // Cache invalidation
-        await cacheService.RemoveAsync($"favorite:{favoriteId}:user:{userId}");
-        await cacheService.RemoveAsync($"favorites:user:{userId}");
+        await cacheService.RemoveAsync(CacheKeys.Favorite(favoriteId, userId));
+        await cacheService.RemoveAsync(CacheKeys.Favorites(userId));
 
         return ServiceResult.Success(HttpStatusCode.NoContent);
     }
@@ -52,7 +54,7 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
             await unitOfWork.CommitAsync();
 
             // Cache invalidation
-            await cacheService.RemoveAsync($"favorites:user:{userId}");
+            await cacheService.RemoveAsync(CacheKeys.Favorites(userId));
 
             return ServiceResult<bool>.Success(true, HttpStatusCode.OK);
         }
@@ -61,13 +63,13 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
         await unitOfWork.CommitAsync();
 
         // Cache invalidation
-        await cacheService.RemoveAsync($"favorites:user:{userId}");
+        await cacheService.RemoveAsync(CacheKeys.Favorites(userId));
 
         return ServiceResult<bool>.Success(false, HttpStatusCode.OK);
     }
     public async Task<ServiceResult<PracticeWordResponse>> GetRandomWordFromFavoritesAsync(Guid userId)
     {
-        string cacheKey = $"favorites:user:{userId}";
+        string cacheKey = CacheKeys.Favorites(userId);
         List<PracticeFavoriteKey>? cachedFavorites = await cacheService.GetAsync<List<PracticeFavoriteKey>>(cacheKey);
 
         List<PracticeFavoriteKey> practiceFavorites;

@@ -11,6 +11,8 @@ using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Results;
 
+using WordMaster.Application.Constants;
+
 namespace WordMaster.Application.Services.Concrete;
 
 public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork unitOfWork, IWordService wordService, ICacheService cacheService) : IUnknowsService
@@ -31,15 +33,15 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
         await unitOfWork.CommitAsync();
 
         // Cache invalidation
-        await cacheService.RemoveAsync($"unknows:{unknowsId}:user:{userId}");
-        await cacheService.RemoveAsync($"unknows:user:{userId}");
+        await cacheService.RemoveAsync(CacheKeys.Unknow(unknowsId, userId));
+        await cacheService.RemoveAsync(CacheKeys.Unknows(userId));
 
         return ServiceResult.Success(HttpStatusCode.NoContent);
     }
 
     public async Task<ServiceResult<PracticeWordResponse>> GetRandomWordFromUnknowsAsync(Guid userId)
     {
-        string cacheKey = $"unknows:user:{userId}";
+        string cacheKey = CacheKeys.Unknows(userId);
         List<PracticeUnknowsKey>? cachedUnknows = await cacheService.GetAsync<List<PracticeUnknowsKey>>(cacheKey);
 
         List<PracticeUnknowsKey> practiceUnknows;
@@ -101,7 +103,7 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
             await unitOfWork.CommitAsync();
 
             // Cache invalidation
-            await cacheService.RemoveAsync($"unknows:user:{userId}");
+            await cacheService.RemoveAsync(CacheKeys.Unknows(userId));
 
             return ServiceResult<bool>.Success(true, HttpStatusCode.OK);
         }
@@ -110,7 +112,7 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
         await unitOfWork.CommitAsync();
 
         // Cache invalidation
-        await cacheService.RemoveAsync($"unknows:user:{userId}");
+        await cacheService.RemoveAsync(CacheKeys.Unknows(userId));
 
         return ServiceResult<bool>.Success(false, HttpStatusCode.OK);
     }
