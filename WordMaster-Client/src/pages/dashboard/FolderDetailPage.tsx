@@ -19,7 +19,6 @@ export default function FolderDetailPage() {
     const [allWords, setAllWords] = useState<WordResponse[]>([]);
     const [selectedWordId, setSelectedWordId] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
-    const [message, setMessage] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [removeTarget, setRemoveTarget] = useState<FolderWordResponse | null>(null);
     const [updateTarget, setUpdateTarget] = useState<FolderWordResponse | null>(null);
@@ -103,7 +102,6 @@ export default function FolderDetailPage() {
                 const addedWord = allWords.find(w => w.id === selectedWordId);
                 if (addedWord) {
                     setWords(prev => [...prev, addedWord]);
-                    setMessage("Kelime klasöre eklendi ✓");
                 }
                 setSelectedWordId(null);
                 setDropdownOpen(false);
@@ -115,7 +113,6 @@ export default function FolderDetailPage() {
             setError("Kelime klasöre eklenemedi.");
         } finally {
             setBusy(false);
-            setTimeout(() => setMessage(null), 2000);
         }
     };
 
@@ -127,7 +124,6 @@ export default function FolderDetailPage() {
             if (response.isSuccess) {
                 // jQuery tarzı optimizasyon: Sadece çıkarılan kelimeyi state'ten kaldır
                 setWords(prev => prev.filter(w => w.id !== removeTarget.id));
-                setMessage("Kelime klasörden çıkarıldı ✓");
                 setRemoveTarget(null);
             } else {
                 setError(response.errorList?.join(" ") || "Kelime çıkarılamadı.");
@@ -137,7 +133,6 @@ export default function FolderDetailPage() {
             setError("Kelime çıkarılamadı.");
         } finally {
             setBusy(false);
-            setTimeout(() => setMessage(null), 2000);
         }
     };
 
@@ -242,11 +237,6 @@ export default function FolderDetailPage() {
                                             </div>
                                         )}
                                     </div>
-                                    {message && (
-                                        <div className="mt-3 rounded-2xl bg-green-50 px-4 py-2 text-xs font-medium text-green-600 shadow">
-                                            {message}
-                                        </div>
-                                    )}
                                 </div>
                             </div>
                         </div>

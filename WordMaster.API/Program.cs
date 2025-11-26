@@ -92,4 +92,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+await app.LogStartupStatusAsync();
+
 app.Run();

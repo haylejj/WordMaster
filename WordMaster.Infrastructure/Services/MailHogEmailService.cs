@@ -5,14 +5,18 @@ using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Configuration;
 using WordMaster.Domain.Results;
 
+using Microsoft.Extensions.Logging;
+
 namespace WordMaster.Infrastructure.Services;
 
-public class MailHogEmailService(IOptions<MailHogSettings> settings) : IEmailService
+public class MailHogEmailService(IOptions<MailHogSettings> settings, ILogger<MailHogEmailService> logger) : IEmailService
 {
     public async Task<ServiceResult> SendResetPasswordLinkToEmailAsync(string resetEmailLink, string toEmail)
     {
         try
         {
+            logger.LogInformation("Sending password reset link to {Email}", toEmail);
+
             SmtpClient smtpClient = new()
             {
                 Host = settings.Value.Host,
@@ -35,10 +39,12 @@ public class MailHogEmailService(IOptions<MailHogSettings> settings) : IEmailSer
             mailMessage.IsBodyHtml = true;
             await smtpClient.SendMailAsync(mailMessage);
 
+            logger.LogInformation("Password reset link sent successfully to {Email}", toEmail);
             return ServiceResult.Success(HttpStatusCode.OK);
         }
         catch (Exception ex)
         {
+            logger.LogError(ex, "Error sending password reset link to {Email}", toEmail);
             return ServiceResult.Failure($"Email gönderilirken hata oluştu: {ex.Message}", HttpStatusCode.InternalServerError);
         }
     }
@@ -47,6 +53,8 @@ public class MailHogEmailService(IOptions<MailHogSettings> settings) : IEmailSer
     {
         try
         {
+            logger.LogInformation("Sending new password to {Email}", toEmail);
+
             SmtpClient smtpClient = new()
             {
                 Host = settings.Value.Host,
@@ -72,10 +80,12 @@ public class MailHogEmailService(IOptions<MailHogSettings> settings) : IEmailSer
             mailMessage.IsBodyHtml = true;
             await smtpClient.SendMailAsync(mailMessage);
 
+            logger.LogInformation("New password sent successfully to {Email}", toEmail);
             return ServiceResult.Success(HttpStatusCode.OK);
         }
         catch (Exception ex)
         {
+            logger.LogError(ex, "Error sending new password to {Email}", toEmail);
             return ServiceResult.Failure($"Email gönderilirken hata oluştu: {ex.Message}", HttpStatusCode.InternalServerError);
         }
     }

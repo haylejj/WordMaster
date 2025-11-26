@@ -14,9 +14,11 @@ using WordMaster.Domain.Results;
 
 using WordMaster.Application.Constants;
 
+using Microsoft.Extensions.Logging;
+
 namespace WordMaster.Application.Services.Concrete;
 
-public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork, ICacheService cacheService) : IWordService
+public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork, ICacheService cacheService, ILogger<WordService> logger) : IWordService
 {
     private static readonly Random _random = new();
     private static readonly TimeSpan PracticeCacheExpiration = TimeSpan.FromMinutes(5);
@@ -321,6 +323,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
             .Where(x => wordIds.Contains(x.Id) && x.UserId == userId)
             .ToListAsync();
 
+        int updatedCount = 0;
         foreach (PracticeResultItem result in request.Results)
         {
             Word? word = words.FirstOrDefault(w => w.Id == result.WordId);
@@ -346,9 +349,12 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
             }
 
             wordRepository.Update(word);
+            updatedCount++;
         }
 
         await unitOfWork.CommitAsync();
+
+        logger.LogInformation("Practice completed for user {UserId}. Updated stats for {UpdatedCount} words.", userId, updatedCount);
 
         await cacheService.RemoveAsync(CacheKeys.Words(userId));
         foreach (long id in wordIds)

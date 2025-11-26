@@ -11,6 +11,7 @@ using WordMaster.Domain.Entities;
 using WordMaster.Domain.Results;
 
 using WordMaster.Infrastructure.Helpers;
+using Microsoft.Extensions.Logging;
 
 namespace WordMaster.Infrastructure.Services;
 
@@ -24,7 +25,8 @@ public class LoginService(
     IDataProtectionHelper dataProtectionHelper,
     ICacheService cacheService,
     IAllowedIpAddressService allowedIpAddressService,
-    IOptions<UrlsSettings> urlSettings) : ILoginService
+    IOptions<UrlsSettings> urlSettings,
+    ILogger<LoginService> logger) : ILoginService
 {
     /// <summary>
     /// Verilen email adresiyle kullanıcıyı bulur.
@@ -101,6 +103,8 @@ public class LoginService(
 
         // Başarılı login kaydı
         await logHistoryService.RecordAsync(user.Id.ToString(), request.Email, ipAddress, true, "PublicLogin");
+
+        logger.LogInformation("User {UserId} logged in successfully from IP {IpAddress}", user.Id, ipAddress);
 
         return ServiceResult<LoginResponse>.Success(new LoginResponse
         {
@@ -180,6 +184,8 @@ public class LoginService(
 
         // Başarılı login kaydı
         await logHistoryService.RecordAsync(user.Id.ToString(), request.Email, ipAddress, true, "AdminLogin");
+
+        logger.LogInformation("Admin user {UserId} logged in successfully from IP {IpAddress}", user.Id, ipAddress);
 
         return ServiceResult<LoginResponse>.Success(new LoginResponse
         {
@@ -266,6 +272,7 @@ public class LoginService(
         if (!result.Succeeded)
         {
             List<string> errors = result.Errors.Select(x => x.Description).ToList();
+            logger.LogWarning("Password reset failed for user {UserId}. Errors: {Errors}", user.Id, string.Join(", ", errors));
             return ServiceResult.Failure(errors, HttpStatusCode.BadRequest);
         }
 
@@ -273,6 +280,8 @@ public class LoginService(
         await userManager.UpdateSecurityStampAsync(user);
         // SecurityStamp cache'ini temizle
         await cacheService.RemoveAsync($"security_stamp:{user.Id}");
+
+        logger.LogInformation("Password reset successfully for user {UserId}", user.Id);
 
         return ServiceResult.Success(HttpStatusCode.OK);
     }
@@ -300,6 +309,8 @@ public class LoginService(
 
         // SecurityStamp cache'ini temizle (Middleware yeni stamp'i DB'den okusun)
         await cacheService.RemoveAsync($"security_stamp:{user.Id}");
+
+        logger.LogInformation("User {UserId} logged out successfully", user.Id);
 
         return ServiceResult.Success(HttpStatusCode.OK);
     }

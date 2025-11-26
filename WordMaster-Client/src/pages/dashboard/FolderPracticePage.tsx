@@ -1,20 +1,20 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { PracticeCard } from "@/components/PracticeCard";
 import { folderService } from "@/services/folder.service";
 import { wordService } from "@/services/word.service";
-import type { WordResponse } from "@/types/word";
+import type { FolderWordResponse } from "@/types/folder";
 import { X } from "lucide-react";
 
 interface PracticeResult {
-    word: WordResponse;
+    word: FolderWordResponse;
     isCorrect: boolean;
 }
 
 export default function FolderPracticePage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const [words, setWords] = useState<WordResponse[]>([]);
+    const [words, setWords] = useState<FolderWordResponse[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [results, setResults] = useState<PracticeResult[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -195,6 +195,7 @@ export default function FolderPracticePage() {
         <div className="max-w-4xl mx-auto">
             <h1 className="text-2xl font-bold text-gray-900 mb-8 text-center uppercase">{folderName}</h1>
             <PracticeCard
+                key={`${currentWord.id}-${currentIndex}`}
                 englishWord={currentWord.englishWord}
                 turkishWord={currentWord.turkishWord}
                 wordId={currentWord.id}

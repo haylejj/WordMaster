@@ -11,6 +11,8 @@ using WordMaster.Domain.Entities;
 using WordMaster.Domain.Helpers;
 using WordMaster.Domain.Results;
 
+using Microsoft.Extensions.Logging;
+
 namespace WordMaster.Infrastructure.Services;
 
 public class UserService(
@@ -21,7 +23,8 @@ public class UserService(
     IUnknowsRepository unknowsRepository,
     IEmailService emailService,
     IUnitOfWork unitOfWork,
-    ICacheService cacheService) : IUserService
+    ICacheService cacheService,
+    ILogger<UserService> logger) : IUserService
 {
     /// <summary>
     /// Kullanıcının şifresini değiştirir.
@@ -37,6 +40,7 @@ public class UserService(
         bool ok = await userManager.CheckPasswordAsync(currentUser, request.OldPassword!);
         if (!ok)
         {
+            logger.LogWarning("Password change failed for user {UserId}. Incorrect old password.", userId);
             return ServiceResult.Failure("Mevcut şifre yanlış.", HttpStatusCode.BadRequest);
         }
 
@@ -44,12 +48,14 @@ public class UserService(
         if (!resultChangePassword.Succeeded)
         {
             List<string> errors = resultChangePassword.Errors.Select(e => e.Description).ToList();
+            logger.LogWarning("Password change failed for user {UserId}. Errors: {Errors}", userId, string.Join(", ", errors));
             return ServiceResult.Failure(errors, HttpStatusCode.BadRequest);
         }
 
         await userManager.UpdateSecurityStampAsync(currentUser);
         await cacheService.RemoveAsync($"security_stamp:{currentUser.Id}");
 
+        logger.LogInformation("Password changed successfully for user {UserId}.", userId);
         return ServiceResult.Success(HttpStatusCode.NoContent);
     }
 
@@ -215,9 +221,11 @@ public class UserService(
         if (!updateResult.Succeeded)
         {
             List<string> errors = updateResult.Errors.Select(e => e.Description).ToList();
+            logger.LogWarning("User update failed for user {UserId}. Errors: {Errors}", request.Id, string.Join(", ", errors));
             return ServiceResult.Failure(errors, HttpStatusCode.BadRequest);
         }
 
+        logger.LogInformation("User profile updated successfully for user {UserId}.", request.Id);
         return ServiceResult.Success(HttpStatusCode.NoContent);
     }
 
@@ -263,6 +271,7 @@ public class UserService(
             if (!removePasswordResult.Succeeded)
             {
                 await unitOfWork.RollbackTransactionAsync();
+                logger.LogError("Failed to remove password for user {UserId} during admin password reset", id);
                 return ServiceResult<string>.Failure("Şifre sıfırlanırken bir hata oluştu.", HttpStatusCode.InternalServerError);
             }
 
@@ -270,6 +279,7 @@ public class UserService(
             if (!addPasswordResult.Succeeded)
             {
                 await unitOfWork.RollbackTransactionAsync();
+                logger.LogError("Failed to add new password for user {UserId} during admin password reset", id);
                 return ServiceResult<string>.Failure("Yeni şifre atanırken bir hata oluştu.", HttpStatusCode.InternalServerError);
             }
 
@@ -279,6 +289,7 @@ public class UserService(
             if (!emailResult.IsSuccess)
             {
                 await unitOfWork.RollbackTransactionAsync();
+                logger.LogError("Password created but email failed to send for user {UserId}", id);
                 return ServiceResult<string>.Failure($"Şifre oluşturuldu ancak email gönderilemedi: {emailResult.ErrorList?.FirstOrDefault() ?? "Bilinmeyen hata"}", HttpStatusCode.InternalServerError);
             }
 
@@ -286,11 +297,13 @@ public class UserService(
             await userManager.UpdateSecurityStampAsync(user);
             await cacheService.RemoveAsync($"security_stamp:{user.Id}");
 
+            logger.LogInformation("Admin reset password successfully for user {UserId}", id);
             return ServiceResult<string>.Success(newPassword, HttpStatusCode.OK);
         }
         catch (Exception ex)
         {
             await unitOfWork.RollbackTransactionAsync();
+            logger.LogError(ex, "Exception occurred while resetting password for user {UserId}", id);
             return ServiceResult<string>.Failure($"Şifre sıfırlanırken bir hata oluştu: {ex.Message}", HttpStatusCode.InternalServerError);
         }
     }

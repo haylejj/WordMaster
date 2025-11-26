@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { PracticeCard } from "@/components/PracticeCard";
 import { wordService } from "@/services/word.service";
@@ -233,6 +233,7 @@ export default function GeneralPracticePage() {
             </div>
             {currentWord && (
                 <PracticeCard
+                    key={`${currentWord.id}-${currentIndex}`}
                     englishWord={currentWord.englishWord}
                     turkishWord={currentWord.turkishWord}
                     wordId={currentWord.id}
