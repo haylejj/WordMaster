@@ -18,4 +18,9 @@ public interface IWordService
     Task<ServiceResult<bool>> BulkUpdateStatsAsync(Guid userId, BulkUpdateStatsRequest request);
     Task<ServiceResult<PagedResult<WordResponse>>> GetPagedWordsAsync(Guid userId, string? search, int page, int pageSize);
     Task<ServiceResult<List<WordLookupResponse>>> GetUserWordsAsync(Guid userId);
+
+    // Admin Methods
+    Task<ServiceResult<PagedResult<AdminWordResponse>>> GetAdminPagedWordsAsync(string? search, int page, int pageSize);
+    Task<ServiceResult<AdminWordResponse>> AdminUpdateWordAsync(long wordId, UpdateWordRequest request);
+    Task<ServiceResult> AdminDeleteWordAsync(long wordId);
 }

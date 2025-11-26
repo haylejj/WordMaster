@@ -65,4 +65,37 @@ public class WordRepository(AppDbContext context) : GenericRepository<Word>(cont
             .OrderByDescending(x => x.Id)
             .FirstOrDefaultAsync();
     }
+
+    public async Task<(List<Word> Words, int TotalCount)> GetAdminPagedWordsAsync(string? search, int page, int pageSize)
+    {
+        IQueryable<Word> query = _context.Words
+            .Include(x => x.User)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            // Try to parse search as ID
+            if (long.TryParse(search, out long searchId))
+            {
+                query = query.Where(x => x.Id == searchId);
+            }
+            else
+            {
+                query = query.Where(x =>
+                    x.EnglishWord!.Contains(search) ||
+                    x.TurkishWord!.Contains(search) ||
+                    (x.User != null && x.User.UserName!.Contains(search)));
+            }
+        }
+
+        int totalCount = await query.CountAsync();
+        List<Word> words = await query
+            .OrderByDescending(x => x.CreatedTime)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .AsNoTracking()
+            .ToListAsync();
+
+        return (words, totalCount);
+    }
 }

@@ -17,6 +17,7 @@ import FolderPracticePage from "@/pages/dashboard/FolderPracticePage";
 import AdminLayout from "@/layouts/AdminLayout";
 import AdminDashboardPage from "@/pages/admin/AdminDashboardPage";
 import AdminUsersPage from "@/pages/admin/AdminUsersPage";
+import AdminWordsPage from "@/pages/admin/AdminWordsPage";
 import AdminRolesPage from "@/pages/admin/AdminRolesPage";
 import AdminIpAddressesPage from "@/pages/admin/AdminIpAddressesPage";
 
@@ -34,6 +35,7 @@ function App() {
         <Route path="/admin" element={<AdminLayout />}>
           <Route path="dashboard" element={<AdminDashboardPage />} />
           <Route path="users" element={<AdminUsersPage />} />
+          <Route path="words" element={<AdminWordsPage />} />
           <Route path="roles" element={<AdminRolesPage />} />
           <Route path="ip-addresses" element={<AdminIpAddressesPage />} />
         </Route>
