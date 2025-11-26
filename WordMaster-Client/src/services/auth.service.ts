@@ -8,6 +8,11 @@ export const authService = {
         return response.data;
     },
 
+    adminLogin: async (data: LoginRequest) => {
+        const response = await api.post<ServiceResultWithData<LoginResponse>>("/auth/admin-login", data);
+        return response.data;
+    },
+
     register: async (data: RegisterRequest) => {
         // Convert gender string to number for API
         const payload = {

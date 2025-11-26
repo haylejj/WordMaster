@@ -3,6 +3,7 @@ import LoginPage from "@/pages/auth/LoginPage";
 import RegisterPage from "@/pages/auth/RegisterPage";
 import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
+import AdminLoginPage from "@/pages/admin/AdminLoginPage";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import WordsPage from "@/pages/dashboard/WordsPage";
 import CreateWordPage from "@/pages/dashboard/CreateWordPage";
@@ -13,6 +14,11 @@ import ChangePasswordPage from "@/pages/dashboard/ChangePasswordPage";
 import GeneralPracticePage from "@/pages/dashboard/GeneralPracticePage";
 import FolderPracticePage from "@/pages/dashboard/FolderPracticePage";
 
+import AdminLayout from "@/layouts/AdminLayout";
+import AdminDashboardPage from "@/pages/admin/AdminDashboardPage";
+import AdminRolesPage from "@/pages/admin/AdminRolesPage";
+import AdminIpAddressesPage from "@/pages/admin/AdminIpAddressesPage";
+
 function App() {
   return (
     <Router>
@@ -21,6 +27,15 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/ResetPassword" element={<ResetPasswordPage />} />
+
+        {/* Admin Routes */}
+        <Route path="/admin/login" element={<AdminLoginPage />} />
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route path="dashboard" element={<AdminDashboardPage />} />
+          <Route path="users" element={<div className="text-white p-4">Kullanıcılar Sayfası (Yapım Aşamasında)</div>} />
+          <Route path="roles" element={<AdminRolesPage />} />
+          <Route path="ip-addresses" element={<AdminIpAddressesPage />} />
+        </Route>
 
         {/* Protected Dashboard Routes */}
         <Route path="/" element={<DashboardLayout />}>
