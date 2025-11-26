@@ -16,6 +16,7 @@ import FolderPracticePage from "@/pages/dashboard/FolderPracticePage";
 
 import AdminLayout from "@/layouts/AdminLayout";
 import AdminDashboardPage from "@/pages/admin/AdminDashboardPage";
+import AdminUsersPage from "@/pages/admin/AdminUsersPage";
 import AdminRolesPage from "@/pages/admin/AdminRolesPage";
 import AdminIpAddressesPage from "@/pages/admin/AdminIpAddressesPage";
 
@@ -32,7 +33,7 @@ function App() {
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/admin" element={<AdminLayout />}>
           <Route path="dashboard" element={<AdminDashboardPage />} />
-          <Route path="users" element={<div className="text-white p-4">Kullanıcılar Sayfası (Yapım Aşamasında)</div>} />
+          <Route path="users" element={<AdminUsersPage />} />
           <Route path="roles" element={<AdminRolesPage />} />
           <Route path="ip-addresses" element={<AdminIpAddressesPage />} />
         </Route>
