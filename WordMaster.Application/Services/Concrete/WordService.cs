@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Net;
+using WordMaster.Application.Constants;
 using WordMaster.Application.Key;
 using WordMaster.Application.Persistence;
 using WordMaster.Application.Persistence.Repositories;
@@ -11,10 +13,6 @@ using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Extensions;
 using WordMaster.Domain.Results;
-
-using WordMaster.Application.Constants;
-
-using Microsoft.Extensions.Logging;
 
 namespace WordMaster.Application.Services.Concrete;
 

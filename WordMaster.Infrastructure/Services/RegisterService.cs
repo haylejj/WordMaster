@@ -1,11 +1,10 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 using System.Net;
 using WordMaster.Application.Requests.Auth;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Results;
-
-using Microsoft.Extensions.Logging;
 
 namespace WordMaster.Infrastructure.Services;
 

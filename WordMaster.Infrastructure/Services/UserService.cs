@@ -98,6 +98,7 @@ public class UserService(
 
         int totalCount = await query.CountAsync();
         List<AppUser> users = await query
+            .OrderBy(x => x.UserName)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();

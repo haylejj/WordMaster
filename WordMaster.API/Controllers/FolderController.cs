@@ -4,7 +4,6 @@ using WordMaster.API.Extensions;
 using WordMaster.Application.Requests.Folder;
 using WordMaster.Application.Requests.Word;
 using WordMaster.Application.Responses.Folder;
-using WordMaster.Application.Responses.Word;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Results;
 

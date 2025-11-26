@@ -3,8 +3,16 @@ using WordMaster.Infrastructure.EfCore;
 
 namespace WordMaster.API.Extensions;
 
+/// <summary>
+/// Extension methods for the WebApplication class.
+/// </summary>
 public static class WebApplicationExtensions
 {
+    /// <summary>
+    /// Logs the startup status of the application, including database and Redis connection checks.
+    /// </summary>
+    /// <param name="app">The WebApplication instance.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public static async Task LogStartupStatusAsync(this WebApplication app)
     {
         using (IServiceScope scope = app.Services.CreateScope())

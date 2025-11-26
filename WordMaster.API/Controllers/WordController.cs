@@ -2,10 +2,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using WordMaster.API.Extensions;
-using WordMaster.Application.Requests.Word;
 using WordMaster.Application.Requests.Practice;
-using WordMaster.Application.Responses.Word;
+using WordMaster.Application.Requests.Word;
 using WordMaster.Application.Responses.Practice;
+using WordMaster.Application.Responses.Word;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Results;
 

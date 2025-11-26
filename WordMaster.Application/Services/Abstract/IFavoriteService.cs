@@ -2,7 +2,6 @@ using WordMaster.Application.Requests.Favorite;
 using WordMaster.Application.Requests.Word;
 using WordMaster.Application.Responses.Favorite;
 using WordMaster.Application.Responses.Practice;
-using WordMaster.Application.Responses.Word;
 using WordMaster.Domain.Results;
 
 namespace WordMaster.Application.Services.Abstract;

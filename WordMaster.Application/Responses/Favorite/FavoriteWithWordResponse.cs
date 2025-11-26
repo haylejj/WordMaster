@@ -1,6 +1,3 @@
-using System;
-using WordMaster.Application.Responses.Word;
-
 namespace WordMaster.Application.Responses.Favorite;
 
 public class FavoriteWithWordResponse

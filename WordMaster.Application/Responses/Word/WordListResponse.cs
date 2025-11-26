@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace WordMaster.Application.Responses.Word;
 
 public class WordListResponse

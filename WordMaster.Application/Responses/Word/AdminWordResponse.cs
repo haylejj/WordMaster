@@ -1,5 +1,3 @@
-using WordMaster.Domain.Entities;
-
 namespace WordMaster.Application.Responses.Word;
 
 public class AdminWordResponse

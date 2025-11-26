@@ -1,6 +1,3 @@
-using System.Collections.Generic;
-using WordMaster.Application.Responses;
-
 namespace WordMaster.Application.Responses.Admin;
 
 public class LoginStatisticsResponse
