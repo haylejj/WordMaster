@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using WordMaster.Application.Responses.Word;
 
 namespace WordMaster.Application.Responses.Folder;

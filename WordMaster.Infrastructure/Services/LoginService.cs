@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Net;
 using WordMaster.Application.Requests.Auth;
@@ -9,9 +10,7 @@ using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Configuration;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Results;
-
 using WordMaster.Infrastructure.Helpers;
-using Microsoft.Extensions.Logging;
 
 namespace WordMaster.Infrastructure.Services;
 

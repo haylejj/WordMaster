@@ -12,8 +12,8 @@ public static class ClaimsPrincipalExtensions
     /// </summary>
     public static Guid GetUserId(this ClaimsPrincipal principal)
     {
-        var userId = principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return Guid.TryParse(userId, out var guid) ? guid : Guid.Empty;
+        string? userId = principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return Guid.TryParse(userId, out Guid guid) ? guid : Guid.Empty;
     }
 
     /// <summary>

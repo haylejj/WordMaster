@@ -1,4 +1,5 @@
 using System.Net;
+using WordMaster.Application.Constants;
 using WordMaster.Application.Key;
 using WordMaster.Application.Persistence;
 using WordMaster.Application.Persistence.Repositories;
@@ -10,8 +11,6 @@ using WordMaster.Application.Responses.Word;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Results;
-
-using WordMaster.Application.Constants;
 
 namespace WordMaster.Application.Services.Concrete;
 

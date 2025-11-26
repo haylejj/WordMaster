@@ -1,30 +1,35 @@
 import api from "./api";
-import type { ServiceResult, ServiceResultWithData } from "@/types/api";
-
-export interface UserProfile {
-    userName: string | null;
-    email: string | null;
-    phone: string | null;
-    birthDate: string | null;
-    gender: number | null;
-}
-
-export interface UpdateProfileRequest {
-    userName: string | null;
-    email: string | null;
-    phone: string | null;
-    birthDate: string | null;
-    gender: number | null;
-}
+import type { ServiceResult, ServiceResultWithData, PagedResult } from "@/types/api";
+import type { UserWithRolesResponse, UserDetailResponse, UserUpdateRequest } from "@/types/user";
 
 export const userService = {
-    getProfile: async () => {
-        const response = await api.get<ServiceResultWithData<UserProfile>>("/user/profile");
+    getPagedUsers: async (page: number = 1, pageSize: number = 10, search?: string): Promise<ServiceResultWithData<PagedResult<UserWithRolesResponse>>> => {
+        const params = new URLSearchParams();
+        params.append("page", page.toString());
+        params.append("pageSize", pageSize.toString());
+        if (search) params.append("search", search);
+
+        const response = await api.get(`/admin/users?${params.toString()}`);
         return response.data;
     },
 
-    updateProfile: async (data: UpdateProfileRequest) => {
-        const response = await api.put<ServiceResult>("/user/profile", data);
+    getUserDetail: async (id: string): Promise<ServiceResultWithData<UserDetailResponse>> => {
+        const response = await api.get(`/admin/users/${id}/detail`);
         return response.data;
     },
+
+    updateUser: async (data: UserUpdateRequest): Promise<ServiceResult> => {
+        const response = await api.put("/admin/users", data);
+        return response.data;
+    },
+
+    deleteUser: async (id: string): Promise<ServiceResult> => {
+        const response = await api.delete(`/admin/users/${id}`);
+        return response.data;
+    },
+
+    resetPassword: async (id: string): Promise<ServiceResultWithData<string>> => {
+        const response = await api.post(`/admin/users/${id}/reset-password`);
+        return response.data;
+    }
 };

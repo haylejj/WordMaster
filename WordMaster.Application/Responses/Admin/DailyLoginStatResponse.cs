@@ -1,5 +1,3 @@
-using System;
-
 namespace WordMaster.Application.Responses.Admin;
 
 public class DailyLoginStatResponse

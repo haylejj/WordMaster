@@ -3,9 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using WordMaster.API.Extensions;
 using WordMaster.Application.Requests.Unknows;
 using WordMaster.Application.Requests.Word;
-using WordMaster.Application.Responses.Unknows;
-using WordMaster.Application.Responses.Word;
 using WordMaster.Application.Responses.Practice;
+using WordMaster.Application.Responses.Unknows;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Results;
 
@@ -29,7 +28,7 @@ public class UnknowsController(IUnknowsService unknowsService) : BaseController
     public async Task<IActionResult> GetUnknows([FromQuery] string? search, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
         Guid userId = User.GetUserId();
-        var result = await unknowsService.GetPagedUnknowsAsync(userId, search, page, pageSize);
+        ServiceResult<PagedResult<UnknowsWithWordResponse>> result = await unknowsService.GetPagedUnknowsAsync(userId, search, page, pageSize);
         return CreateResult(result);
     }
 

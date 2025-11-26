@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using WordMaster.Application.Responses;
-
 namespace WordMaster.Application.Responses.Favorite;
 
 public class FavoriteListResponse

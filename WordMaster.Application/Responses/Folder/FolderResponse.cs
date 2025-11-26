@@ -1,5 +1,3 @@
-using System;
-
 namespace WordMaster.Application.Responses.Folder;
 
 public class FolderResponse

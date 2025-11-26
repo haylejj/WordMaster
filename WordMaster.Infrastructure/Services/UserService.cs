@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Net;
 using WordMaster.Application.Persistence;
 using WordMaster.Application.Persistence.Repositories;
@@ -10,8 +11,6 @@ using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Helpers;
 using WordMaster.Domain.Results;
-
-using Microsoft.Extensions.Logging;
 
 namespace WordMaster.Infrastructure.Services;
 
@@ -99,6 +98,7 @@ public class UserService(
 
         int totalCount = await query.CountAsync();
         List<AppUser> users = await query
+            .OrderBy(x => x.UserName)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
@@ -113,6 +113,8 @@ public class UserService(
                 UserName = user.UserName!,
                 Email = user.Email!,
                 SecurityStamp = user.SecurityStamp,
+                IsLockedOut = await userManager.IsLockedOutAsync(user),
+                Gender = user.Gender,
                 Roles = userRoles.ToList()
             });
         }
@@ -205,6 +207,11 @@ public class UserService(
     /// </summary>
     public async Task<ServiceResult> UpdateUserAsync(UserUpdateRequest request)
     {
+        if (string.IsNullOrEmpty(request.Id))
+        {
+            return ServiceResult.Failure("Kullanıcı ID'si zorunludur.", HttpStatusCode.BadRequest);
+        }
+
         AppUser? user = await userManager.FindByIdAsync(request.Id);
         if (user == null)
         {
@@ -337,6 +344,7 @@ public class UserService(
             UserName = user.UserName!,
             Email = user.Email!,
             SecurityStamp = user.SecurityStamp,
+            Gender = user.Gender,
             Roles = roles.ToList()
         };
 
