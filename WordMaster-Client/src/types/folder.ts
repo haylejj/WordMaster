@@ -8,6 +8,12 @@ export interface FolderResponse {
     wordCount: number;
 }
 
+export interface FolderWordResponse {
+    id: number;
+    englishWord: string;
+    turkishWord: string;
+}
+
 export interface FolderDetailResponse {
     folderId: number;
     folderName: string;

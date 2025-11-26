@@ -30,18 +30,8 @@ const normalizeWordFromWrapper = (
           id: Number(item.word.id ?? item.wordId),
           englishWord: item.word.englishWord ?? "",
           turkishWord: item.word.turkishWord ?? "",
-          favoriteId:
-            relation === "favorite"
-              ? Number(item.id)
-              : item.word.favoriteId !== undefined && item.word.favoriteId !== null
-                ? Number(item.word.favoriteId)
-                : null,
-          unknowsId:
-            relation === "unknown"
-              ? Number(item.id)
-              : item.word.unknowsId !== undefined && item.word.unknowsId !== null
-                ? Number(item.word.unknowsId)
-                : null,
+          favoriteId: relation === "favorite" ? Number(item.id) : null,
+          unknowsId: relation === "unknown" ? Number(item.id) : null,
         } as WordResponse;
       })
       .filter(Boolean) as WordResponse[],

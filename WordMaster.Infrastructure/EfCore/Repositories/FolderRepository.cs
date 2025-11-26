@@ -12,6 +12,7 @@ public class FolderRepository(AppDbContext context) : GenericRepository<Folder>(
             .AsNoTracking()
             .Where(f => f.UserId == userId)
             .OrderByDescending(f => f.CreatedTime)
+            .Include(f => f.WordFolders)
             .ToListAsync();
     }
 

@@ -136,11 +136,11 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
             CreatedTime = u.CreatedTime,
             WordId = u.WordId,
             UserId = u.UserId,
-            Word = u.Word != null ? new WordResponse
+            Word = u.Word != null ? new UnknowsWordResponse
             {
                 Id = u.Word.Id,
-                EnglishWord = u.Word.EnglishWord,
-                TurkishWord = u.Word.TurkishWord
+                EnglishWord = u.Word.EnglishWord ?? string.Empty,
+                TurkishWord = u.Word.TurkishWord ?? string.Empty
             } : null
         }).ToList();
 

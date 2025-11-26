@@ -4,7 +4,7 @@ import FolderFlashCard from "@/components/folders/FolderFlashCard";
 import { folderService } from "@/services/folder.service";
 import { wordService } from "@/services/word.service";
 import type { WordResponse } from "@/types/word";
-import type { FolderResponse } from "@/types/folder";
+import type { FolderResponse, FolderWordResponse } from "@/types/folder";
 import { Folder, Loader2, ChevronLeft, Plus, Search, ChevronDown } from "lucide-react";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import UpdateWordModal from "@/components/dashboard/UpdateWordModal";
@@ -15,14 +15,14 @@ export default function FolderDetailPage() {
     const navigate = useNavigate();
 
     const [folder, setFolder] = useState<FolderResponse | null>(null);
-    const [words, setWords] = useState<WordResponse[]>([]);
+    const [words, setWords] = useState<FolderWordResponse[]>([]);
     const [allWords, setAllWords] = useState<WordResponse[]>([]);
     const [selectedWordId, setSelectedWordId] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const [removeTarget, setRemoveTarget] = useState<WordResponse | null>(null);
-    const [updateTarget, setUpdateTarget] = useState<WordResponse | null>(null);
+    const [removeTarget, setRemoveTarget] = useState<FolderWordResponse | null>(null);
+    const [updateTarget, setUpdateTarget] = useState<FolderWordResponse | null>(null);
     const [busy, setBusy] = useState(false);
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [wordQuery, setWordQuery] = useState("");

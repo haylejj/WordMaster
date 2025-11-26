@@ -13,7 +13,7 @@ public interface IFolderService
     Task<ServiceResult<FolderResponse>> AddFolderAsync(CreateFolderRequest request, Guid userId);
     Task<ServiceResult<FolderResponse>> UpdateFolderAsync(long folderId, UpdateFolderRequest request, Guid userId);
     Task<ServiceResult> DeleteFolderAsync(long folderId, Guid userId);
-    Task<ServiceResult<List<WordResponse>>> GetWordsInFolderAsync(long folderId, Guid userId);
+    Task<ServiceResult<List<FolderWordResponse>>> GetWordsInFolderAsync(long folderId, Guid userId);
     Task<ServiceResult> AddWordToFolderAsync(AddWordToFolderRequest request, Guid userId);
     Task<ServiceResult> RemoveWordFromFolderAsync(AddWordToFolderRequest request, Guid userId);
     Task<ServiceResult<bool>> CheckTranslationAndUpdateAsync(Guid userId, CheckTranslationRequest request);

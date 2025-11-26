@@ -90,7 +90,7 @@ public class FolderController(IFolderService folderService) : BaseController
     public async Task<IActionResult> GetWordsInFolder(long id)
     {
         Guid userId = User.GetUserId();
-        ServiceResult<List<WordResponse>> result = await folderService.GetWordsInFolderAsync(id, userId);
+        ServiceResult<List<FolderWordResponse>> result = await folderService.GetWordsInFolderAsync(id, userId);
         return CreateResult(result);
     }
 

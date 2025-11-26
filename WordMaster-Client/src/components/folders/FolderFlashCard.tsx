@@ -1,12 +1,12 @@
 import { useState } from "react";
-import type { WordResponse } from "@/types/word";
+import type { FolderWordResponse } from "@/types/folder";
 import { Pencil, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface FolderFlashCardProps {
-    word: WordResponse;
-    onEdit: (word: WordResponse) => void;
-    onRemove: (word: WordResponse) => void;
+    word: FolderWordResponse;
+    onEdit: (word: FolderWordResponse) => void;
+    onRemove: (word: FolderWordResponse) => void;
 }
 
 export default function FolderFlashCard({ word, onEdit, onRemove }: FolderFlashCardProps) {

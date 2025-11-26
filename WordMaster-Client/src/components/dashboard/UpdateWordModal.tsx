@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { updateWordSchema } from "@/types/word";
 import type { UpdateWordRequest, WordResponse } from "@/types/word";
+import type { FolderWordResponse } from "@/types/folder";
 import { wordService } from "@/services/word.service";
 import { X } from "lucide-react";
 import { cn, getErrorMessage } from "@/lib/utils";
@@ -11,7 +12,7 @@ interface UpdateWordModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: (updatedWord?: WordResponse) => void;
-  word: WordResponse | null;
+  word: WordResponse | FolderWordResponse | null;
 }
 
 export default function UpdateWordModal({ isOpen, onClose, onSuccess, word }: UpdateWordModalProps) {
@@ -53,8 +54,8 @@ export default function UpdateWordModal({ isOpen, onClose, onSuccess, word }: Up
           id: data.id,
           englishWord: data.englishWord,
           turkishWord: data.turkishWord,
-          favoriteId: word?.favoriteId ?? null,
-          unknowsId: word?.unknowsId ?? null,
+          favoriteId: word && 'favoriteId' in word ? word.favoriteId : null,
+          unknowsId: word && 'unknowsId' in word ? word.unknowsId : null,
         };
         onSuccess(updatedWord);
         setTimeout(() => {

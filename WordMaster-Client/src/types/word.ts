@@ -14,12 +14,26 @@ export interface PracticeWordResponse {
   turkishWord: string;
 }
 
+
+
+export interface FavoriteWordResponse {
+  id: number;
+  englishWord: string;
+  turkishWord: string;
+}
+
+export interface UnknowsWordResponse {
+  id: number;
+  englishWord: string;
+  turkishWord: string;
+}
+
 export interface FavoriteWithWordResponse {
   id: number;
   createdTime: string;
   wordId: number;
   userId: string | null;
-  word: WordResponse | null;
+  word: FavoriteWordResponse | null;
 }
 
 export interface UnknowsWithWordResponse {
@@ -27,7 +41,7 @@ export interface UnknowsWithWordResponse {
   createdTime: string;
   wordId: number;
   userId: string | null;
-  word: WordResponse | null;
+  word: UnknowsWordResponse | null;
 }
 
 export const createWordSchema = z.object({

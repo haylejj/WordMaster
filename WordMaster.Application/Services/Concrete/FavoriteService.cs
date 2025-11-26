@@ -136,11 +136,11 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
             CreatedTime = f.CreatedTime,
             WordId = f.WordId,
             UserId = f.UserId,
-            Word = f.Word != null ? new WordResponse
+            Word = f.Word != null ? new FavoriteWordResponse
             {
                 Id = f.Word.Id,
-                EnglishWord = f.Word.EnglishWord,
-                TurkishWord = f.Word.TurkishWord
+                EnglishWord = f.Word.EnglishWord ?? string.Empty,
+                TurkishWord = f.Word.TurkishWord ?? string.Empty
             } : null
         }).ToList();
 

@@ -1,6 +1,6 @@
 import api from "./api";
 import type { ServiceResult, ServiceResultWithData } from "@/types/api";
-import type { FolderResponse, FolderWordRequest } from "@/types/folder";
+import type { FolderResponse, FolderWordRequest, FolderWordResponse } from "@/types/folder";
 import type { WordResponse } from "@/types/word";
 
 export const folderService = {
@@ -30,7 +30,7 @@ export const folderService = {
     },
 
     getWords: async (folderId: number) => {
-        const response = await api.get<ServiceResultWithData<WordResponse[]>>(`/folders/${folderId}/words`);
+        const response = await api.get<ServiceResultWithData<FolderWordResponse[]>>(`/folders/${folderId}/words`);
         return response.data;
     },
 
