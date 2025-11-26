@@ -99,8 +99,14 @@ export default function FolderDetailPage() {
         try {
             const response = await folderService.addWordToFolder({ folderId, wordId: selectedWordId });
             if (response.isSuccess) {
+                // jQuery tarzı optimizasyon: Sadece eklenen kelimeyi state'e ekle
+                const addedWord = allWords.find(w => w.id === selectedWordId);
+                if (addedWord) {
+                    setWords(prev => [...prev, addedWord]);
+                    setMessage("Kelime klasöre eklendi ✓");
+                }
                 setSelectedWordId(null);
-                fetchData();
+                setDropdownOpen(false);
             } else {
                 setError(response.errorList?.join(" ") || "Kelime klasöre eklenemedi.");
             }
@@ -119,8 +125,10 @@ export default function FolderDetailPage() {
         try {
             const response = await folderService.removeWordFromFolder({ folderId, wordId: removeTarget.id });
             if (response.isSuccess) {
+                // jQuery tarzı optimizasyon: Sadece çıkarılan kelimeyi state'ten kaldır
+                setWords(prev => prev.filter(w => w.id !== removeTarget.id));
+                setMessage("Kelime klasörden çıkarıldı ✓");
                 setRemoveTarget(null);
-                fetchData();
             } else {
                 setError(response.errorList?.join(" ") || "Kelime çıkarılamadı.");
             }
@@ -169,7 +177,10 @@ export default function FolderDetailPage() {
                             </div>
 
                             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                                <button className="rounded-full bg-green-500 px-5 py-2 text-sm font-semibold text-white shadow hover:bg-green-600">
+                                <button
+                                    onClick={() => navigate(`/folders/${folderId}/practice`)}
+                                    className="rounded-full bg-green-500 px-5 py-2 text-sm font-semibold text-white shadow hover:bg-green-600"
+                                >
                                     Pratik Yap
                                 </button>
                                 <div className="relative w-full max-w-xs z-20">
@@ -264,8 +275,12 @@ export default function FolderDetailPage() {
             <UpdateWordModal
                 isOpen={!!updateTarget}
                 onClose={() => setUpdateTarget(null)}
-                onSuccess={() => {
-                    fetchData();
+                onSuccess={(updatedWord) => {
+                    // jQuery tarzı optimizasyon: Sadece güncellenen kelimeyi state'te değiştir
+                    if (updatedWord) {
+                        setWords(prev => prev.map(w => w.id === updatedWord.id ? updatedWord : w));
+                    }
+                    setUpdateTarget(null);
                 }}
                 word={updateTarget}
             />

@@ -9,6 +9,8 @@ export default function DashboardLayout() {
   const navigate = useNavigate();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const [isPracticeMenuOpen, setIsPracticeMenuOpen] = useState(false);
+  const practiceMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -45,6 +47,23 @@ export default function DashboardLayout() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isUserMenuOpen]);
+
+  // Close practice menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (practiceMenuRef.current && !practiceMenuRef.current.contains(event.target as Node)) {
+        setIsPracticeMenuOpen(false);
+      }
+    };
+
+    if (isPracticeMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isPracticeMenuOpen]);
 
   const handleLogout = async () => {
     try {
@@ -102,12 +121,29 @@ export default function DashboardLayout() {
             </Link>
           </nav>
 
-          <div className="relative group">
-            <button className="flex items-center px-4 py-2 bg-primary-yellow text-primary-dark rounded-full text-sm font-bold hover:bg-[#FFC107] transition-colors">
+          <div className="relative" ref={practiceMenuRef}>
+            <button
+              onClick={() => setIsPracticeMenuOpen(!isPracticeMenuOpen)}
+              className="flex items-center px-4 py-2 bg-primary-yellow text-primary-dark rounded-full text-sm font-bold hover:bg-[#FFC107] transition-colors"
+            >
               <PlayCircle size={18} className="mr-2" />
               Pratik Yap
               <ChevronDown size={16} className="ml-2" />
             </button>
+
+            {isPracticeMenuOpen && (
+              <div className="absolute left-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
+                <Link to="/practice/all" onClick={() => setIsPracticeMenuOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                  <Book size={16} className="mr-2" /> Tüm Kelimelerle
+                </Link>
+                <Link to="/practice/favorites" onClick={() => setIsPracticeMenuOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                  <Star size={16} className="mr-2" /> Favorilerle
+                </Link>
+                <Link to="/practice/unknowns" onClick={() => setIsPracticeMenuOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                  <HelpCircle size={16} className="mr-2" /> Bilinmeyenlerle
+                </Link>
+              </div>
+            )}
           </div>
         </div>
 

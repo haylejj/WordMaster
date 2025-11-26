@@ -32,7 +32,7 @@ public class PracticeController(IWordService wordService) : Controller
     }
 
     [HttpGet("CheckTranslation")]
-    public async Task<IActionResult> CheckTranslation(string turkishWord, string englishWord)
+    public async Task<IActionResult> CheckTranslation(long wordId, string answer)
     {
         Guid userId = User.GetUserId();
         if (userId == Guid.Empty)
@@ -40,7 +40,13 @@ public class PracticeController(IWordService wordService) : Controller
             return Json(new { isCorrect = false });
         }
 
-        Result<bool> result = await wordService.CheckTranslationAndUpdateAsync(userId, turkishWord, englishWord);
+        var request = new WordMaster.Application.Requests.Word.CheckTranslationRequest
+        {
+            WordId = wordId,
+            Answer = answer
+        };
+
+        var result = await wordService.CheckTranslationAndUpdateAsync(userId, request);
         return Json(new { isCorrect = result.Data });
     }
 

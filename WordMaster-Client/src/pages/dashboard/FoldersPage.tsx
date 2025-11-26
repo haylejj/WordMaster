@@ -45,10 +45,11 @@ export default function FoldersPage() {
         setError(null);
         try {
             const response = await folderService.createFolder(name.trim());
-            if (response.isSuccess) {
+            if (response.isSuccess && response.data) {
+                // Backend artık created folder dönüyor!
+                setFolders(prev => [...prev, response.data!]);
                 setFeedback("Klasör oluşturuldu.");
                 setCreateModalOpen(false);
-                fetchFolders();
             } else {
                 setError(response.errorList?.join(" ") || "Klasör oluşturulamadı.");
             }
@@ -66,10 +67,13 @@ export default function FoldersPage() {
         setBusy(true);
         try {
             const response = await folderService.updateFolder(editTarget.id, name);
-            if (response.isSuccess) {
+            if (response.isSuccess && response.data) {
+                // Backend updated folder dönüyor!
+                setFolders(prev => prev.map(folder =>
+                    folder.id === editTarget.id ? response.data! : folder
+                ));
                 setFeedback("Klasör güncellendi.");
                 setEditTarget(null);
-                fetchFolders();
             } else {
                 throw new Error(response.errorList?.join(" ") || "Klasör güncellenemedi.");
             }
@@ -87,9 +91,10 @@ export default function FoldersPage() {
         try {
             const response = await folderService.deleteFolder(deleteTarget.id);
             if (response.isSuccess) {
+                // jQuery tarzı optimizasyon: Silinen folder'ı state'ten kaldır
+                setFolders(prev => prev.filter(folder => folder.id !== deleteTarget.id));
                 setFeedback("Klasör silindi.");
                 setDeleteTarget(null);
-                fetchFolders();
             } else {
                 throw new Error(response.errorList?.join(" ") || "Klasör silinemedi.");
             }

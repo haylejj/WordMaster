@@ -52,17 +52,17 @@ public class FolderService(
         return ServiceResult<FolderResponse>.Success(folderDto, HttpStatusCode.OK);
     }
 
-    public async Task<ServiceResult> AddFolderAsync(CreateFolderRequest request, Guid userId)
+    public async Task<ServiceResult<FolderResponse>> AddFolderAsync(CreateFolderRequest request, Guid userId)
     {
         if (string.IsNullOrWhiteSpace(request.Name))
         {
-            return ServiceResult.Failure("Klasör adı gereklidir.", HttpStatusCode.BadRequest);
+            return ServiceResult<FolderResponse>.Failure("Klasör adı gereklidir.", HttpStatusCode.BadRequest);
         }
 
         bool exists = await folderRepository.AnyAsync(f => f.UserId == userId && f.Name == request.Name.Trim());
         if (exists)
         {
-            return ServiceResult.Failure("Bu isimde bir klasör zaten mevcut.", HttpStatusCode.Conflict);
+            return ServiceResult<FolderResponse>.Failure("Bu isimde bir klasör zaten mevcut.", HttpStatusCode.Conflict);
         }
 
         Folder folder = new()
@@ -74,32 +74,50 @@ public class FolderService(
 
         await folderRepository.AddAsync(folder);
         await unitOfWork.CommitAsync();
-        return ServiceResult.SuccessAsCreated();
+
+        FolderResponse response = new()
+        {
+            Id = folder.Id,
+            Name = folder.Name,
+            CreatedTime = folder.CreatedTime,
+            WordCount = 0
+        };
+
+        return ServiceResult<FolderResponse>.SuccessAsCreated(response, null);
     }
 
-    public async Task<ServiceResult> UpdateFolderAsync(long folderId, UpdateFolderRequest request, Guid userId)
+    public async Task<ServiceResult<FolderResponse>> UpdateFolderAsync(long folderId, UpdateFolderRequest request, Guid userId)
     {
         if (string.IsNullOrWhiteSpace(request.Name))
         {
-            return ServiceResult.Failure("Klasör adı gereklidir.", HttpStatusCode.BadRequest);
+            return ServiceResult<FolderResponse>.Failure("Klasör adı gereklidir.", HttpStatusCode.BadRequest);
         }
 
         Folder? folder = await folderRepository.GetUserFolderAsync(folderId, userId);
         if (folder == null)
         {
-            return ServiceResult.Failure("Klasör bulunamadı.", HttpStatusCode.NotFound);
+            return ServiceResult<FolderResponse>.Failure("Klasör bulunamadı.", HttpStatusCode.NotFound);
         }
 
         bool exists = await folderRepository.AnyAsync(f => f.UserId == userId && f.Name == request.Name.Trim() && f.Id != folderId);
         if (exists)
         {
-            return ServiceResult.Failure("Bu isimde bir klasör zaten mevcut.", HttpStatusCode.Conflict);
+            return ServiceResult<FolderResponse>.Failure("Bu isimde bir klasör zaten mevcut.", HttpStatusCode.Conflict);
         }
 
         folder.Name = request.Name.Trim();
         folderRepository.Update(folder);
         await unitOfWork.CommitAsync();
-        return ServiceResult.Success(HttpStatusCode.NoContent);
+
+        FolderResponse response = new()
+        {
+            Id = folder.Id,
+            Name = folder.Name,
+            CreatedTime = folder.CreatedTime,
+            WordCount = folder.WordFolders.Count
+        };
+
+        return ServiceResult<FolderResponse>.Success(response, HttpStatusCode.OK);
     }
 
     public async Task<ServiceResult> DeleteFolderAsync(long folderId, Guid userId)

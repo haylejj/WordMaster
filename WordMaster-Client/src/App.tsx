@@ -10,6 +10,8 @@ import FoldersPage from "@/pages/dashboard/FoldersPage";
 import FolderDetailPage from "@/pages/dashboard/FolderDetailPage";
 import ProfilePage from "@/pages/dashboard/ProfilePage";
 import ChangePasswordPage from "@/pages/dashboard/ChangePasswordPage";
+import GeneralPracticePage from "@/pages/dashboard/GeneralPracticePage";
+import FolderPracticePage from "@/pages/dashboard/FolderPracticePage";
 
 function App() {
   return (
@@ -30,6 +32,8 @@ function App() {
           <Route path="unknowns" element={<WordsPage variant="unknowns" />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="change-password" element={<ChangePasswordPage />} />
+          <Route path="practice/:type" element={<GeneralPracticePage />} />
+          <Route path="folders/:id/practice" element={<FolderPracticePage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

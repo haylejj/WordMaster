@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using WordMaster.API.Extensions;
 using WordMaster.Application.Requests.Unknows;
 using WordMaster.Application.Requests.Word;
+using WordMaster.Application.Responses.Unknows;
+using WordMaster.Application.Responses.Word;
+using WordMaster.Application.Responses.Practice;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Results;
 
@@ -59,12 +62,12 @@ public class UnknowsController(IUnknowsService unknowsService) : BaseController
     /// <summary>
     /// Bilinmeyen kelimelerden pratik yapmak için rastgele bir kelime getirir.
     /// </summary>
-    /// <returns>İngilizce kelime.</returns>
+    /// <returns>Kelime detayları (WordResponse).</returns>
     [HttpGet("practice/random")]
     public async Task<IActionResult> GetRandomWord()
     {
         Guid userId = User.GetUserId();
-        ServiceResult<string> result = await unknowsService.GetRandomWordFromUnknowsAsync(userId);
+        ServiceResult<PracticeWordResponse> result = await unknowsService.GetRandomWordFromUnknowsAsync(userId);
         return CreateResult(result);
     }
 

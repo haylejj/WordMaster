@@ -6,6 +6,7 @@ import type {
   UpdateWordRequest,
   FavoriteWithWordResponse,
   UnknowsWithWordResponse,
+  PracticeWordResponse,
 } from "@/types/word";
 
 const buildQueryString = (search: string, page: number, pageSize: number) => {
@@ -96,7 +97,7 @@ export const wordService = {
   },
 
   updateWord: async (data: UpdateWordRequest) => {
-    const response = await api.put<ServiceResult>("/words", data);
+    const response = await api.put<ServiceResultWithData<WordResponse>>("/words", data);
     return response.data;
   },
 
@@ -128,6 +129,41 @@ export const wordService = {
         "Content-Type": "multipart/form-data",
       },
     });
+    return response.data;
+  },
+
+  getPracticeRandomWord: async () => {
+    const response = await api.get<ServiceResultWithData<PracticeWordResponse>>("/words/practice/random");
+    return response.data;
+  },
+
+  checkPracticeTranslation: async (wordId: number, answer: string) => {
+    const response = await api.post<ServiceResultWithData<boolean>>("/words/practice/check", { wordId, answer });
+    return response.data;
+  },
+
+  getPracticeRandomFavorite: async () => {
+    const response = await api.get<ServiceResultWithData<PracticeWordResponse>>("/favorites/practice/random");
+    return response.data;
+  },
+
+  checkPracticeFavorite: async (wordId: number, answer: string) => {
+    const response = await api.post<ServiceResultWithData<boolean>>("/favorites/practice/check", { wordId, answer });
+    return response.data;
+  },
+
+  getPracticeRandomUnknown: async () => {
+    const response = await api.get<ServiceResultWithData<PracticeWordResponse>>("/unknows/practice/random");
+    return response.data;
+  },
+
+  checkPracticeUnknown: async (wordId: number, answer: string) => {
+    const response = await api.post<ServiceResultWithData<boolean>>("/unknows/practice/check", { wordId, answer });
+    return response.data;
+  },
+
+  bulkUpdateStats: async (results: { wordId: number; isCorrect: boolean }[]) => {
+    const response = await api.post<ServiceResultWithData<boolean>>("/words/practice/batch-update", { results });
     return response.data;
   },
 };

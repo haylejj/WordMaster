@@ -10,7 +10,7 @@ import { cn, getErrorMessage } from "@/lib/utils";
 interface UpdateWordModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (updatedWord?: WordResponse) => void;
   word: WordResponse | null;
 }
 
@@ -48,7 +48,15 @@ export default function UpdateWordModal({ isOpen, onClose, onSuccess, word }: Up
       const response = await wordService.updateWord(data);
       if (response.isSuccess) {
         setSuccess("Kelime başarıyla güncellendi.");
-        onSuccess();
+        // Backend güncellenmiş kelimeyi dönmüyor, o yüzden form datasını kullanıyoruz
+        const updatedWord: WordResponse = {
+          id: data.id,
+          englishWord: data.englishWord,
+          turkishWord: data.turkishWord,
+          favoriteId: word?.favoriteId ?? null,
+          unknowsId: word?.unknowsId ?? null,
+        };
+        onSuccess(updatedWord);
         setTimeout(() => {
           setSuccess(null);
           onClose();

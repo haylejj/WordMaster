@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using WordMaster.API.Extensions;
 using WordMaster.Application.Requests.Word;
+using WordMaster.Application.Requests.Practice;
 using WordMaster.Application.Responses.Word;
+using WordMaster.Application.Responses.Practice;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Results;
 
@@ -131,13 +133,13 @@ public class WordController(IWordService wordService, IExcelService excelService
     /// <summary>
     /// Pratik yapmak için rastgele bir kelime getirir.
     /// </summary>
-    /// <returns>İngilizce kelime.</returns>
+    /// <returns>Kelime detayları (WordResponse).</returns>
     [Authorize]
     [HttpGet("practice/random")]
     public async Task<IActionResult> GetRandomWord()
     {
         Guid userId = User.GetUserId();
-        ServiceResult<string> result = await wordService.GetRandomWordAsync(userId);
+        ServiceResult<PracticeWordResponse> result = await wordService.GetRandomWordAsync(userId);
         return CreateResult(result);
     }
 
@@ -152,6 +154,20 @@ public class WordController(IWordService wordService, IExcelService excelService
     {
         Guid userId = User.GetUserId();
         ServiceResult<bool> result = await wordService.CheckTranslationAndUpdateAsync(userId, request);
+        return CreateResult(result);
+    }
+
+    /// <summary>
+    /// Pratik sonuçlarını toplu olarak günceller.
+    /// </summary>
+    /// <param name="request">Sonuç listesi.</param>
+    /// <returns>İşlem sonucu.</returns>
+    [Authorize]
+    [HttpPost("practice/batch-update")]
+    public async Task<IActionResult> BulkUpdateStats([FromBody] BulkUpdateStatsRequest request)
+    {
+        Guid userId = User.GetUserId();
+        ServiceResult<bool> result = await wordService.BulkUpdateStatsAsync(userId, request);
         return CreateResult(result);
     }
 }

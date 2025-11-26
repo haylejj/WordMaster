@@ -3,7 +3,9 @@ using System.Net;
 using WordMaster.Application.Key;
 using WordMaster.Application.Persistence;
 using WordMaster.Application.Persistence.Repositories;
+using WordMaster.Application.Requests.Practice;
 using WordMaster.Application.Requests.Word;
+using WordMaster.Application.Responses.Practice;
 using WordMaster.Application.Responses.Word;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Entities;
@@ -79,12 +81,12 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
         return ServiceResult.SuccessAsCreated();
     }
 
-    public async Task<ServiceResult> UpdateWordAsync(long wordId, UpdateWordRequest request, Guid userId)
+    public async Task<ServiceResult<WordResponse>> UpdateWordAsync(long wordId, UpdateWordRequest request, Guid userId)
     {
         Word? existingWord = await wordRepository.GetWordForUserTrackedAsync(wordId, userId);
         if (existingWord == null)
         {
-            return ServiceResult.Failure("Kelime bulunamadı veya size ait değil.", HttpStatusCode.NotFound);
+            return ServiceResult<WordResponse>.Failure("Kelime bulunamadı veya size ait değil.", HttpStatusCode.NotFound);
         }
 
         request.EnglishWord = request.EnglishWord?.NormalizeEnglishWord()!;
@@ -92,7 +94,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
 
         if (string.IsNullOrWhiteSpace(request.EnglishWord))
         {
-            return ServiceResult.Failure("İngilizce kelime boş olamaz.", HttpStatusCode.BadRequest);
+            return ServiceResult<WordResponse>.Failure("İngilizce kelime boş olamaz.", HttpStatusCode.BadRequest);
         }
 
         bool isDuplicate = await wordRepository.AnyAsync(x =>
@@ -103,7 +105,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
 
         if (isDuplicate)
         {
-            return ServiceResult.Failure("Bu kelime zaten sözlüğünüzde mevcut.", HttpStatusCode.Conflict);
+            return ServiceResult<WordResponse>.Failure("Bu kelime zaten sözlüğünüzde mevcut.", HttpStatusCode.Conflict);
         }
 
         existingWord.EnglishWord = request.EnglishWord;
@@ -117,7 +119,14 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
         await cacheService.RemoveAsync($"words:user:{userId}");
         await cacheService.RemoveAsync($"dropdown_words:user:{userId}");
 
-        return ServiceResult.Success(HttpStatusCode.NoContent);
+        WordResponse response = new()
+        {
+            Id = existingWord.Id,
+            EnglishWord = existingWord.EnglishWord,
+            TurkishWord = existingWord.TurkishWord
+        };
+
+        return ServiceResult<WordResponse>.Success(response, HttpStatusCode.OK);
     }
 
     public async Task<ServiceResult> DeleteWordAsync(long wordId, Guid userId)
@@ -152,7 +161,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
         return ServiceResult<bool>.Success(existingWord != null, HttpStatusCode.OK);
     }
 
-    public async Task<ServiceResult<string>> GetRandomWordAsync(Guid userId)
+    public async Task<ServiceResult<PracticeWordResponse>> GetRandomWordAsync(Guid userId)
     {
         string cacheKey = $"words:user:{userId}";
         List<PracticeWordKey>? cachedWords = await cacheService.GetAsync<List<PracticeWordKey>>(cacheKey);
@@ -167,7 +176,9 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
             List<Word> words = await wordRepository.GetWordsByUserAsync(userId);
             practiceWords = words.Select(w => new PracticeWordKey
             {
-                EnglishWord = w.EnglishWord
+                Id = w.Id,
+                EnglishWord = w.EnglishWord,
+                TurkishWord = w.TurkishWord
             }).ToList();
 
             if (practiceWords.Count > 0)
@@ -178,34 +189,33 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
 
         if (practiceWords.Count == 0)
         {
-            return ServiceResult<string>.Failure("Kayıt bulunamadı.", HttpStatusCode.NotFound);
+            return ServiceResult<PracticeWordResponse>.Failure("Kayıt bulunamadı.", HttpStatusCode.NotFound);
         }
 
         int index = _random.Next(0, practiceWords.Count);
-        return ServiceResult<string>.Success(practiceWords[index].EnglishWord ?? string.Empty, HttpStatusCode.OK);
+        PracticeWordKey randomWord = practiceWords[index];
+
+        PracticeWordResponse response = new()
+        {
+            Id = randomWord.Id,
+            EnglishWord = randomWord.EnglishWord ?? string.Empty,
+            TurkishWord = randomWord.TurkishWord ?? string.Empty
+        };
+
+        return ServiceResult<PracticeWordResponse>.Success(response, HttpStatusCode.OK);
     }
 
     public async Task<ServiceResult<bool>> CheckTranslationAndUpdateAsync(Guid userId, CheckTranslationRequest request)
     {
-        string? normalizedEnglishWord = request.EnglishWord?.NormalizeEnglishWord();
-
-        Word? word;
-        if (normalizedEnglishWord == null)
-        {
-            word=null;
-        }
-        else
-        {
-            word=await wordRepository.GetWordByNormalizedEnglishAsync(userId, normalizedEnglishWord);
-        }
+        Word? word = await wordRepository.GetWordForUserTrackedAsync(request.WordId, userId);
 
         if (word == null)
         {
             return ServiceResult<bool>.Failure("Kelime bulunamadı.", HttpStatusCode.NotFound);
         }
 
-        string? normalizedTurkishWord = request.TurkishWord?.NormalizeTurkishWord();
-        bool isCorrect = word.TurkishWord == normalizedTurkishWord;
+        string? normalizedAnswer = request.Answer?.NormalizeTurkishWord();
+        bool isCorrect = word.TurkishWord == normalizedAnswer;
 
         word.IsLastAnswerCorrect = isCorrect;
         word.LastPracticeDate = DateTime.UtcNow;
@@ -290,5 +300,54 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
 
         await cacheService.SetAsync(cacheKey, words, TimeSpan.FromMinutes(10));
         return ServiceResult<List<WordLookupResponse>>.Success(words, HttpStatusCode.OK);
+    }
+    public async Task<ServiceResult<bool>> BulkUpdateStatsAsync(Guid userId, BulkUpdateStatsRequest request)
+    {
+        if (request.Results == null || request.Results.Count == 0)
+        {
+            return ServiceResult<bool>.Success(true, HttpStatusCode.OK);
+        }
+
+        List<long> wordIds = request.Results.Select(r => (long)r.WordId).ToList();
+        List<Word> words = await wordRepository
+            .Where(x => wordIds.Contains(x.Id) && x.UserId == userId)
+            .ToListAsync();
+
+        foreach (PracticeResultItem result in request.Results)
+        {
+            Word? word = words.FirstOrDefault(w => w.Id == result.WordId);
+            if (word == null)
+            {
+                continue;
+            }
+
+            word.IsLastAnswerCorrect = result.IsCorrect;
+            word.LastPracticeDate = DateTime.UtcNow;
+
+            if (result.IsCorrect)
+            {
+                word.ConsecutiveCorrectCount++;
+                word.ConsecutiveWrongCount = 0;
+                word.TotalCorrectCount++;
+            }
+            else
+            {
+                word.ConsecutiveWrongCount++;
+                word.ConsecutiveCorrectCount = 0;
+                word.TotalWrongCount++;
+            }
+
+            wordRepository.Update(word);
+        }
+
+        await unitOfWork.CommitAsync();
+
+        await cacheService.RemoveAsync($"words:user:{userId}");
+        foreach (long id in wordIds)
+        {
+            await cacheService.RemoveAsync($"word:{id}:user:{userId}");
+        }
+
+        return ServiceResult<bool>.Success(true, HttpStatusCode.OK);
     }
 }

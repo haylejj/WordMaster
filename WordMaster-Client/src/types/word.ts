@@ -8,6 +8,12 @@ export interface WordResponse {
   unknowsId: number | null;
 }
 
+export interface PracticeWordResponse {
+  id: number;
+  englishWord: string;
+  turkishWord: string;
+}
+
 export interface FavoriteWithWordResponse {
   id: number;
   createdTime: string;

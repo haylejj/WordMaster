@@ -4,6 +4,8 @@ using WordMaster.API.Extensions;
 using WordMaster.Application.Requests.Favorite;
 using WordMaster.Application.Requests.Word;
 using WordMaster.Application.Responses.Favorite;
+using WordMaster.Application.Responses.Word;
+using WordMaster.Application.Responses.Practice;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Results;
 
@@ -60,12 +62,12 @@ public class FavoriteController(IFavoriteService favoriteService) : BaseControll
     /// <summary>
     /// Favorilerden pratik yapmak için rastgele bir kelime getirir.
     /// </summary>
-    /// <returns>İngilizce kelime.</returns>
+    /// <returns>Kelime detayları (WordResponse).</returns>
     [HttpGet("practice/random")]
     public async Task<IActionResult> GetRandomWord()
     {
         Guid userId = User.GetUserId();
-        ServiceResult<string> result = await favoriteService.GetRandomWordFromFavoritesAsync(userId);
+        ServiceResult<PracticeWordResponse> result = await favoriteService.GetRandomWordFromFavoritesAsync(userId);
         return CreateResult(result);
     }
 

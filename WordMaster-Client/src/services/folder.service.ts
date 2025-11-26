@@ -15,12 +15,12 @@ export const folderService = {
     },
 
     createFolder: async (name: string) => {
-        const response = await api.post<ServiceResult>("/folders", { name });
+        const response = await api.post<ServiceResultWithData<FolderResponse>>("/folders", { name });
         return response.data;
     },
 
     updateFolder: async (id: number, name: string) => {
-        const response = await api.put<ServiceResult>("/folders", { id, name });
+        const response = await api.put<ServiceResultWithData<FolderResponse>>("/folders", { id, name });
         return response.data;
     },
 
@@ -41,6 +41,11 @@ export const folderService = {
 
     removeWordFromFolder: async (payload: FolderWordRequest) => {
         const response = await api.delete<ServiceResult>("/folders/words", { data: payload });
+        return response.data;
+    },
+
+    checkPracticeTranslation: async (wordId: number, answer: string) => {
+        const response = await api.post<ServiceResultWithData<boolean>>("/folders/practice/check", { wordId, answer });
         return response.data;
     },
 };
