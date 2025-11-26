@@ -7,8 +7,16 @@ import type { ResetPasswordRequest } from "@/types/auth";
 import { authService } from "@/services/auth.service";
 import { cn, getErrorMessage } from "@/lib/utils";
 import AuthLayout from "@/layouts/AuthLayout";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Lock, ShieldCheck, Check, X } from "lucide-react";
 
+
+const passwordRequirements = [
+    { id: "length", label: "En az 6 karakter", test: (pwd: string) => pwd.length >= 6 },
+    { id: "uppercase", label: "En az bir büyük harf (A-Z)", test: (pwd: string) => /[A-Z]/.test(pwd) },
+    { id: "lowercase", label: "En az bir küçük harf (a-z)", test: (pwd: string) => /[a-z]/.test(pwd) },
+    { id: "number", label: "En az bir rakam (0-9)", test: (pwd: string) => /\d/.test(pwd) },
+    { id: "special", label: "En az bir özel karakter (!@#$%^&*)", test: (pwd: string) => /[^a-zA-Z0-9]/.test(pwd) },
+];
 
 export default function ResetPasswordPage() {
     const [searchParams] = useSearchParams();
@@ -26,6 +34,7 @@ export default function ResetPasswordPage() {
         register,
         handleSubmit,
         setValue,
+        watch,
         formState: { errors },
     } = useForm<ResetPasswordRequest>({
         resolver: zodResolver(resetPasswordSchema),
@@ -41,6 +50,8 @@ export default function ResetPasswordPage() {
         if (userId) setValue("userId", userId);
         if (token) setValue("token", token);
     }, [userId, token, setValue]);
+
+    const newPassword = watch("password") || "";
 
     const onSubmit = async (data: ResetPasswordRequest) => {
         if (!userId || !token) {
@@ -91,62 +102,86 @@ export default function ResetPasswordPage() {
                     </div>
                 )}
 
-                <div className="space-y-1 relative">
-                    <label htmlFor="password" className="block text-[0.9rem] font-semibold text-primary-dark mb-1">
-                        Yeni Şifre
-                    </label>
-                    <div className="relative">
-                        <input
-                            id="password"
-                            type={showPassword ? "text" : "password"}
-                            placeholder="........"
-                            {...register("password")}
-                            className={cn(
-                                "w-full bg-[#f8f9fa] border-2 border-[#e9ecef] px-4 py-3 rounded-lg text-primary-dark text-[0.95rem] transition-all duration-300",
-                                "focus:bg-white focus:border-primary-yellow focus:outline-none",
-                                errors.password && "border-destructive focus:border-destructive"
-                            )}
-                        />
+                <div className="space-y-1">
+                    <div
+                        className={cn(
+                            "flex items-center border-2 rounded-xl px-4 py-3 transition-colors",
+                            errors.password ? "border-red-300 bg-red-50" : "border-gray-200 focus-within:border-primary-yellow"
+                        )}
+                    >
+                        <Lock className="text-primary-yellow mr-3" size={18} />
+                        <div className="flex-1">
+                            <label className="block text-xs font-medium text-gray-500">Yeni Şifre</label>
+                            <input
+                                {...register("password")}
+                                type={showPassword ? "text" : "password"}
+                                className="w-full bg-transparent border-none outline-none text-gray-800 text-sm py-0.5"
+                                placeholder="Yeni şifrenizi girin"
+                            />
+                        </div>
                         <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                            className="text-gray-400 hover:text-gray-600 transition-colors"
                         >
                             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
                     </div>
-                    {errors.password && (
-                        <span className="text-xs text-destructive block mt-1">{errors.password.message}</span>
-                    )}
+                    {errors.password && <p className="text-xs text-red-500 ml-4">{errors.password.message}</p>}
                 </div>
 
-                <div className="space-y-1 relative">
-                    <label htmlFor="passwordConfirm" className="block text-[0.9rem] font-semibold text-primary-dark mb-1">
-                        Yeni Şifre (Tekrar)
-                    </label>
-                    <div className="relative">
-                        <input
-                            id="passwordConfirm"
-                            type={showPasswordConfirm ? "text" : "password"}
-                            placeholder="........"
-                            {...register("passwordConfirm")}
-                            className={cn(
-                                "w-full bg-[#f8f9fa] border-2 border-[#e9ecef] px-4 py-3 rounded-lg text-primary-dark text-[0.95rem] transition-all duration-300",
-                                "focus:bg-white focus:border-primary-yellow focus:outline-none",
-                                errors.passwordConfirm && "border-destructive focus:border-destructive"
-                            )}
-                        />
+                <div className="space-y-1">
+                    <div
+                        className={cn(
+                            "flex items-center border-2 rounded-xl px-4 py-3 transition-colors",
+                            errors.passwordConfirm ? "border-red-300 bg-red-50" : "border-gray-200 focus-within:border-primary-yellow"
+                        )}
+                    >
+                        <ShieldCheck className="text-primary-yellow mr-3" size={18} />
+                        <div className="flex-1">
+                            <label className="block text-xs font-medium text-gray-500">Yeni Şifre (Tekrar)</label>
+                            <input
+                                {...register("passwordConfirm")}
+                                type={showPasswordConfirm ? "text" : "password"}
+                                className="w-full bg-transparent border-none outline-none text-gray-800 text-sm py-0.5"
+                                placeholder="Yeni şifrenizi tekrar girin"
+                            />
+                        </div>
                         <button
                             type="button"
                             onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                            className="text-gray-400 hover:text-gray-600 transition-colors"
                         >
                             {showPasswordConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
                     </div>
-                    {errors.passwordConfirm && (
-                        <span className="text-xs text-destructive block mt-1">{errors.passwordConfirm.message}</span>
-                    )}
+                    {errors.passwordConfirm && <p className="text-xs text-red-500 ml-4">{errors.passwordConfirm.message}</p>}
+                </div>
+
+                {/* Password Requirements - Live Check */}
+                <div className="bg-gray-50 rounded-xl p-4">
+                    <p className="text-sm font-medium text-gray-700 mb-3">Şifre gereksinimleri:</p>
+                    <ul className="space-y-2">
+                        {passwordRequirements.map((req) => {
+                            const passed = req.test(newPassword);
+                            return (
+                                <li
+                                    key={req.id}
+                                    className={cn(
+                                        "flex items-center gap-2 text-xs transition-colors",
+                                        passed ? "text-green-600" : "text-gray-400"
+                                    )}
+                                >
+                                    {passed ? (
+                                        <Check size={14} className="text-green-500" />
+                                    ) : (
+                                        <X size={14} className="text-gray-300" />
+                                    )}
+                                    <span className={passed ? "font-medium" : ""}>{req.label}</span>
+                                </li>
+                            );
+                        })}
+                    </ul>
                 </div>
 
                 <button

@@ -19,8 +19,6 @@ public class FolderService(
     IWordService wordService
 ) : IFolderService
 {
-    private static readonly Random _random = new();
-
     public async Task<ServiceResult<List<FolderResponse>>> GetUserFoldersAsync(Guid userId)
     {
         List<Folder> folders = await folderRepository.GetUserFoldersAsync(userId);

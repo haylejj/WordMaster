@@ -189,9 +189,15 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
     {
         string? normalizedEnglishWord = request.EnglishWord?.NormalizeEnglishWord();
 
-        Word? word = normalizedEnglishWord == null
-            ? null
-            : await wordRepository.GetWordByNormalizedEnglishAsync(userId, normalizedEnglishWord);
+        Word? word;
+        if (normalizedEnglishWord == null)
+        {
+            word=null;
+        }
+        else
+        {
+            word=await wordRepository.GetWordByNormalizedEnglishAsync(userId, normalizedEnglishWord);
+        }
 
         if (word == null)
         {

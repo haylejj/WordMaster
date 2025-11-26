@@ -130,20 +130,50 @@ export default function WordsPage({ variant = "all" }: WordsPageProps) {
   };
 
   const handleToggleFavorite = async (word: WordResponse) => {
+    const previousWords = [...words];
+
+    // Optimistic update
+    setWords((currentWords) =>
+      currentWords.map((w) => {
+        if (w.id === word.id) {
+          // If it has an ID, it means it's active, so we set to null (remove).
+          // If it's null, we set to a dummy ID (e.g. 1) to make it active in UI.
+          return { ...w, favoriteId: w.favoriteId ? null : 1 };
+        }
+        return w;
+      })
+    );
+
     try {
       await wordService.toggleFavorite(word.id);
-      fetchWords();
+      // No fetchWords() call to avoid table refresh
     } catch (error) {
       console.error("Toggle favorite failed", error);
+      // Revert to previous state on error
+      setWords(previousWords);
     }
   };
 
   const handleToggleUnknown = async (word: WordResponse) => {
+    const previousWords = [...words];
+
+    // Optimistic update
+    setWords((currentWords) =>
+      currentWords.map((w) => {
+        if (w.id === word.id) {
+          return { ...w, unknowsId: w.unknowsId ? null : 1 };
+        }
+        return w;
+      })
+    );
+
     try {
       await wordService.toggleUnknown(word.id);
-      fetchWords();
+      // No fetchWords() call to avoid table refresh
     } catch (error) {
       console.error("Toggle unknown failed", error);
+      // Revert to previous state on error
+      setWords(previousWords);
     }
   };
 
