@@ -35,5 +35,21 @@ export interface UserUpdateRequest {
     email: string;
     phone?: string;
     birthDate?: string;
-    gender?: string; // "Kadın" or "Erkek"
+    gender?: string | number; // Can be string ("Kadın") or number (enum value) depending on usage
+}
+
+export interface UserProfileResponse {
+    userName: string;
+    email: string;
+    phone?: string;
+    birthDate?: string;
+    gender?: number;
+}
+
+export interface UpdateProfileRequest {
+    userName: string;
+    email: string;
+    phone?: string;
+    birthDate?: string | null;
+    gender?: number | null;
 }

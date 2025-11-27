@@ -3,7 +3,8 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { User, Mail, Phone, Calendar, Users, Save, Loader2, AlertCircle, CheckCircle } from "lucide-react";
-import { userService, type UpdateProfileRequest } from "@/services/user.service";
+import { userService } from "@/services/user.service";
+import type { UpdateProfileRequest } from "@/types/user";
 import { cn, getErrorMessage } from "@/lib/utils";
 import DatePicker from "@/components/ui/DatePicker";
 
