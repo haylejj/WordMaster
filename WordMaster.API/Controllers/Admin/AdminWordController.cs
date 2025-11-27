@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WordMaster.Application.Attributes;
 using WordMaster.Application.Requests.Word;
 using WordMaster.Application.Responses.Word;
 using WordMaster.Application.Services.Abstract;
@@ -22,6 +23,7 @@ public class AdminWordController(IWordService wordService) : BaseController
     /// <param name="pageSize">The number of items per page (default is 10).</param>
     /// <returns>A paged result of admin word responses.</returns>
     [HttpGet]
+    [RequirePermission("Admin", "AdminWords", "GetPagedWords", "GET", "Yönetici kelime listesi")]
     public async Task<IActionResult> GetPagedWords([FromQuery] string? search, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
         ServiceResult<PagedResult<AdminWordResponse>> result = await wordService.GetAdminPagedWordsAsync(search, page, pageSize);
@@ -35,6 +37,7 @@ public class AdminWordController(IWordService wordService) : BaseController
     /// <param name="request">The update request containing the new word details.</param>
     /// <returns>The updated word response.</returns>
     [HttpPut("{id}")]
+    [RequirePermission("Admin", "AdminWords", "UpdateWord", "PUT", "Yönetici kelime güncelle")]
     public async Task<IActionResult> UpdateWord(long id, [FromBody] UpdateWordRequest request)
     {
         ServiceResult<AdminWordResponse> result = await wordService.AdminUpdateWordAsync(id, request);
@@ -47,6 +50,7 @@ public class AdminWordController(IWordService wordService) : BaseController
     /// <param name="id">The unique identifier of the word to delete.</param>
     /// <returns>A result indicating the outcome of the operation.</returns>
     [HttpDelete("{id}")]
+    [RequirePermission("Admin", "AdminWords", "DeleteWord", "DELETE", "Yönetici kelime sil")]
     public async Task<IActionResult> DeleteWord(long id)
     {
         ServiceResult result = await wordService.AdminDeleteWordAsync(id);

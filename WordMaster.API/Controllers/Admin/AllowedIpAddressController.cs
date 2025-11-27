@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WordMaster.Application.Attributes;
 using WordMaster.Application.Requests.AllowedIpAddress;
 using WordMaster.Application.Responses.AllowedIpAddress;
 using WordMaster.Application.Services.Abstract;
@@ -19,6 +20,7 @@ public class AllowedIpAddressController(IAllowedIpAddressService allowedIpAddres
     /// </summary>
     /// <returns>IP adresleri listesi.</returns>
     [HttpGet]
+    [RequirePermission("Admin", "AllowedIps", "GetAll", "GET", "İzin verilen IP'leri listele")]
     public async Task<IActionResult> GetAll()
     {
         ServiceResult<List<AllowedIpAddressResponse>> result = await allowedIpAddressService.GetAllAsync();
@@ -31,6 +33,7 @@ public class AllowedIpAddressController(IAllowedIpAddressService allowedIpAddres
     /// <param name="id">IP Adresi ID'si.</param>
     /// <returns>IP adresi detayları.</returns>
     [HttpGet("{id}")]
+    [RequirePermission("Admin", "AllowedIps", "GetById", "GET", "İzin verilen IP detayını getir")]
     public async Task<IActionResult> GetById(int id)
     {
         ServiceResult<AllowedIpAddressResponse> result = await allowedIpAddressService.GetByIdAsync(id);
@@ -43,6 +46,7 @@ public class AllowedIpAddressController(IAllowedIpAddressService allowedIpAddres
     /// <param name="request">Eklenecek IP adresi bilgileri.</param>
     /// <returns>İşlem sonucu.</returns>
     [HttpPost]
+    [RequirePermission("Admin", "AllowedIps", "Create", "POST", "İzin verilen IP ekle")]
     public async Task<IActionResult> Create([FromBody] AllowedIpAddressCreateRequest request)
     {
         ServiceResult result = await allowedIpAddressService.CreateAsync(request);
@@ -55,6 +59,7 @@ public class AllowedIpAddressController(IAllowedIpAddressService allowedIpAddres
     /// <param name="request">Güncellenecek IP adresi bilgileri.</param>
     /// <returns>İşlem sonucu.</returns>
     [HttpPut]
+    [RequirePermission("Admin", "AllowedIps", "Update", "PUT", "İzin verilen IP güncelle")]
     public async Task<IActionResult> Update([FromBody] AllowedIpAddressUpdateRequest request)
     {
         ServiceResult result = await allowedIpAddressService.UpdateAsync(request);
@@ -67,6 +72,7 @@ public class AllowedIpAddressController(IAllowedIpAddressService allowedIpAddres
     /// <param name="id">Silinecek IP Adresi ID'si.</param>
     /// <returns>İşlem sonucu.</returns>
     [HttpDelete("{id}")]
+    [RequirePermission("Admin", "AllowedIps", "Delete", "DELETE", "İzin verilen IP sil")]
     public async Task<IActionResult> Delete(int id)
     {
         ServiceResult result = await allowedIpAddressService.DeleteAsync(id);

@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "sonner";
 import LoginPage from "@/pages/auth/LoginPage";
 import RegisterPage from "@/pages/auth/RegisterPage";
 import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage";
@@ -19,11 +20,16 @@ import AdminDashboardPage from "@/pages/admin/AdminDashboardPage";
 import AdminUsersPage from "@/pages/admin/AdminUsersPage";
 import AdminWordsPage from "@/pages/admin/AdminWordsPage";
 import AdminRolesPage from "@/pages/admin/AdminRolesPage";
+import AdminPermissionsPage from "@/pages/admin/AdminPermissionsPage";
 import AdminIpAddressesPage from "@/pages/admin/AdminIpAddressesPage";
+
+import PermissionDeniedModal from "@/components/common/PermissionDeniedModal";
 
 function App() {
   return (
     <Router>
+      <Toaster position="top-right" theme="dark" />
+      <PermissionDeniedModal />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
@@ -37,6 +43,7 @@ function App() {
           <Route path="users" element={<AdminUsersPage />} />
           <Route path="words" element={<AdminWordsPage />} />
           <Route path="roles" element={<AdminRolesPage />} />
+          <Route path="permissions" element={<AdminPermissionsPage />} />
           <Route path="ip-addresses" element={<AdminIpAddressesPage />} />
         </Route>
 

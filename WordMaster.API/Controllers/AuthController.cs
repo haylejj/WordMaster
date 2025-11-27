@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using WordMaster.API.Extensions;
+using WordMaster.Application.Attributes;
 using WordMaster.Application.Requests.Auth;
 using WordMaster.Application.Responses.Auth;
 using WordMaster.Application.Services.Abstract;
@@ -168,6 +169,7 @@ public class AuthController(ILoginService loginService, IRegisterService registe
     /// <response code="404">Kullanıcı bulunamadı.</response>
     [HttpPost("change-password")]
     [Authorize]
+    [RequirePermission("Public", "Auth", "ChangePassword", "POST", "Şifre değiştir")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
     {
         string userId = User.GetUserId().ToString();
@@ -188,6 +190,7 @@ public class AuthController(ILoginService loginService, IRegisterService registe
     /// <response code="401">Yetkisiz erişim (Token geçersiz veya yok).</response>
     [Authorize]
     [HttpPost("logout")]
+    [RequirePermission("Public", "Auth", "Logout", "POST", "Çıkış yap")]
     public async Task<IActionResult> Logout()
     {
         string? userName = User.GetUserName();

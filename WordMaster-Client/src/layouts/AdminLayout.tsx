@@ -8,7 +8,8 @@ import {
     LogOut,
     ExternalLink,
     Menu,
-    BookOpen
+    BookOpen,
+    Lock
 } from "lucide-react";
 import { authService } from "@/services/auth.service";
 import { useState } from "react";
@@ -32,8 +33,9 @@ export default function AdminLayout() {
     const navItems = [
         { icon: LayoutDashboard, label: "Kontrol Paneli", path: "/admin/dashboard" },
         { icon: Users, label: "Kullanıcılar", path: "/admin/users" },
-        { icon: BookOpen, label: "Kelimeler", path: "/admin/words" }, // Using BookOpen icon
+        { icon: BookOpen, label: "Kelimeler", path: "/admin/words" },
         { icon: Shield, label: "Roller", path: "/admin/roles" },
+        { icon: Lock, label: "Yetkilendirme", path: "/admin/permissions" },
         { icon: Network, label: "IP Adresler", path: "/admin/ip-addresses" },
     ];
 

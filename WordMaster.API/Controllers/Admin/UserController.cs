@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WordMaster.Application.Attributes;
 using WordMaster.Application.Requests.User;
 using WordMaster.Application.Responses.User;
 using WordMaster.Application.Services.Abstract;
@@ -22,6 +23,7 @@ public class UserController(IUserService userService) : BaseController
     /// <param name="pageSize">Sayfa boyutu.</param>
     /// <returns>Sayfalanmış kullanıcı listesi.</returns>
     [HttpGet]
+    [RequirePermission("Admin", "AdminUsers", "GetPagedUsers", "GET", "Kullanıcıları listele")]
     public async Task<IActionResult> GetPagedUsers([FromQuery] string? search, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
         ServiceResult<PagedResult<UserWithRolesResponse>> result = await userService.GetPagedUsersAsync(search, page, pageSize);
@@ -33,6 +35,7 @@ public class UserController(IUserService userService) : BaseController
     /// </summary>
     /// <returns>Kullanıcı listesi.</returns>
     [HttpGet("all")]
+    [RequirePermission("Admin", "AdminUsers", "GetAllUsers", "GET", "Tüm kullanıcıları listele")]
     public async Task<IActionResult> GetAllUsers()
     {
         ServiceResult<List<UserResponse>> result = await userService.GetUsersAsync();
@@ -45,6 +48,7 @@ public class UserController(IUserService userService) : BaseController
     /// <param name="id">Kullanıcı ID'si.</param>
     /// <returns>Kullanıcı detayları.</returns>
     [HttpGet("{id}")]
+    [RequirePermission("Admin", "AdminUsers", "GetUser", "GET", "Kullanıcı detayını getir")]
     public async Task<IActionResult> GetUser(string id)
     {
         ServiceResult<UserProfileResponse> result = await userService.GetProfileByIdAsync(id);
@@ -57,6 +61,7 @@ public class UserController(IUserService userService) : BaseController
     /// <param name="id">Kullanıcı ID'si.</param>
     /// <returns>Kullanıcı detayları.</returns>
     [HttpGet("{id}/detail")]
+    [RequirePermission("Admin", "AdminUsers", "GetUserDetail", "GET", "Kullanıcı detaylı bilgisini getir")]
     public async Task<IActionResult> GetUserDetail(string id)
     {
         ServiceResult<UserDetailResponse> result = await userService.GetUserDetailAsync(id);
@@ -69,6 +74,7 @@ public class UserController(IUserService userService) : BaseController
     /// <param name="request">Güncellenecek kullanıcı bilgileri.</param>
     /// <returns>İşlem sonucu.</returns>
     [HttpPut]
+    [RequirePermission("Admin", "AdminUsers", "UpdateUser", "PUT", "Kullanıcı güncelle")]
     public async Task<IActionResult> UpdateUser([FromBody] UserUpdateRequest request)
     {
         ServiceResult result = await userService.UpdateUserAsync(request);
@@ -81,6 +87,7 @@ public class UserController(IUserService userService) : BaseController
     /// <param name="id">Silinecek kullanıcı ID'si.</param>
     /// <returns>İşlem sonucu.</returns>
     [HttpDelete("{id}")]
+    [RequirePermission("Admin", "AdminUsers", "DeleteUser", "DELETE", "Kullanıcı sil")]
     public async Task<IActionResult> DeleteUser(string id)
     {
         ServiceResult result = await userService.DeleteUserAsync(id);
@@ -93,6 +100,7 @@ public class UserController(IUserService userService) : BaseController
     /// <param name="id">Kullanıcı ID'si.</param>
     /// <returns>İşlem sonucu.</returns>
     [HttpPost("{id}/reset-password")]
+    [RequirePermission("Admin", "AdminUsers", "ResetPassword", "POST", "Kullanıcı şifresini sıfırla")]
     public async Task<IActionResult> ResetPassword(string id)
     {
         ServiceResult<string> result = await userService.ResetUserPasswordAsync(id);
