@@ -1,4 +1,3 @@
-using System;
 using WordMaster.Domain.Entities;
 
 namespace WordMaster.Application.Responses.User;

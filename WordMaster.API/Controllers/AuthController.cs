@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using WordMaster.API.Extensions;
+using WordMaster.Application.Attributes;
 using WordMaster.Application.Requests.Auth;
 using WordMaster.Application.Responses.Auth;
 using WordMaster.Application.Services.Abstract;
@@ -20,7 +21,6 @@ public class AuthController(ILoginService loginService, IRegisterService registe
     /// API'nin ayakta olup olmadığını kontrol etmek için basit bir endpoint.
     /// </summary>
     /// <returns>200 OK durumu döner.</returns>
-    [Authorize]
     [HttpGet("ping")]
     public IActionResult Ping()
     {
@@ -43,6 +43,20 @@ public class AuthController(ILoginService loginService, IRegisterService registe
     {
         ServiceResult<RefreshTokenResponse> result = await jwtService.RefreshAccessTokenAsync(request.AccessToken, request.RefreshToken);
         return CreateResult(result);
+    }
+
+    /// <summary>
+    /// Geçerli access token'ı doğrulamak için basit bir endpoint.
+    /// </summary>
+    /// <remarks>
+    /// Frontend bu endpoint'i belirli aralıklarla çağırarak kullanıcının oturumunun hâlâ geçerli olup olmadığını kontrol eder.
+    /// Token geçerliyse 200 döner, aksi halde 401 döner.
+    /// </remarks>
+    [Authorize]
+    [HttpGet("session-check")]
+    public IActionResult SessionCheck()
+    {
+        return CreateResult(ServiceResult.Success(HttpStatusCode.OK));
     }
 
     /// <summary>
@@ -155,15 +169,11 @@ public class AuthController(ILoginService loginService, IRegisterService registe
     /// <response code="404">Kullanıcı bulunamadı.</response>
     [HttpPost("change-password")]
     [Authorize]
+    [RequirePermission("Public", "Auth", "ChangePassword", "POST", "Şifre değiştir")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
     {
-        string? userName = User.GetUserName();
-        if (string.IsNullOrEmpty(userName))
-        {
-            return CreateResult(ServiceResult.Failure("Kullanıcı adı bulunamadı.", HttpStatusCode.Unauthorized));
-        }
-
-        ServiceResult result = await userService.ChangePasswordAsync(request, userName);
+        string userId = User.GetUserId().ToString();
+        ServiceResult result = await userService.ChangePasswordAsync(request, userId);
         return CreateResult(result);
     }
 
@@ -180,6 +190,7 @@ public class AuthController(ILoginService loginService, IRegisterService registe
     /// <response code="401">Yetkisiz erişim (Token geçersiz veya yok).</response>
     [Authorize]
     [HttpPost("logout")]
+    [RequirePermission("Public", "Auth", "Logout", "POST", "Çıkış yap")]
     public async Task<IActionResult> Logout()
     {
         string? userName = User.GetUserName();

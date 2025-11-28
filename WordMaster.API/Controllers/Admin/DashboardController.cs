@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WordMaster.Application.Attributes;
 using WordMaster.Application.Responses.Admin;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Results;
@@ -18,6 +19,7 @@ public class DashboardController(IAdminDashboardService adminDashboardService) :
     /// </summary>
     /// <returns>Dashboard verileri (kullanıcı sayıları, kelime sayıları vb.).</returns>
     [HttpGet]
+    [RequirePermission("Admin", "Dashboard", "GetDashboard", "GET", "Dashboard verilerini getir")]
     public async Task<IActionResult> GetDashboard()
     {
         ServiceResult<AdminDashboardResponse> result = await adminDashboardService.GetDashboardAsync();

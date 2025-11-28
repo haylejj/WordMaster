@@ -4,10 +4,9 @@ using System.Reflection;
 using System.Text.Json.Serialization;
 using WordMaster.API.Extensions;
 using WordMaster.API.Filters;
-using WordMaster.Domain.Configuration;
+using WordMaster.API.Middlewares;
 using WordMaster.Infrastructure.EfCore;
 using WordMaster.Infrastructure.Extensions;
-using WordMaster.API.Middlewares;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -29,9 +28,7 @@ builder.Services.AddValidationConfigurations();
 builder.Services.AddHttpContextAccessor();
 
 // Configuration Settings
-builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
-builder.Services.Configure<MailHogSettings>(builder.Configuration.GetSection("MailHog"));
-builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt")); // "Jwt" section name
+builder.Services.AddConfigurationSettings(builder.Configuration);
 
 // JWT Authentication yapılandırması
 builder.Services.AddJwtConfigurations(builder.Configuration);
@@ -62,6 +59,19 @@ builder.Services.AddIdentityConfigurations();
 // Swagger yapılandırması
 builder.Services.AddSwaggerConfigurations();
 
+// CORS Politikası
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigins",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5173", "https://localhost:5173") // Frontend URL
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        });
+});
+
 WebApplication app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -75,9 +85,13 @@ app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
 app.UseHttpsRedirection();
 
+app.UseCors("AllowSpecificOrigins");
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+await app.LogStartupStatusAsync();
 
 app.Run();

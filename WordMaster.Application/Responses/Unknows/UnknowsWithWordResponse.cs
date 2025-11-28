@@ -1,6 +1,3 @@
-using System;
-using WordMaster.Application.Responses.Word;
-
 namespace WordMaster.Application.Responses.Unknows;
 
 public class UnknowsWithWordResponse
@@ -9,5 +6,5 @@ public class UnknowsWithWordResponse
     public DateTime CreatedTime { get; set; }
     public long WordId { get; set; }
     public Guid? UserId { get; set; }
-    public WordResponse? Word { get; set; }
+    public UnknowsWordResponse? Word { get; set; }
 }

@@ -1,5 +1,3 @@
-using System;
-
 namespace WordMaster.Application.Responses.User;
 
 public class LastLoginInfoResponse

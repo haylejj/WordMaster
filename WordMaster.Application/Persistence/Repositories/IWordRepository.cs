@@ -9,4 +9,5 @@ public interface IWordRepository : IGenericRepository<Word>
     Task<List<Word>> GetWordsByUserAsync(Guid userId);
     Task<(List<Word> Words, int TotalCount)> GetPagedWordsAsync(Guid userId, string? search, int page, int pageSize);
     Task<Word?> GetLastWord();
+    Task<(List<Word> Words, int TotalCount)> GetAdminPagedWordsAsync(string? search, int page, int pageSize);
 }

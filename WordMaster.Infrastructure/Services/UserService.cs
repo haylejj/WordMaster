@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Net;
 using WordMaster.Application.Persistence;
 using WordMaster.Application.Persistence.Repositories;
@@ -16,126 +16,67 @@ namespace WordMaster.Infrastructure.Services;
 
 public class UserService(
     UserManager<AppUser> userManager,
-    SignInManager<AppUser> signInManager,
     ILogHistoryService logHistoryService,
     IWordRepository wordRepository,
     IFavoriteRepository favoriteRepository,
     IUnknowsRepository unknowsRepository,
     IEmailService emailService,
     IUnitOfWork unitOfWork,
-    ICacheService cacheService) : IUserService
+    ICacheService cacheService,
+    ILogger<UserService> logger) : IUserService
 {
-    public async Task LogOutAsync()
-    {
-        await signInManager.SignOutAsync();
-    }
-
-    public SelectList GetGenderSelectList()
-    {
-        return new(Enum.GetNames<Gender>());
-    }
-
-    public async Task<ServiceResult<UserEditResponse>> GetUserEditViewModelAsync(string username)
-    {
-        AppUser? currentUser = await userManager.FindByNameAsync(username);
-
-        return currentUser == null
-            ? ServiceResult<UserEditResponse>.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound)
-            : ServiceResult<UserEditResponse>.Success(new UserEditResponse
-            {
-                UserName = currentUser.UserName,
-                Email = currentUser.Email,
-                Phone = currentUser.PhoneNumber,
-                BirthDate = currentUser.BirthDate,
-                Gender = currentUser.Gender,
-            }, HttpStatusCode.OK);
-    }
-
-    public async Task<ServiceResult> EditUserAsync(UserEditRequest request, string username)
-    {
-        AppUser? currentUser = await userManager.FindByNameAsync(username);
-        if (currentUser == null)
-        {
-            return ServiceResult.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound);
-        }
-
-        currentUser.UserName = request.UserName;
-        currentUser.Email = request.Email;
-        currentUser.PhoneNumber = request.Phone;
-        currentUser.BirthDate = request.BirthDate;
-        currentUser.Gender = request.Gender;
-        // Removed Picture assignment since it's being removed from the form
-
-        IdentityResult updateResult = await userManager.UpdateAsync(currentUser);
-        if (!updateResult.Succeeded)
-        {
-            List<string> errors = updateResult.Errors.Select(e => e.Description).ToList();
-            return ServiceResult.Failure(errors, HttpStatusCode.BadRequest);
-        }
-
-        await userManager.UpdateSecurityStampAsync(currentUser);
-        await signInManager.SignOutAsync();
-        await signInManager.SignInAsync(currentUser, true);
-
-        return ServiceResult.Success(HttpStatusCode.NoContent);
-    }
-
-    public async Task<ServiceResult<bool>> CheckPasswordAsync(string userName, string passwordOld)
-    {
-        AppUser? currentUser = await userManager.FindByNameAsync(userName);
-        if (currentUser == null)
-        {
-            return ServiceResult<bool>.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound);
-        }
-
-        bool ok = await userManager.CheckPasswordAsync(currentUser, passwordOld);
-        return ServiceResult<bool>.Success(ok, HttpStatusCode.OK);
-    }
-
     /// <summary>
     /// Kullanıcının şifresini değiştirir.
     /// </summary>
-    /// <param name="request">Eski ve yeni şifre bilgilerini içeren istek.</param>
-    /// <param name="userName">Şifresi değiştirilecek kullanıcının kullanıcı adı.</param>
-    /// <returns>İşlem sonucunu döner.</returns>
-    public async Task<ServiceResult> ChangePasswordAsync(ChangePasswordRequest request, string userName)
+    public async Task<ServiceResult> ChangePasswordAsync(ChangePasswordRequest request, string userId)
     {
-        AppUser? currentUser = await userManager.FindByNameAsync(userName);
+        AppUser? currentUser = await userManager.FindByIdAsync(userId);
         if (currentUser == null)
         {
             return ServiceResult.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound);
         }
-        bool ok = await userManager.CheckPasswordAsync(currentUser, request.PasswordOld!);
+
+        bool ok = await userManager.CheckPasswordAsync(currentUser, request.OldPassword!);
         if (!ok)
         {
+            logger.LogWarning("Password change failed for user {UserId}. Incorrect old password.", userId);
             return ServiceResult.Failure("Mevcut şifre yanlış.", HttpStatusCode.BadRequest);
         }
 
-        IdentityResult resultChangePassword = await userManager.ChangePasswordAsync(currentUser, request.PasswordOld!, request.PasswordNew!);
-
+        IdentityResult resultChangePassword = await userManager.ChangePasswordAsync(currentUser, request.OldPassword!, request.NewPassword!);
         if (!resultChangePassword.Succeeded)
         {
             List<string> errors = resultChangePassword.Errors.Select(e => e.Description).ToList();
+            logger.LogWarning("Password change failed for user {UserId}. Errors: {Errors}", userId, string.Join(", ", errors));
             return ServiceResult.Failure(errors, HttpStatusCode.BadRequest);
         }
 
-        // Security Stamp'i güncelle (bu işlem mevcut JWT token'ları geçersiz kılar)
         await userManager.UpdateSecurityStampAsync(currentUser);
-
-        // SecurityStamp cache'ini temizle
         await cacheService.RemoveAsync($"security_stamp:{currentUser.Id}");
 
+        logger.LogInformation("Password changed successfully for user {UserId}.", userId);
         return ServiceResult.Success(HttpStatusCode.NoContent);
     }
 
+    /// <summary>
+    /// Tüm kullanıcıları listeler.
+    /// </summary>
     public async Task<ServiceResult<List<UserResponse>>> GetUsersAsync()
     {
         List<AppUser> users = await userManager.Users.ToListAsync();
+        List<UserResponse> userList = users.Select(x => new UserResponse
+        {
+            Id = x.Id.ToString(),
+            UserName = x.UserName!,
+            Email = x.Email!
+        }).ToList();
 
-        List<UserResponse> userList = users.Select(x => new UserResponse { Id = x.Id.ToString(), UserName = x.UserName!, Email = x.Email! }).ToList();
         return ServiceResult<List<UserResponse>>.Success(userList, HttpStatusCode.OK);
     }
 
+    /// <summary>
+    /// Kullanıcıları sayfalı olarak listeler.
+    /// </summary>
     public async Task<ServiceResult<PagedResult<UserWithRolesResponse>>> GetPagedUsersAsync(string? search, int page, int pageSize)
     {
         if (page < 1)
@@ -156,24 +97,24 @@ public class UserService(
         }
 
         int totalCount = await query.CountAsync();
-
         List<AppUser> users = await query
+            .OrderBy(x => x.UserName)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
 
         List<UserWithRolesResponse> userViewModels = new();
-
         foreach (AppUser user in users)
         {
             IList<string> userRoles = await userManager.GetRolesAsync(user);
-
             userViewModels.Add(new UserWithRolesResponse
             {
                 Id = user.Id.ToString(),
                 UserName = user.UserName!,
                 Email = user.Email!,
-                SecurityStamp=user.SecurityStamp,
+                SecurityStamp = user.SecurityStamp,
+                IsLockedOut = await userManager.IsLockedOutAsync(user),
+                Gender = user.Gender,
                 Roles = userRoles.ToList()
             });
         }
@@ -189,41 +130,30 @@ public class UserService(
         return ServiceResult<PagedResult<UserWithRolesResponse>>.Success(pagedResult, HttpStatusCode.OK);
     }
 
-    public async Task<ServiceResult<UserWithRolesResponse>> GetUserByIdAsync(string id)
+    /// <summary>
+    /// Kullanıcı profil bilgilerini ID ile getirir.
+    /// </summary>
+    public async Task<ServiceResult<UserProfileResponse>> GetProfileByIdAsync(string id)
     {
         AppUser? user = await userManager.FindByIdAsync(id);
         if (user == null)
         {
-            return ServiceResult<UserWithRolesResponse>.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound);
+            return ServiceResult<UserProfileResponse>.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound);
         }
 
-        IList<string> roles = await userManager.GetRolesAsync(user);
-        UserWithRolesResponse userWithRoles = new()
+        return ServiceResult<UserProfileResponse>.Success(new UserProfileResponse
         {
-            Id = user.Id.ToString(),
-            UserName = user.UserName!,
-            Email = user.Email!,
-            Roles = [.. roles]
-        };
-
-        return ServiceResult<UserWithRolesResponse>.Success(userWithRoles, HttpStatusCode.OK);
+            UserName = user.UserName,
+            Email = user.Email,
+            Phone = user.PhoneNumber,
+            BirthDate = user.BirthDate,
+            Gender = (int?)user.Gender,
+        }, HttpStatusCode.OK);
     }
 
-    public async Task<ServiceResult<UserEditResponse>> GetUserEditViewModelByIdAsync(string id)
-    {
-        AppUser? user = await userManager.FindByIdAsync(id);
-        return user == null
-            ? ServiceResult<UserEditResponse>.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound)
-            : ServiceResult<UserEditResponse>.Success(new UserEditResponse
-            {
-                UserName = user.UserName,
-                Email = user.Email,
-                Phone = user.PhoneNumber,
-                BirthDate = user.BirthDate,
-                Gender = user.Gender,
-            }, HttpStatusCode.OK);
-    }
-
+    /// <summary>
+    /// Kullanıcının detaylı bilgilerini getirir (istatistiklerle birlikte).
+    /// </summary>
     public async Task<ServiceResult<UserDetailResponse>> GetUserDetailAsync(string id)
     {
         if (!Guid.TryParse(id, out Guid userId))
@@ -231,19 +161,15 @@ public class UserService(
             return ServiceResult<UserDetailResponse>.Failure("Geçersiz ID formatı.", HttpStatusCode.BadRequest);
         }
 
-        AppUser? user = await userManager.Users
-            .FirstOrDefaultAsync(x => x.Id == userId);
-
+        AppUser? user = await userManager.Users.FirstOrDefaultAsync(x => x.Id == userId);
         if (user == null)
         {
             return ServiceResult<UserDetailResponse>.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound);
         }
 
-        // Login Statistics
         UserLoginStatsResponse userLoginStats = await logHistoryService.GetUserLoginStatsAsync(id);
         LastLoginInfoResponse lastLoginInfo = await logHistoryService.GetLastSuccessfulLoginAsync(id);
 
-        // Word Statistics
         int wordCount = await wordRepository.CountAsync(x => x.UserId == userId);
         int favoriteCount = await favoriteRepository.CountAsync(x => x.UserId == userId);
         int unknowsCount = await unknowsRepository.CountAsync(x => x.UserId == userId);
@@ -276,8 +202,16 @@ public class UserService(
         return ServiceResult<UserDetailResponse>.Success(detail, HttpStatusCode.OK);
     }
 
+    /// <summary>
+    /// Kullanıcı bilgilerini günceller.
+    /// </summary>
     public async Task<ServiceResult> UpdateUserAsync(UserUpdateRequest request)
     {
+        if (string.IsNullOrEmpty(request.Id))
+        {
+            return ServiceResult.Failure("Kullanıcı ID'si zorunludur.", HttpStatusCode.BadRequest);
+        }
+
         AppUser? user = await userManager.FindByIdAsync(request.Id);
         if (user == null)
         {
@@ -294,12 +228,17 @@ public class UserService(
         if (!updateResult.Succeeded)
         {
             List<string> errors = updateResult.Errors.Select(e => e.Description).ToList();
+            logger.LogWarning("User update failed for user {UserId}. Errors: {Errors}", request.Id, string.Join(", ", errors));
             return ServiceResult.Failure(errors, HttpStatusCode.BadRequest);
         }
 
+        logger.LogInformation("User profile updated successfully for user {UserId}.", request.Id);
         return ServiceResult.Success(HttpStatusCode.NoContent);
     }
 
+    /// <summary>
+    /// Kullanıcıyı siler.
+    /// </summary>
     public async Task<ServiceResult> DeleteUserAsync(string id)
     {
         AppUser? user = await userManager.FindByIdAsync(id);
@@ -314,6 +253,9 @@ public class UserService(
             : ServiceResult.Success(HttpStatusCode.NoContent);
     }
 
+    /// <summary>
+    /// Kullanıcının şifresini sıfırlar ve yeni şifreyi e-posta ile gönderir.
+    /// </summary>
     public async Task<ServiceResult<string>> ResetUserPasswordAsync(string id)
     {
         AppUser? user = await userManager.FindByIdAsync(id);
@@ -327,18 +269,16 @@ public class UserService(
             return ServiceResult<string>.Failure("Kullanıcının email adresi bulunamadı.", HttpStatusCode.BadRequest);
         }
 
-        // Kriptografik olarak güvenli rastgele şifre oluştur
         string newPassword = PasswordHelper.GenerateRandomPassword();
 
-        // Transaction başlat
         await unitOfWork.BeginTransactionAsync();
         try
         {
-            // Mevcut şifreyi kaldır ve yeni şifreyi ayarla
             IdentityResult removePasswordResult = await userManager.RemovePasswordAsync(user);
             if (!removePasswordResult.Succeeded)
             {
                 await unitOfWork.RollbackTransactionAsync();
+                logger.LogError("Failed to remove password for user {UserId} during admin password reset", id);
                 return ServiceResult<string>.Failure("Şifre sıfırlanırken bir hata oluştu.", HttpStatusCode.InternalServerError);
             }
 
@@ -346,61 +286,56 @@ public class UserService(
             if (!addPasswordResult.Succeeded)
             {
                 await unitOfWork.RollbackTransactionAsync();
+                logger.LogError("Failed to add new password for user {UserId} during admin password reset", id);
                 return ServiceResult<string>.Failure("Yeni şifre atanırken bir hata oluştu.", HttpStatusCode.InternalServerError);
             }
 
-            // Değişiklikleri kaydet
             await unitOfWork.CommitAsync();
 
-            // Şifreyi email olarak gönder
             ServiceResult emailResult = await emailService.SendPasswordToEmailAsync(newPassword, user.Email, user.UserName ?? "Kullanıcı");
-
             if (!emailResult.IsSuccess)
             {
                 await unitOfWork.RollbackTransactionAsync();
+                logger.LogError("Password created but email failed to send for user {UserId}", id);
                 return ServiceResult<string>.Failure($"Şifre oluşturuldu ancak email gönderilemedi: {emailResult.ErrorList?.FirstOrDefault() ?? "Bilinmeyen hata"}", HttpStatusCode.InternalServerError);
             }
 
-            // Email başarılı oldu, transaction'ı commit et
             await unitOfWork.CommitTransactionAsync();
-
-            // Güvenlik damgasını güncelle (eski oturumları sonlandırır)
             await userManager.UpdateSecurityStampAsync(user);
-            // SecurityStamp cache'ini temizle
             await cacheService.RemoveAsync($"security_stamp:{user.Id}");
 
+            logger.LogInformation("Admin reset password successfully for user {UserId}", id);
             return ServiceResult<string>.Success(newPassword, HttpStatusCode.OK);
         }
         catch (Exception ex)
         {
-            // Hata durumunda transaction'ı rollback et
             await unitOfWork.RollbackTransactionAsync();
+            logger.LogError(ex, "Exception occurred while resetting password for user {UserId}", id);
             return ServiceResult<string>.Failure($"Şifre sıfırlanırken bir hata oluştu: {ex.Message}", HttpStatusCode.InternalServerError);
         }
     }
 
+    /// <summary>
+    /// Refresh token'ı doğrular ve kullanıcı bilgilerini döndürür.
+    /// </summary>
     public async Task<ServiceResult<UserWithRolesResponse>> ValidateAndGetUserByRefreshTokenAsync(string userId, string refreshToken)
     {
-        // Kullanıcıyı veritabanından getir
         AppUser? user = await userManager.FindByIdAsync(userId);
         if (user == null)
         {
             return ServiceResult<UserWithRolesResponse>.Failure("Kullanıcı bulunamadı", HttpStatusCode.NotFound);
         }
 
-        // Veritabanındaki refresh token hash'i ile gelen refresh token'ı karşılaştır
         if (string.IsNullOrEmpty(user.RefreshToken) || !RefreshTokenHasher.VerifyRefreshToken(refreshToken, user.RefreshToken))
         {
             return ServiceResult<UserWithRolesResponse>.Failure("Geçersiz refresh token", HttpStatusCode.Unauthorized);
         }
 
-        // Refresh token'ın süresinin dolup dolmadığını kontrol et
         if (user.RefreshTokenExpires == null || user.RefreshTokenExpires < DateTime.UtcNow)
         {
             return ServiceResult<UserWithRolesResponse>.Failure("Refresh token süresi dolmuş", HttpStatusCode.Unauthorized);
         }
 
-        // Kullanıcının rollerini al
         IList<string> roles = await userManager.GetRolesAsync(user);
 
         UserWithRolesResponse response = new()
@@ -409,12 +344,16 @@ public class UserService(
             UserName = user.UserName!,
             Email = user.Email!,
             SecurityStamp = user.SecurityStamp,
+            Gender = user.Gender,
             Roles = roles.ToList()
         };
 
         return ServiceResult<UserWithRolesResponse>.Success(response, HttpStatusCode.OK);
     }
 
+    /// <summary>
+    /// Kullanıcının refresh token bilgilerini günceller.
+    /// </summary>
     public async Task<ServiceResult> UpdateRefreshTokenAsync(string userId, string refreshToken, int expiresInDays)
     {
         AppUser? user = await userManager.FindByIdAsync(userId);
@@ -423,7 +362,6 @@ public class UserService(
             return ServiceResult.Failure("Kullanıcı bulunamadı", HttpStatusCode.NotFound);
         }
 
-        // Refresh token'ı hash'leyerek sakla (güvenlik için)
         user.RefreshToken = RefreshTokenHasher.HashRefreshToken(refreshToken);
         user.RefreshTokenExpires = DateTime.UtcNow.AddDays(expiresInDays);
 
@@ -431,5 +369,48 @@ public class UserService(
         return !result.Succeeded
             ? ServiceResult.Failure("Refresh token güncellenirken hata oluştu", HttpStatusCode.InternalServerError)
             : ServiceResult.Success(HttpStatusCode.NoContent);
+    }
+
+    /// <summary>
+    /// Kullanıcının rollerini değiştirir.
+    /// </summary>
+    public async Task<ServiceResult> ChangeUserRoleAsync(ChangeUserRoleRequest request)
+    {
+        AppUser? user = await userManager.FindByIdAsync(request.UserId);
+        if (user == null)
+        {
+            return ServiceResult.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound);
+        }
+
+        IList<string> currentRoles = await userManager.GetRolesAsync(user);
+        IEnumerable<string> rolesToAdd = request.Roles.Except(currentRoles);
+        IEnumerable<string> rolesToRemove = currentRoles.Except(request.Roles);
+
+        if (rolesToAdd.Any())
+        {
+            IdentityResult addResult = await userManager.AddToRolesAsync(user, rolesToAdd);
+            if (!addResult.Succeeded)
+            {
+                List<string> errors = addResult.Errors.Select(e => e.Description).ToList();
+                return ServiceResult.Failure(errors, HttpStatusCode.BadRequest);
+            }
+        }
+
+        if (rolesToRemove.Any())
+        {
+            IdentityResult removeResult = await userManager.RemoveFromRolesAsync(user, rolesToRemove);
+            if (!removeResult.Succeeded)
+            {
+                List<string> errors = removeResult.Errors.Select(e => e.Description).ToList();
+                return ServiceResult.Failure(errors, HttpStatusCode.BadRequest);
+            }
+        }
+
+        // Security stamp'i güncelle ki kullanıcının token'ı geçersiz olsun ve yeni rollerle tekrar giriş yapsın/token alsın.
+        await userManager.UpdateSecurityStampAsync(user);
+        await cacheService.RemoveAsync($"security_stamp:{user.Id}");
+
+        logger.LogInformation("User roles updated for user {UserId}. Added: {Added}, Removed: {Removed}", request.UserId, string.Join(",", rolesToAdd), string.Join(",", rolesToRemove));
+        return ServiceResult.Success(HttpStatusCode.NoContent);
     }
 }

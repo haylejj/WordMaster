@@ -4,25 +4,32 @@ using WordMaster.Application.Persistence.Repositories;
 using WordMaster.Application.Requests.Folder;
 using WordMaster.Application.Requests.Word;
 using WordMaster.Application.Responses.Folder;
-using WordMaster.Application.Responses.Word;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Results;
 
 namespace WordMaster.Application.Services.Concrete;
 
+using WordMaster.Application.Constants;
+
 public class FolderService(
     IFolderRepository folderRepository,
     IWordRepository wordRepository,
     IWordFolderRepository wordFolderRepository,
     IUnitOfWork unitOfWork,
-    IWordService wordService
+    IWordService wordService,
+    ICacheService cacheService
 ) : IFolderService
 {
-    private static readonly Random _random = new();
-
     public async Task<ServiceResult<List<FolderResponse>>> GetUserFoldersAsync(Guid userId)
     {
+        string cacheKey = CacheKeys.Folders(userId);
+        List<FolderResponse>? cachedFolders = await cacheService.GetAsync<List<FolderResponse>>(cacheKey);
+        if (cachedFolders != null)
+        {
+            return ServiceResult<List<FolderResponse>>.Success(cachedFolders, HttpStatusCode.OK);
+        }
+
         List<Folder> folders = await folderRepository.GetUserFoldersAsync(userId);
         List<FolderResponse> folderDtos = folders.Select(f => new FolderResponse
         {
@@ -32,6 +39,7 @@ public class FolderService(
             WordCount = f.WordFolders.Count
         }).ToList();
 
+        await cacheService.SetAsync(cacheKey, folderDtos, TimeSpan.FromMinutes(10));
         return ServiceResult<List<FolderResponse>>.Success(folderDtos, HttpStatusCode.OK);
     }
 
@@ -54,17 +62,17 @@ public class FolderService(
         return ServiceResult<FolderResponse>.Success(folderDto, HttpStatusCode.OK);
     }
 
-    public async Task<ServiceResult> AddFolderAsync(CreateFolderRequest request, Guid userId)
+    public async Task<ServiceResult<FolderResponse>> AddFolderAsync(CreateFolderRequest request, Guid userId)
     {
         if (string.IsNullOrWhiteSpace(request.Name))
         {
-            return ServiceResult.Failure("Klasör adı gereklidir.", HttpStatusCode.BadRequest);
+            return ServiceResult<FolderResponse>.Failure("Klasör adı gereklidir.", HttpStatusCode.BadRequest);
         }
 
         bool exists = await folderRepository.AnyAsync(f => f.UserId == userId && f.Name == request.Name.Trim());
         if (exists)
         {
-            return ServiceResult.Failure("Bu isimde bir klasör zaten mevcut.", HttpStatusCode.Conflict);
+            return ServiceResult<FolderResponse>.Failure("Bu isimde bir klasör zaten mevcut.", HttpStatusCode.Conflict);
         }
 
         Folder folder = new()
@@ -76,32 +84,54 @@ public class FolderService(
 
         await folderRepository.AddAsync(folder);
         await unitOfWork.CommitAsync();
-        return ServiceResult.SuccessAsCreated();
+
+        FolderResponse response = new()
+        {
+            Id = folder.Id,
+            Name = folder.Name,
+            CreatedTime = folder.CreatedTime,
+            WordCount = 0
+        };
+
+        await cacheService.RemoveAsync(CacheKeys.Folders(userId));
+
+        return ServiceResult<FolderResponse>.SuccessAsCreated(response, null);
     }
 
-    public async Task<ServiceResult> UpdateFolderAsync(long folderId, UpdateFolderRequest request, Guid userId)
+    public async Task<ServiceResult<FolderResponse>> UpdateFolderAsync(long folderId, UpdateFolderRequest request, Guid userId)
     {
         if (string.IsNullOrWhiteSpace(request.Name))
         {
-            return ServiceResult.Failure("Klasör adı gereklidir.", HttpStatusCode.BadRequest);
+            return ServiceResult<FolderResponse>.Failure("Klasör adı gereklidir.", HttpStatusCode.BadRequest);
         }
 
         Folder? folder = await folderRepository.GetUserFolderAsync(folderId, userId);
         if (folder == null)
         {
-            return ServiceResult.Failure("Klasör bulunamadı.", HttpStatusCode.NotFound);
+            return ServiceResult<FolderResponse>.Failure("Klasör bulunamadı.", HttpStatusCode.NotFound);
         }
 
         bool exists = await folderRepository.AnyAsync(f => f.UserId == userId && f.Name == request.Name.Trim() && f.Id != folderId);
         if (exists)
         {
-            return ServiceResult.Failure("Bu isimde bir klasör zaten mevcut.", HttpStatusCode.Conflict);
+            return ServiceResult<FolderResponse>.Failure("Bu isimde bir klasör zaten mevcut.", HttpStatusCode.Conflict);
         }
 
         folder.Name = request.Name.Trim();
         folderRepository.Update(folder);
         await unitOfWork.CommitAsync();
-        return ServiceResult.Success(HttpStatusCode.NoContent);
+
+        FolderResponse response = new()
+        {
+            Id = folder.Id,
+            Name = folder.Name,
+            CreatedTime = folder.CreatedTime,
+            WordCount = folder.WordFolders.Count
+        };
+
+        await cacheService.RemoveAsync(CacheKeys.Folders(userId));
+
+        return ServiceResult<FolderResponse>.Success(response, HttpStatusCode.OK);
     }
 
     public async Task<ServiceResult> DeleteFolderAsync(long folderId, Guid userId)
@@ -114,26 +144,37 @@ public class FolderService(
 
         folderRepository.Remove(folder);
         await unitOfWork.CommitAsync();
+        await cacheService.RemoveAsync(CacheKeys.Folders(userId));
+        await cacheService.RemoveAsync(CacheKeys.FolderWords(folderId, userId));
+
         return ServiceResult.Success(HttpStatusCode.NoContent);
     }
 
-    public async Task<ServiceResult<List<WordResponse>>> GetWordsInFolderAsync(long folderId, Guid userId)
+    public async Task<ServiceResult<List<FolderWordResponse>>> GetWordsInFolderAsync(long folderId, Guid userId)
     {
         // Ensure folder belongs to user
         Folder? folder = await folderRepository.GetUserFolderAsync(folderId, userId);
         if (folder == null)
         {
-            return ServiceResult<List<WordResponse>>.Failure("Klasör bulunamadı.", HttpStatusCode.NotFound);
+            return ServiceResult<List<FolderWordResponse>>.Failure("Klasör bulunamadı.", HttpStatusCode.NotFound);
         }
+        string cacheKey = CacheKeys.FolderWords(folderId, userId);
+        List<FolderWordResponse>? cachedWords = await cacheService.GetAsync<List<FolderWordResponse>>(cacheKey);
+        if (cachedWords != null)
+        {
+            return ServiceResult<List<FolderWordResponse>>.Success(cachedWords, HttpStatusCode.OK);
+        }
+
         List<Word> words = await wordFolderRepository.GetWordsInFolderAsync(folderId);
-        List<WordResponse> wordDtos = words.Select(w => new WordResponse
+        List<FolderWordResponse> wordDtos = words.Select(w => new FolderWordResponse
         {
             Id = w.Id,
-            EnglishWord = w.EnglishWord,
-            TurkishWord = w.TurkishWord
+            EnglishWord = w.EnglishWord ?? string.Empty,
+            TurkishWord = w.TurkishWord ?? string.Empty
         }).ToList();
 
-        return ServiceResult<List<WordResponse>>.Success(wordDtos, HttpStatusCode.OK);
+        await cacheService.SetAsync(cacheKey, wordDtos, TimeSpan.FromMinutes(10));
+        return ServiceResult<List<FolderWordResponse>>.Success(wordDtos, HttpStatusCode.OK);
     }
 
     public async Task<ServiceResult> AddWordToFolderAsync(AddWordToFolderRequest request, Guid userId)
@@ -153,8 +194,13 @@ public class FolderService(
 
         await wordFolderRepository.AddAsync(new WordFolder { FolderId = request.FolderId, WordId = request.WordId });
         await unitOfWork.CommitAsync();
+
+        await cacheService.RemoveAsync(CacheKeys.FolderWords(request.FolderId, userId));
+        await cacheService.RemoveAsync(CacheKeys.Folders(userId));
+
         return ServiceResult.SuccessAsCreated();
     }
+
 
     public async Task<ServiceResult> RemoveWordFromFolderAsync(AddWordToFolderRequest request, Guid userId)
     {
@@ -172,6 +218,10 @@ public class FolderService(
 
         wordFolderRepository.Remove(link);
         await unitOfWork.CommitAsync();
+
+        await cacheService.RemoveAsync(CacheKeys.FolderWords(request.FolderId, userId));
+        await cacheService.RemoveAsync(CacheKeys.Folders(userId));
+
         return ServiceResult.Success(HttpStatusCode.NoContent);
     }
 

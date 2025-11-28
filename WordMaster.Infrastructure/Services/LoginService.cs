@@ -1,13 +1,15 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Net;
 using WordMaster.Application.Requests.Auth;
 using WordMaster.Application.Responses.Auth;
 using WordMaster.Application.Responses.User;
 using WordMaster.Application.Services.Abstract;
+using WordMaster.Domain.Configuration;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Results;
-
 using WordMaster.Infrastructure.Helpers;
 
 namespace WordMaster.Infrastructure.Services;
@@ -21,7 +23,9 @@ public class LoginService(
     IEmailService emailService,
     IDataProtectionHelper dataProtectionHelper,
     ICacheService cacheService,
-    IAllowedIpAddressService allowedIpAddressService) : ILoginService
+    IAllowedIpAddressService allowedIpAddressService,
+    IOptions<UrlsSettings> urlSettings,
+    ILogger<LoginService> logger) : ILoginService
 {
     /// <summary>
     /// Verilen email adresiyle kullanıcıyı bulur.
@@ -59,7 +63,7 @@ public class LoginService(
         if (user == null)
         {
             await logHistoryService.RecordAsync(null, request.Email, ipAddress, false, "APILogin");
-            return ServiceResult<LoginResponse>.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound);
+            return ServiceResult<LoginResponse>.Failure("Email veya şifre yanlış", HttpStatusCode.NotFound);
         }
 
         SignInResult result = await signInManager.CheckPasswordSignInAsync(user, request.Password!, true);
@@ -93,11 +97,13 @@ public class LoginService(
         if (!accessTokenResult.IsSuccess)
         {
             await logHistoryService.RecordAsync(user.Id.ToString(), request.Email, ipAddress, false, "PublicLogin");
-            return ServiceResult<LoginResponse>.Failure("Token oluşturulamadı.", HttpStatusCode.InternalServerError);
+            return ServiceResult<LoginResponse>.Failure("Email veya şifre yanlış.Beklenmeyen bir hata oluştu.", HttpStatusCode.InternalServerError);
         }
 
         // Başarılı login kaydı
         await logHistoryService.RecordAsync(user.Id.ToString(), request.Email, ipAddress, true, "PublicLogin");
+
+        logger.LogInformation("User {UserId} logged in successfully from IP {IpAddress}", user.Id, ipAddress);
 
         return ServiceResult<LoginResponse>.Success(new LoginResponse
         {
@@ -178,6 +184,8 @@ public class LoginService(
         // Başarılı login kaydı
         await logHistoryService.RecordAsync(user.Id.ToString(), request.Email, ipAddress, true, "AdminLogin");
 
+        logger.LogInformation("Admin user {UserId} logged in successfully from IP {IpAddress}", user.Id, ipAddress);
+
         return ServiceResult<LoginResponse>.Success(new LoginResponse
         {
             AccessToken = accessTokenResult.Data!,
@@ -218,8 +226,8 @@ public class LoginService(
 
         string token = await userManager.GeneratePasswordResetTokenAsync(user);
 
-        HttpRequest? requestContext = httpContextAccessor.HttpContext?.Request;
-        string baseUrl = $"{requestContext?.Scheme}://{requestContext?.Host}";
+        //string baseUrl = $"{requestContext?.Scheme}://{requestContext?.Host}";
+        string baseUrl = urlSettings.Value.Client;
 
         // UserId'yi şifrele
         string encryptedUserId = dataProtectionHelper.Encrypt(user.Id.ToString());
@@ -263,6 +271,7 @@ public class LoginService(
         if (!result.Succeeded)
         {
             List<string> errors = result.Errors.Select(x => x.Description).ToList();
+            logger.LogWarning("Password reset failed for user {UserId}. Errors: {Errors}", user.Id, string.Join(", ", errors));
             return ServiceResult.Failure(errors, HttpStatusCode.BadRequest);
         }
 
@@ -270,6 +279,8 @@ public class LoginService(
         await userManager.UpdateSecurityStampAsync(user);
         // SecurityStamp cache'ini temizle
         await cacheService.RemoveAsync($"security_stamp:{user.Id}");
+
+        logger.LogInformation("Password reset successfully for user {UserId}", user.Id);
 
         return ServiceResult.Success(HttpStatusCode.OK);
     }
@@ -297,6 +308,8 @@ public class LoginService(
 
         // SecurityStamp cache'ini temizle (Middleware yeni stamp'i DB'den okusun)
         await cacheService.RemoveAsync($"security_stamp:{user.Id}");
+
+        logger.LogInformation("User {UserId} logged out successfully", user.Id);
 
         return ServiceResult.Success(HttpStatusCode.OK);
     }
