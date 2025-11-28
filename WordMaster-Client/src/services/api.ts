@@ -116,6 +116,10 @@ api.interceptors.response.use(
             redirectToLogin();
         }
 
+        if (status === 403) {
+            window.dispatchEvent(new Event("permission-denied"));
+        }
+
         return Promise.reject(error);
     }
 );

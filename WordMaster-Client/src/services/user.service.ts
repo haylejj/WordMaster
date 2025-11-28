@@ -33,6 +33,11 @@ export const userService = {
         return response.data;
     },
 
+    changeUserRole: async (id: string, roles: string[]): Promise<ServiceResult> => {
+        const response = await api.post(`/admin/users/${id}/change-role`, roles);
+        return response.data;
+    },
+
     getProfile: async (): Promise<ServiceResultWithData<UserProfileResponse>> => {
         const response = await api.get("/user/profile");
         return response.data;

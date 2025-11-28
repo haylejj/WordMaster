@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WordMaster.API.Extensions;
+using WordMaster.Application.Attributes;
 using WordMaster.Application.Requests.User;
 using WordMaster.Application.Responses.User;
 using WordMaster.Application.Services.Abstract;
@@ -23,6 +24,7 @@ public class UserController(IUserService userService) : BaseController
     /// <response code="401">Yetkisiz erişim.</response>
     /// <response code="404">Kullanıcı bulunamadı.</response>
     [HttpGet("profile")]
+    [RequirePermission("Public", "User", "GetProfile", "GET", "Profil bilgilerini getir")]
     public async Task<IActionResult> GetProfile()
     {
         Guid userId = User.GetUserId();
@@ -40,6 +42,7 @@ public class UserController(IUserService userService) : BaseController
     /// <response code="401">Yetkisiz erişim.</response>
     /// <response code="404">Kullanıcı bulunamadı.</response>
     [HttpPut("profile")]
+    [RequirePermission("Public", "User", "UpdateProfile", "PUT", "Profil bilgilerini güncelle")]
     public async Task<IActionResult> UpdateProfile([FromBody] UserUpdateRequest request)
     {
         Guid userId = User.GetUserId();

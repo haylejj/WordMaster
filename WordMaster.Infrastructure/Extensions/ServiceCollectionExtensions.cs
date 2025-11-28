@@ -36,6 +36,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IFavoriteRepository, FavoriteRepository>();
         services.AddScoped<IUnknowsRepository, UnknowsRepository>();
         services.AddScoped<ILogHistoryRepository, LogHistoryRepository>();
+        services.AddScoped<IPermissionRepository, PermissionRepository>();
 
         // Services
         services.AddScoped<IWordService, WordService>();
@@ -54,6 +55,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAllowedIpAddressService, AllowedIpAddressService>();
         services.AddScoped<IExcelService, ExcelService>();
         services.AddScoped<IJwtService, JwtService>();
+        services.AddScoped<IPermissionService, PermissionService>();
 
         // Helpers
         services.AddScoped<IDataProtectionHelper, DataProtectionHelper>();

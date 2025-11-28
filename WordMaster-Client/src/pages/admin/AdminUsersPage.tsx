@@ -3,7 +3,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { userService } from "@/services/user.service";
+import { roleService } from "@/services/role.service";
 import type { UserWithRolesResponse, UserDetailResponse } from "@/types/user";
+import type { RoleResponse } from "@/types/role";
 import {
     Search,
     Edit2,
@@ -74,6 +76,15 @@ export default function AdminUsersPage() {
     const [resetLoading, setResetLoading] = useState(false);
     const [resetSuccess, setResetSuccess] = useState<string | null>(null);
     const [resetError, setResetError] = useState<string | null>(null);
+
+    // Role Modal State
+    const [roleModalOpen, setRoleModalOpen] = useState(false);
+    const [userToChangeRole, setUserToChangeRole] = useState<UserWithRolesResponse | null>(null);
+    const [availableRoles, setAvailableRoles] = useState<RoleResponse[]>([]);
+    const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+    const [roleLoading, setRoleLoading] = useState(false);
+    const [roleSuccess, setRoleSuccess] = useState<string | null>(null);
+    const [roleError, setRoleError] = useState<string | null>(null);
 
     const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<UserFormData>({
         resolver: zodResolver(userSchema)
@@ -267,6 +278,66 @@ export default function AdminUsersPage() {
         setResetError(null);
     };
 
+    // Role Modal Handlers
+    const handleOpenRoleModal = async (user: UserWithRolesResponse) => {
+        setUserToChangeRole(user);
+        setSelectedRoles(user.roles);
+        setRoleSuccess(null);
+        setRoleError(null);
+        setRoleModalOpen(true);
+
+        // Fetch roles if not already fetched
+        if (availableRoles.length === 0) {
+            try {
+                const result = await roleService.getRoles();
+                if (result.isSuccess) {
+                    setAvailableRoles(result.data);
+                }
+            } catch (error) {
+                console.error("Roller yüklenemedi", error);
+            }
+        }
+    };
+
+    const handleCloseRoleModal = () => {
+        setRoleModalOpen(false);
+        setUserToChangeRole(null);
+        setSelectedRoles([]);
+        setRoleSuccess(null);
+        setRoleError(null);
+    };
+
+    const handleRoleToggle = (roleName: string) => {
+        if (selectedRoles.includes(roleName)) {
+            setSelectedRoles(selectedRoles.filter(r => r !== roleName));
+        } else {
+            setSelectedRoles([...selectedRoles, roleName]);
+        }
+    };
+
+    const handleConfirmRoleChange = async () => {
+        if (!userToChangeRole) return;
+
+        setRoleLoading(true);
+        setRoleSuccess(null);
+        setRoleError(null);
+
+        try {
+            const result = await userService.changeUserRole(userToChangeRole.id, selectedRoles);
+            if (result.isSuccess) {
+                setRoleSuccess("Kullanıcı rolleri başarıyla güncellendi.");
+                fetchUsers(page, searchQuery);
+            } else {
+                setRoleError(result.errorList?.[0] || "Rol güncelleme başarısız.");
+            }
+        } catch (error) {
+            setRoleError("İşlem sırasında bir hata oluştu.");
+            console.error("Rol güncelleme başarısız", error);
+        } finally {
+            setRoleLoading(false);
+        }
+    };
+
     const getGenderText = (gender?: string) => {
         if (!gender) return "Belirtilmemiş";
         return gender; // Since API returns "Kadın" or "Erkek", we can just return it.
@@ -376,6 +447,13 @@ export default function AdminUsersPage() {
                                                     title="Düzenle"
                                                 >
                                                     <Edit2 size={18} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleOpenRoleModal(user)}
+                                                    className="p-2 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors"
+                                                    title="Rolleri Düzenle"
+                                                >
+                                                    <Users size={18} />
                                                 </button>
                                                 <button
                                                     onClick={() => handleResetPasswordClick(user)}
@@ -683,6 +761,103 @@ export default function AdminUsersPage() {
                 successMessage={resetSuccess}
                 errorMessage={resetError}
             />
+
+            {/* Role Change Modal */}
+            {roleModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="bg-[#1a1a1a] border border-white/10 rounded-xl w-full max-w-md shadow-2xl">
+                        <div className="flex items-center justify-between p-6 border-b border-white/10">
+                            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                                <Users className="text-red-500" />
+                                Rolleri Düzenle
+                            </h2>
+                            <button onClick={handleCloseRoleModal} className="text-gray-400 hover:text-white transition-colors">
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        <div className="p-6">
+                            {roleSuccess ? (
+                                <div className="flex flex-col items-center justify-center py-4 space-y-4">
+                                    <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center text-green-500">
+                                        <CheckCircle2 size={32} />
+                                    </div>
+                                    <p className="text-green-500 font-medium text-center">{roleSuccess}</p>
+                                    <button
+                                        onClick={handleCloseRoleModal}
+                                        className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
+                                    >
+                                        Kapat
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="space-y-6">
+                                    {roleError && (
+                                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 flex items-center gap-3 text-red-500">
+                                            <AlertCircle size={20} />
+                                            <p className="text-sm">{roleError}</p>
+                                        </div>
+                                    )}
+
+                                    <div className="space-y-3">
+                                        <p className="text-sm text-gray-400">
+                                            <span className="text-white font-medium">{userToChangeRole?.userName}</span> kullanıcısı için rolleri seçin:
+                                        </p>
+
+                                        <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
+                                            {availableRoles.map((role) => (
+                                                <label
+                                                    key={role.id}
+                                                    className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all ${selectedRoles.includes(role.name)
+                                                        ? "bg-red-500/10 border-red-500/50"
+                                                        : "bg-[#121212] border-white/10 hover:border-white/20"
+                                                        }`}
+                                                    onClick={() => handleRoleToggle(role.name)}
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${selectedRoles.includes(role.name)
+                                                            ? "bg-red-500 border-red-500"
+                                                            : "border-gray-500"
+                                                            }`}>
+                                                            {selectedRoles.includes(role.name) && <CheckCircle2 size={14} className="text-white" />}
+                                                        </div>
+                                                        <span className={selectedRoles.includes(role.name) ? "text-white" : "text-gray-400"}>
+                                                            {role.name}
+                                                        </span>
+                                                    </div>
+                                                </label>
+                                            ))}
+
+                                            {availableRoles.length === 0 && (
+                                                <div className="text-center py-4 text-gray-500">
+                                                    Yüklü rol bulunamadı.
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-end gap-3 pt-2">
+                                        <button
+                                            onClick={handleCloseRoleModal}
+                                            className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors"
+                                        >
+                                            İptal
+                                        </button>
+                                        <button
+                                            onClick={handleConfirmRoleChange}
+                                            disabled={roleLoading}
+                                            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+                                        >
+                                            {roleLoading && <Loader2 className="animate-spin" size={16} />}
+                                            Kaydet
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

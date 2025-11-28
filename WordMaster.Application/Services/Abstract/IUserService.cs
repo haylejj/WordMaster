@@ -56,4 +56,9 @@ public interface IUserService
     /// Kullanıcının refresh token bilgilerini günceller.
     /// </summary>
     Task<ServiceResult> UpdateRefreshTokenAsync(string userId, string refreshToken, int expiresInDays);
+
+    /// <summary>
+    /// Kullanıcının rollerini değiştirir.
+    /// </summary>
+    Task<ServiceResult> ChangeUserRoleAsync(ChangeUserRoleRequest request);
 }

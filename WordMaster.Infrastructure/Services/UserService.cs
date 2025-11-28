@@ -370,4 +370,47 @@ public class UserService(
             ? ServiceResult.Failure("Refresh token güncellenirken hata oluştu", HttpStatusCode.InternalServerError)
             : ServiceResult.Success(HttpStatusCode.NoContent);
     }
+
+    /// <summary>
+    /// Kullanıcının rollerini değiştirir.
+    /// </summary>
+    public async Task<ServiceResult> ChangeUserRoleAsync(ChangeUserRoleRequest request)
+    {
+        AppUser? user = await userManager.FindByIdAsync(request.UserId);
+        if (user == null)
+        {
+            return ServiceResult.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound);
+        }
+
+        IList<string> currentRoles = await userManager.GetRolesAsync(user);
+        IEnumerable<string> rolesToAdd = request.Roles.Except(currentRoles);
+        IEnumerable<string> rolesToRemove = currentRoles.Except(request.Roles);
+
+        if (rolesToAdd.Any())
+        {
+            IdentityResult addResult = await userManager.AddToRolesAsync(user, rolesToAdd);
+            if (!addResult.Succeeded)
+            {
+                List<string> errors = addResult.Errors.Select(e => e.Description).ToList();
+                return ServiceResult.Failure(errors, HttpStatusCode.BadRequest);
+            }
+        }
+
+        if (rolesToRemove.Any())
+        {
+            IdentityResult removeResult = await userManager.RemoveFromRolesAsync(user, rolesToRemove);
+            if (!removeResult.Succeeded)
+            {
+                List<string> errors = removeResult.Errors.Select(e => e.Description).ToList();
+                return ServiceResult.Failure(errors, HttpStatusCode.BadRequest);
+            }
+        }
+
+        // Security stamp'i güncelle ki kullanıcının token'ı geçersiz olsun ve yeni rollerle tekrar giriş yapsın/token alsın.
+        await userManager.UpdateSecurityStampAsync(user);
+        await cacheService.RemoveAsync($"security_stamp:{user.Id}");
+
+        logger.LogInformation("User roles updated for user {UserId}. Added: {Added}, Removed: {Removed}", request.UserId, string.Join(",", rolesToAdd), string.Join(",", rolesToRemove));
+        return ServiceResult.Success(HttpStatusCode.NoContent);
+    }
 }

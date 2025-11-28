@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WordMaster.API.Extensions;
+using WordMaster.Application.Attributes;
 using WordMaster.Application.Requests.Folder;
 using WordMaster.Application.Requests.Word;
 using WordMaster.Application.Responses.Folder;
@@ -21,6 +22,7 @@ public class FolderController(IFolderService folderService) : BaseController
     /// </summary>
     /// <returns>Klasör listesi.</returns>
     [HttpGet]
+    [RequirePermission("Public", "Folders", "GetFolders", "GET", "Klasörleri listele")]
     public async Task<IActionResult> GetFolders()
     {
         Guid userId = User.GetUserId();
@@ -34,6 +36,7 @@ public class FolderController(IFolderService folderService) : BaseController
     /// <param name="id">Klasör ID'si.</param>
     /// <returns>Klasör detayları.</returns>
     [HttpGet("{id}")]
+    [RequirePermission("Public", "Folders", "GetFolder", "GET", "Klasör detayını getir")]
     public async Task<IActionResult> GetFolder(long id)
     {
         Guid userId = User.GetUserId();
@@ -47,6 +50,7 @@ public class FolderController(IFolderService folderService) : BaseController
     /// <param name="request">Oluşturulacak klasör bilgileri.</param>
     /// <returns>İşlem sonucu.</returns>
     [HttpPost]
+    [RequirePermission("Public", "Folders", "AddFolder", "POST", "Klasör ekle")]
     public async Task<IActionResult> AddFolder([FromBody] CreateFolderRequest request)
     {
         Guid userId = User.GetUserId();
@@ -60,6 +64,7 @@ public class FolderController(IFolderService folderService) : BaseController
     /// <param name="request">Güncellenecek klasör bilgileri.</param>
     /// <returns>İşlem sonucu.</returns>
     [HttpPut]
+    [RequirePermission("Public", "Folders", "UpdateFolder", "PUT", "Klasör güncelle")]
     public async Task<IActionResult> UpdateFolder([FromBody] UpdateFolderRequest request)
     {
         Guid userId = User.GetUserId();
@@ -73,6 +78,7 @@ public class FolderController(IFolderService folderService) : BaseController
     /// <param name="id">Silinecek klasör ID'si.</param>
     /// <returns>İşlem sonucu.</returns>
     [HttpDelete("{id}")]
+    [RequirePermission("Public", "Folders", "DeleteFolder", "DELETE", "Klasör sil")]
     public async Task<IActionResult> DeleteFolder(long id)
     {
         Guid userId = User.GetUserId();
@@ -86,6 +92,7 @@ public class FolderController(IFolderService folderService) : BaseController
     /// <param name="id">Klasör ID'si.</param>
     /// <returns>Klasördeki kelimelerin listesi.</returns>
     [HttpGet("{id}/words")]
+    [RequirePermission("Public", "Folders", "GetWordsInFolder", "GET", "Klasördeki kelimeleri listele")]
     public async Task<IActionResult> GetWordsInFolder(long id)
     {
         Guid userId = User.GetUserId();
@@ -99,6 +106,7 @@ public class FolderController(IFolderService folderService) : BaseController
     /// <param name="request">Eklenecek kelime ve klasör bilgileri.</param>
     /// <returns>İşlem sonucu.</returns>
     [HttpPost("words")]
+    [RequirePermission("Public", "Folders", "AddWordToFolder", "POST", "Klasöre kelime ekle")]
     public async Task<IActionResult> AddWordToFolder([FromBody] AddWordToFolderRequest request)
     {
         Guid userId = User.GetUserId();
@@ -112,6 +120,7 @@ public class FolderController(IFolderService folderService) : BaseController
     /// <param name="request">Çıkarılacak kelime ve klasör bilgileri.</param>
     /// <returns>İşlem sonucu.</returns>
     [HttpDelete("words")]
+    [RequirePermission("Public", "Folders", "RemoveWordFromFolder", "DELETE", "Klasörden kelime çıkar")]
     public async Task<IActionResult> RemoveWordFromFolder([FromBody] AddWordToFolderRequest request)
     {
         Guid userId = User.GetUserId();
@@ -125,6 +134,7 @@ public class FolderController(IFolderService folderService) : BaseController
     /// <param name="request">Kontrol edilecek kelime bilgileri.</param>
     /// <returns>Doğru/Yanlış bilgisi.</returns>
     [HttpPost("practice/check")]
+    [RequirePermission("Public", "Folders", "CheckTranslation", "POST", "Çeviri kontrolü")]
     public async Task<IActionResult> CheckTranslation([FromBody] CheckTranslationRequest request)
     {
         Guid userId = User.GetUserId();

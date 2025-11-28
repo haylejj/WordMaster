@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WordMaster.API.Extensions;
+using WordMaster.Application.Attributes;
 using WordMaster.Application.Requests.Favorite;
 using WordMaster.Application.Requests.Word;
 using WordMaster.Application.Responses.Favorite;
@@ -25,6 +26,7 @@ public class FavoriteController(IFavoriteService favoriteService) : BaseControll
     /// <param name="pageSize">Sayfa boyutu (varsayılan 10).</param>
     /// <returns>Sayfalanmış favori kelime listesi.</returns>
     [HttpGet]
+    [RequirePermission("Public", "Favorites", "GetFavorites", "GET", "View favorites")]
     public async Task<IActionResult> GetFavorites([FromQuery] string? search, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
         Guid userId = User.GetUserId();
@@ -38,6 +40,7 @@ public class FavoriteController(IFavoriteService favoriteService) : BaseControll
     /// <param name="request">İşlem yapılacak kelime ID'si.</param>
     /// <returns>İşlem sonucu (true: Eklendi, false: Çıkarıldı).</returns>
     [HttpPost("toggle")]
+    [RequirePermission("Public", "Favorites", "ToggleFavorite", "POST", "Toggle favorite")]
     public async Task<IActionResult> ToggleFavorite([FromBody] ToggleFavoriteRequest request)
     {
         Guid userId = User.GetUserId();
@@ -51,6 +54,7 @@ public class FavoriteController(IFavoriteService favoriteService) : BaseControll
     /// <param name="id">Favori ID'si.</param>
     /// <returns>İşlem sonucu.</returns>
     [HttpDelete("{id}")]
+    [RequirePermission("Public", "Favorites", "DeleteFavorite", "DELETE", "Delete favorite")]
     public async Task<IActionResult> DeleteFavorite(int id)
     {
         Guid userId = User.GetUserId();
@@ -63,6 +67,7 @@ public class FavoriteController(IFavoriteService favoriteService) : BaseControll
     /// </summary>
     /// <returns>Kelime detayları (WordResponse).</returns>
     [HttpGet("practice/random")]
+    [RequirePermission("Public", "Favorites", "GetRandomWord", "GET", "Get random word from favorites")]
     public async Task<IActionResult> GetRandomWord()
     {
         Guid userId = User.GetUserId();
@@ -76,6 +81,7 @@ public class FavoriteController(IFavoriteService favoriteService) : BaseControll
     /// <param name="request">Kontrol edilecek kelime bilgileri.</param>
     /// <returns>Doğru/Yanlış bilgisi.</returns>
     [HttpPost("practice/check")]
+    [RequirePermission("Public", "Favorites", "CheckTranslation", "POST", "Check translation")]
     public async Task<IActionResult> CheckTranslation([FromBody] CheckTranslationRequest request)
     {
         Guid userId = User.GetUserId();
