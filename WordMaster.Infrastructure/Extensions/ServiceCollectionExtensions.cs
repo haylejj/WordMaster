@@ -7,6 +7,7 @@ using WordMaster.Application.Services.Abstract;
 using WordMaster.Application.Services.Concrete;
 using WordMaster.Infrastructure.EfCore.Repositories;
 using WordMaster.Infrastructure.EfCore.UnitOfWork;
+using WordMaster.Infrastructure.Helpers;
 using WordMaster.Infrastructure.Services;
 
 namespace WordMaster.Infrastructure.Extensions;
@@ -35,6 +36,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IFavoriteRepository, FavoriteRepository>();
         services.AddScoped<IUnknowsRepository, UnknowsRepository>();
         services.AddScoped<ILogHistoryRepository, LogHistoryRepository>();
+        services.AddScoped<IPermissionRepository, PermissionRepository>();
 
         // Services
         services.AddScoped<IWordService, WordService>();
@@ -45,13 +47,18 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IRegisterService, RegisterService>();
         services.AddScoped<ILoginService, LoginService>();
         services.AddScoped<IRoleService, RoleService>();
-        services.AddScoped<IEmailService, EmailService>();
+        //services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IEmailService, MailHogEmailService>();
         services.AddScoped<ICacheService, RedisCacheService>();
         services.AddScoped<ILogHistoryService, LogHistoryService>();
         services.AddScoped<IAdminDashboardService, AdminDashboardService>();
         services.AddScoped<IAllowedIpAddressService, AllowedIpAddressService>();
         services.AddScoped<IExcelService, ExcelService>();
+        services.AddScoped<IJwtService, JwtService>();
+        services.AddScoped<IPermissionService, PermissionService>();
+
+        // Helpers
+        services.AddScoped<IDataProtectionHelper, DataProtectionHelper>();
 
         return services;
     }

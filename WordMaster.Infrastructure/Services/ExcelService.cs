@@ -2,6 +2,7 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.EntityFrameworkCore.Storage;
 using System.Globalization;
+using System.Net;
 using System.Text.RegularExpressions;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Entities;
@@ -13,7 +14,7 @@ namespace WordMaster.Infrastructure.Services;
 
 public class ExcelService(AppDbContext context) : IExcelService
 {
-    public async Task<Result> ImportWordsAsync(Stream fileStream, Guid userId)
+    public async Task<ServiceResult> ImportWordsAsync(Stream fileStream, Guid userId)
     {
         try
         {
@@ -32,13 +33,13 @@ public class ExcelService(AppDbContext context) : IExcelService
             // Başlığı oku
             if (!await csv.ReadAsync() || !csv.ReadHeader())
             {
-                return Result.Failure("Dosya boş veya başlık satırı okunamadı.");
+                return ServiceResult.Failure("Dosya boş veya başlık satırı okunamadı.", HttpStatusCode.BadRequest);
             }
 
             string[]? headers = csv.HeaderRecord;
             if (headers == null)
             {
-                return Result.Failure("Başlıklar okunamadı.");
+                return ServiceResult.Failure("Başlıklar okunamadı.", HttpStatusCode.BadRequest);
             }
 
             // WORD ve MEANING sütunlarını dinamik olarak bul
@@ -52,7 +53,7 @@ public class ExcelService(AppDbContext context) : IExcelService
 
             if (string.IsNullOrEmpty(wordHeader) || string.IsNullOrEmpty(meaningHeader))
             {
-                return Result.Failure("CSV dosyasında 'WORD' ve 'MEANING' sütunları bulunamadı (veya bunları içeren sütunlar).");
+                return ServiceResult.Failure("CSV dosyasında 'WORD' ve 'MEANING' sütunları bulunamadı (veya bunları içeren sütunlar).", HttpStatusCode.BadRequest);
             }
 
             List<Word> wordsToAdd = new();
@@ -96,7 +97,7 @@ public class ExcelService(AppDbContext context) : IExcelService
 
             if (wordsToAdd.Count == 0)
             {
-                return Result.Failure("Eklenecek geçerli kelime bulunamadı.");
+                return ServiceResult.Failure("Eklenecek geçerli kelime bulunamadı.", HttpStatusCode.BadRequest);
             }
 
             // Transaction
@@ -107,19 +108,17 @@ public class ExcelService(AppDbContext context) : IExcelService
                 await context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                return Result.Success();
+                return ServiceResult.SuccessAsCreated();
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                return Result.Failure($"Veritabanı hatası: {ex.Message}");
+                return ServiceResult.Failure($"Veritabanı hatası: {ex.Message}", HttpStatusCode.InternalServerError);
             }
         }
         catch (Exception ex)
         {
-            return Result.Failure($"Beklenmeyen hata: {ex.Message}");
+            return ServiceResult.Failure($"Beklenmeyen hata: {ex.Message}", HttpStatusCode.InternalServerError);
         }
     }
-
-
 }

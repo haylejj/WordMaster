@@ -1,0 +1,70 @@
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "sonner";
+import LoginPage from "@/pages/auth/LoginPage";
+import RegisterPage from "@/pages/auth/RegisterPage";
+import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage";
+import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
+import AdminLoginPage from "@/pages/admin/AdminLoginPage";
+import DashboardLayout from "@/layouts/DashboardLayout";
+import WordsPage from "@/pages/dashboard/WordsPage";
+import CreateWordPage from "@/pages/dashboard/CreateWordPage";
+import FoldersPage from "@/pages/dashboard/FoldersPage";
+import FolderDetailPage from "@/pages/dashboard/FolderDetailPage";
+import ProfilePage from "@/pages/dashboard/ProfilePage";
+import ChangePasswordPage from "@/pages/dashboard/ChangePasswordPage";
+import GeneralPracticePage from "@/pages/dashboard/GeneralPracticePage";
+import FolderPracticePage from "@/pages/dashboard/FolderPracticePage";
+
+import AdminLayout from "@/layouts/AdminLayout";
+import AdminDashboardPage from "@/pages/admin/AdminDashboardPage";
+import AdminUsersPage from "@/pages/admin/AdminUsersPage";
+import AdminWordsPage from "@/pages/admin/AdminWordsPage";
+import AdminRolesPage from "@/pages/admin/AdminRolesPage";
+import AdminPermissionsPage from "@/pages/admin/AdminPermissionsPage";
+import AdminIpAddressesPage from "@/pages/admin/AdminIpAddressesPage";
+
+import PermissionDeniedModal from "@/components/common/PermissionDeniedModal";
+
+function App() {
+  return (
+    <Router>
+      <Toaster position="top-right" theme="dark" />
+      <PermissionDeniedModal />
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/ResetPassword" element={<ResetPasswordPage />} />
+
+        {/* Admin Routes */}
+        <Route path="/admin/login" element={<AdminLoginPage />} />
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route path="dashboard" element={<AdminDashboardPage />} />
+          <Route path="users" element={<AdminUsersPage />} />
+          <Route path="words" element={<AdminWordsPage />} />
+          <Route path="roles" element={<AdminRolesPage />} />
+          <Route path="permissions" element={<AdminPermissionsPage />} />
+          <Route path="ip-addresses" element={<AdminIpAddressesPage />} />
+        </Route>
+
+        {/* Protected Dashboard Routes */}
+        <Route path="/" element={<DashboardLayout />}>
+          <Route index element={<WordsPage />} />
+          <Route path="add-word" element={<CreateWordPage />} />
+          <Route path="folders" element={<FoldersPage />} />
+          <Route path="folders/:id" element={<FolderDetailPage />} />
+          <Route path="favorites" element={<WordsPage variant="favorites" />} />
+          <Route path="unknowns" element={<WordsPage variant="unknowns" />} />
+          <Route path="profile" element={<ProfilePage />} />
+          <Route path="change-password" element={<ChangePasswordPage />} />
+          <Route path="practice/:type" element={<GeneralPracticePage />} />
+          <Route path="folders/:id/practice" element={<FolderPracticePage />} />
+        </Route>
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Router>
+  );
+}
+
+export default App;

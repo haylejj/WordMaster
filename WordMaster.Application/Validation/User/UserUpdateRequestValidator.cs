@@ -7,9 +7,6 @@ public class UserUpdateRequestValidator : AbstractValidator<UserUpdateRequest>
 {
     public UserUpdateRequestValidator()
     {
-        RuleFor(x => x.Id)
-            .NotEmpty().WithMessage("Kullanıcı ID alanı boş bırakılamaz");
-
         RuleFor(x => x.UserName)
             .NotEmpty().WithMessage("Kullanıcı Adı alanı boş bırakılamaz")
             .MaximumLength(256).WithMessage("Kullanıcı adı en fazla 256 karakter olabilir");

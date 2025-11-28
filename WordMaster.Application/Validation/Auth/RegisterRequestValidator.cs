@@ -24,6 +24,11 @@ public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
 
         RuleFor(x => x.Phone)
             .NotEmpty().WithMessage("Telefon alanı boş bırakılamaz");
+
+        RuleFor(x => x.Gender)
+            .NotNull().WithMessage("Cinsiyet alanı boş olamaz.")
+            .IsInEnum().WithMessage("Geçersiz cinsiyet değeri.");
+
     }
 }
 

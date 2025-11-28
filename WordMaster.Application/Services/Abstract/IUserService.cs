@@ -1,27 +1,64 @@
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using WordMaster.Application.Requests.Auth;
 using WordMaster.Application.Requests.User;
-using WordMaster.Application.ViewModels.User;
+using WordMaster.Application.Responses.User;
 using WordMaster.Domain.Results;
 
 namespace WordMaster.Application.Services.Abstract;
 
 public interface IUserService
 {
-    Task LogOutAsync();
-    SelectList GetGenderSelectList();
-    Task<Result<UserEditViewModel>> GetUserEditViewModelAsync(string username);
-    Task<Result<IEnumerable<IdentityError>>> EditUserAsync(UserEditRequest request, string username);
-    Task<Result<bool>> CheckPasswordAsync(string userName, string passwordOld);
-    Task<Result<IEnumerable<IdentityError>>> ChangePasswordAsync(PasswordChangeRequest request, string userName);
-    Task<List<UserViewModel>> GetUsersAsync();
-    Task<Result<(List<UserWithRolesViewModel> Users, int TotalCount)>> GetPagedUsersAsync(string? search, int page, int pageSize);
-    Task<Result<UserWithRolesViewModel>> GetUserByIdAsync(string id);
-    Task<Result<UserEditViewModel>> GetUserEditViewModelByIdAsync(string id);
-    Task<Result<UserDetailViewModel>> GetUserDetailAsync(string id);
-    Task<Result<IEnumerable<IdentityError>>> UpdateUserAsync(string id, UserEditRequest request);
-    Task<Result<bool>> DeleteUserAsync(string id);
-    Task<Result<string>> ResetUserPasswordAsync(string id);
-}
+    /// <summary>
+    /// Kullanıcının şifresini değiştirir.
+    /// </summary>
+    Task<ServiceResult> ChangePasswordAsync(ChangePasswordRequest request, string userId);
 
+    /// <summary>
+    /// Tüm kullanıcıları listeler.
+    /// </summary>
+    Task<ServiceResult<List<UserResponse>>> GetUsersAsync();
+
+    /// <summary>
+    /// Kullanıcıları sayfalı olarak listeler.
+    /// </summary>
+    Task<ServiceResult<PagedResult<UserWithRolesResponse>>> GetPagedUsersAsync(string? search, int page, int pageSize);
+
+    /// <summary>
+    /// Kullanıcı profil bilgilerini ID ile getirir.
+    /// </summary>
+    Task<ServiceResult<UserProfileResponse>> GetProfileByIdAsync(string id);
+
+    /// <summary>
+    /// Kullanıcının detaylı bilgilerini getirir (istatistiklerle birlikte).
+    /// </summary>
+    Task<ServiceResult<UserDetailResponse>> GetUserDetailAsync(string id);
+
+    /// <summary>
+    /// Kullanıcı bilgilerini günceller.
+    /// </summary>
+    Task<ServiceResult> UpdateUserAsync(UserUpdateRequest request);
+
+    /// <summary>
+    /// Kullanıcıyı siler.
+    /// </summary>
+    Task<ServiceResult> DeleteUserAsync(string id);
+
+    /// <summary>
+    /// Kullanıcının şifresini sıfırlar ve yeni şifreyi e-posta ile gönderir.
+    /// </summary>
+    Task<ServiceResult<string>> ResetUserPasswordAsync(string id);
+
+    /// <summary>
+    /// Refresh token'ı doğrular ve kullanıcı bilgilerini döndürür.
+    /// </summary>
+    Task<ServiceResult<UserWithRolesResponse>> ValidateAndGetUserByRefreshTokenAsync(string userId, string refreshToken);
+
+    /// <summary>
+    /// Kullanıcının refresh token bilgilerini günceller.
+    /// </summary>
+    Task<ServiceResult> UpdateRefreshTokenAsync(string userId, string refreshToken, int expiresInDays);
+
+    /// <summary>
+    /// Kullanıcının rollerini değiştirir.
+    /// </summary>
+    Task<ServiceResult> ChangeUserRoleAsync(ChangeUserRoleRequest request);
+}

@@ -1,0 +1,10 @@
+namespace WordMaster.Application.Responses.Favorite;
+
+public class FavoriteWithWordResponse
+{
+    public long Id { get; set; }
+    public DateTime CreatedTime { get; set; }
+    public long WordId { get; set; }
+    public Guid? UserId { get; set; }
+    public FavoriteWordResponse? Word { get; set; }
+}

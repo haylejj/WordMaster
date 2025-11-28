@@ -1,15 +1,16 @@
-using WordMaster.Domain.Entities;
+using WordMaster.Application.Requests.Favorite;
+using WordMaster.Application.Requests.Word;
+using WordMaster.Application.Responses.Favorite;
+using WordMaster.Application.Responses.Practice;
 using WordMaster.Domain.Results;
 
 namespace WordMaster.Application.Services.Abstract;
 
 public interface IFavoriteService
 {
-    Task<List<Favorite>> GetUserFavoritesAsync(Guid userId);
-    Task<Result<bool>> ToggleFavoriteAsync(long wordId, Guid userId);
-    Task<Result<Favorite>> GetFavoriteWithWordAsync(int favoriteId, Guid userId);
-    Task<Result> DeleteFavoriteAsync(int favoriteId, Guid userId);
-    Task<Result<string>> GetRandomWordFromFavoritesAsync(Guid userId);
-    Task<Result<bool>> CheckTranslationAndUpdateAsync(Guid userId, string turkishWord, string englishWord);
-    Task<Result<(List<Favorite> Favorites, int TotalCount)>> GetPagedFavoritesAsync(Guid userId, string? search, int page, int pageSize);
+    Task<ServiceResult<bool>> ToggleFavoriteAsync(ToggleFavoriteRequest request, Guid userId);
+    Task<ServiceResult> DeleteFavoriteAsync(int favoriteId, Guid userId);
+    Task<ServiceResult<PracticeWordResponse>> GetRandomWordFromFavoritesAsync(Guid userId);
+    Task<ServiceResult<bool>> CheckTranslationAndUpdateAsync(Guid userId, CheckTranslationRequest request);
+    Task<ServiceResult<PagedResult<FavoriteWithWordResponse>>> GetPagedFavoritesAsync(Guid userId, string? search, int page, int pageSize);
 }

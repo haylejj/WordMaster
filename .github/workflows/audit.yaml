@@ -2,9 +2,9 @@ name: Audit
 
 on:
   push:
-    branches: [feature/*]
+    branches: [feature/*,api/*]
   pull_request:
-    branches: [feature/*]
+    branches: [feature/*,api-*]
 
 jobs:
   codeql-analysis:
