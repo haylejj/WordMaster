@@ -106,5 +106,20 @@ public class UserController(IUserService userService) : BaseController
         ServiceResult<string> result = await userService.ResetUserPasswordAsync(id);
         return CreateResult(result);
     }
+
+    /// <summary>
+    /// Kullanıcının rollerini değiştirir.
+    /// </summary>
+    /// <param name="id">Kullanıcı ID'si.</param>
+    /// <param name="roles">Yeni roller.</param>
+    /// <returns>İşlem sonucu.</returns>
+    [HttpPost("{id}/change-role")]
+    [RequirePermission("Admin", "AdminUsers", "ChangeRole", "POST", "Kullanıcı rolünü değiştir")]
+    public async Task<IActionResult> ChangeRole(string id, [FromBody] List<string> roles)
+    {
+        var request = new ChangeUserRoleRequest { UserId = id, Roles = roles };
+        ServiceResult result = await userService.ChangeUserRoleAsync(request);
+        return CreateResult(result);
+    }
 }
 

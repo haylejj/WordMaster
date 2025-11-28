@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Check, HelpCircle, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -17,7 +17,6 @@ interface PracticeCardProps {
 export function PracticeCard({
     englishWord,
     turkishWord,
-    wordId,
     onCheck,
     onNext,
     isFolderPractice = false,

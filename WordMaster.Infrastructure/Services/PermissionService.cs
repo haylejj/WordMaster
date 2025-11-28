@@ -89,21 +89,49 @@ public class PermissionService(IPermissionRepository permissionRepository, IUnit
             return ServiceResult.Failure("Role not found", HttpStatusCode.NotFound);
         }
 
-        List<RolePermission> existingPermissions = await permissionRepository.GetRolePermissionsAsync(request.RoleId);
+        // Get existing role permissions
+        List<RolePermission> existingRolePermissions = await permissionRepository.GetRolePermissionsAsync(request.RoleId);
+        HashSet<Guid> existingPermissionIds = existingRolePermissions.Select(rp => rp.PermissionId).ToHashSet();
+        HashSet<Guid> requestedPermissionIds = request.PermissionIds.ToHashSet();
 
-        permissionRepository.RemoveRolePermissions(existingPermissions);
+        // Determine permissions to add and delete
+        List<Guid> permissionIdsToAdd = requestedPermissionIds.Except(existingPermissionIds).ToList();
+        List<Guid> permissionIdsToDelete = existingPermissionIds.Except(requestedPermissionIds).ToList();
 
-        IEnumerable<RolePermission> newPermissions = request.PermissionIds.Select(pId => new RolePermission
+        if (permissionIdsToAdd.Count == 0 && permissionIdsToDelete.Count == 0)
         {
-            RoleId = request.RoleId,
-            PermissionId = pId
-        });
+            logger.LogInformation("No permission changes detected for Role {RoleId} by User {OperatorId}.", request.RoleId, operatorId);
+            return ServiceResult.Success(HttpStatusCode.OK);
+        }
 
-        await permissionRepository.AddRolePermissionsAsync(newPermissions);
+        // Add new permissions
+        if (permissionIdsToAdd.Count != 0)
+        {
+            IEnumerable<RolePermission> newPermissions = permissionIdsToAdd.Select(pId => new RolePermission
+            {
+                RoleId = request.RoleId,
+                PermissionId = pId
+            });
+            await permissionRepository.AddRolePermissionsAsync(newPermissions);
+        }
+
+        // Remove deleted permissions
+        if (permissionIdsToDelete.Count != 0)
+        {
+            IEnumerable<RolePermission> permissionsToRemove = existingRolePermissions
+                .Where(rp => permissionIdsToDelete.Contains(rp.PermissionId));
+            permissionRepository.RemoveRolePermissions(permissionsToRemove);
+        }
+
         await unitOfWork.CommitAsync();
 
-        logger.LogInformation("Permissions updated successfully. Operator: {OperatorId}, Role: {RoleId}, New Permission IDs: {PermissionIds}",
-            operatorId, request.RoleId, string.Join(", ", request.PermissionIds));
+        logger.LogInformation("Permissions updated for Role {RoleId} by User {OperatorId}. Added: {AddedCount} ({AddedIds}), Removed: {RemovedCount} ({RemovedIds})",
+            request.RoleId,
+            operatorId,
+            permissionIdsToAdd.Count,
+            string.Join(", ", permissionIdsToAdd),
+            permissionIdsToDelete.Count,
+            string.Join(", ", permissionIdsToDelete));
 
         return ServiceResult.Success(HttpStatusCode.OK);
     }
