@@ -1,8 +1,11 @@
 import { ShieldAlert, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function PermissionDeniedModal() {
     const [open, setOpen] = useState(false);
+    const navigate = useNavigate();
+    const location = useLocation();
 
     useEffect(() => {
         const handlePermissionDenied = () => {
@@ -16,6 +19,15 @@ export default function PermissionDeniedModal() {
         };
     }, []);
 
+    const handleClose = () => {
+        setOpen(false);
+        if (location.pathname.startsWith("/admin")) {
+            navigate("/admin/dashboard");
+        } else {
+            navigate("/");
+        }
+    };
+
     if (!open) return null;
 
     return (
@@ -23,7 +35,7 @@ export default function PermissionDeniedModal() {
             {/* Backdrop */}
             <div
                 className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
-                onClick={() => setOpen(false)}
+                onClick={handleClose}
             />
 
             {/* Modal */}
@@ -31,7 +43,7 @@ export default function PermissionDeniedModal() {
                 <div className="relative w-full max-w-md transform overflow-hidden rounded-2xl bg-[#0a0a0a] border border-red-900/30 shadow-2xl transition-all animate-in fade-in zoom-in-95 duration-200">
                     {/* Close button */}
                     <button
-                        onClick={() => setOpen(false)}
+                        onClick={handleClose}
                         className="absolute right-4 top-4 p-1 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
                     >
                         <X size={18} />
@@ -57,7 +69,7 @@ export default function PermissionDeniedModal() {
                     {/* Actions */}
                     <div className="px-6 pb-6">
                         <button
-                            onClick={() => setOpen(false)}
+                            onClick={handleClose}
                             className="w-full px-4 py-3 text-sm font-semibold text-white bg-red-600 rounded-xl hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-[#0a0a0a] transition-all shadow-lg shadow-red-900/20"
                         >
                             Tamam

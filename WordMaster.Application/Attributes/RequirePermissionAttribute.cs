@@ -1,13 +1,13 @@
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using System.Security.Claims;
 using WordMaster.Application.Services.Abstract;
-using WordMaster.Domain.Results;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using WordMaster.Domain.Entities;
+using WordMaster.Domain.Results;
 
 namespace WordMaster.Application.Attributes;
 
@@ -46,7 +46,7 @@ public class RequirePermissionAttribute(string areaName, string controllerName, 
         string key = $"{AreaName}_{ControllerName}_{ActionName}_{HttpMethod}";
 
         // Check if user has permission
-        var serviceResult = await permissionService.HasPermissionAsync(Guid.Parse(userId), key);
+        ServiceResult<bool> serviceResult = await permissionService.HasPermissionAsync(Guid.Parse(userId), key);
 
         if (!serviceResult.IsSuccess || !serviceResult.Data)
         {

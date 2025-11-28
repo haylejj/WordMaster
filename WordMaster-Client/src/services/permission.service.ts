@@ -1,6 +1,6 @@
 import api from "./api";
 import type { ServiceResult, ServiceResultWithData } from "@/types/api";
-import type { PermissionResponse, UpdateRolePermissionsRequest } from "@/types/permission";
+import type { PermissionResponse, UpdateRolePermissionsRequest, PermissionScanResponse } from "@/types/permission";
 
 export const permissionService = {
     getAll: async (): Promise<ServiceResultWithData<PermissionResponse[]>> => {
@@ -15,7 +15,7 @@ export const permissionService = {
         const response = await api.put("/admin/permissions/role", data);
         return response.data;
     },
-    scan: async (): Promise<ServiceResult> => {
+    scan: async (): Promise<ServiceResultWithData<PermissionScanResponse>> => {
         const response = await api.post("/admin/permissions/scan");
         return response.data;
     }

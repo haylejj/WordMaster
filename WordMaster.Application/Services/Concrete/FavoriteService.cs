@@ -18,7 +18,6 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
 {
     private static readonly Random _random = new();
     private static readonly TimeSpan PracticeCacheExpiration = TimeSpan.FromMinutes(5);
-    private static readonly TimeSpan GetByIdCacheExpiration = TimeSpan.FromMinutes(10);
 
     public async Task<ServiceResult> DeleteFavoriteAsync(int favoriteId, Guid userId)
     {
@@ -31,7 +30,6 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
         favoriteRepository.Remove(favorite);
         await unitOfWork.CommitAsync();
 
-        // Cache invalidation
         await cacheService.RemoveAsync(CacheKeys.Favorite(favoriteId, userId));
         await cacheService.RemoveAsync(CacheKeys.Favorites(userId));
 
@@ -52,7 +50,7 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
             await favoriteRepository.AddAsync(favorite);
             await unitOfWork.CommitAsync();
 
-            // Cache invalidation
+
             await cacheService.RemoveAsync(CacheKeys.Favorites(userId));
 
             return ServiceResult<bool>.Success(true, HttpStatusCode.OK);
@@ -61,7 +59,6 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
         favoriteRepository.Remove(existingFavorite);
         await unitOfWork.CommitAsync();
 
-        // Cache invalidation
         await cacheService.RemoveAsync(CacheKeys.Favorites(userId));
 
         return ServiceResult<bool>.Success(false, HttpStatusCode.OK);

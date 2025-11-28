@@ -85,8 +85,13 @@ export default function AdminPermissionsPage() {
         try {
             const result = await permissionService.scan();
             if (result.isSuccess) {
-                toast.success("İzinler başarıyla tarandı ve güncellendi.");
-                loadAllPermissions();
+                const { addedCount, deletedCount } = result.data;
+                toast.success(`Tarama tamamlandı. Eklendi: ${addedCount}, Silindi: ${deletedCount}`);
+                await loadAllPermissions();
+                // If a role is selected, reload its permissions to remove any deleted ones from selection
+                if (selectedRoleId) {
+                    await loadRolePermissions(selectedRoleId);
+                }
             } else {
                 toast.error(result.errorList?.[0] || "İzin taraması başarısız oldu.");
             }

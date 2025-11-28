@@ -12,3 +12,8 @@ export interface UpdateRolePermissionsRequest {
     roleId: string;
     permissionIds: string[];
 }
+
+export interface PermissionScanResponse {
+    addedCount: number;
+    deletedCount: number;
+}

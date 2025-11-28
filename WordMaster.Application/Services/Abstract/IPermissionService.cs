@@ -31,12 +31,13 @@ public interface IPermissionService
     /// Updates the permissions assigned to a role.
     /// </summary>
     /// <param name="request">The request containing the role ID and the list of permission IDs.</param>
+    /// <param name="operatorId">The ID of the user performing the update.</param>
     /// <returns>A result indicating success or failure.</returns>
-    Task<ServiceResult> UpdateRolePermissionsAsync(UpdateRolePermissionsRequest request);
+    Task<ServiceResult> UpdateRolePermissionsAsync(UpdateRolePermissionsRequest request, Guid operatorId);
 
     /// <summary>
     /// Scans the application for permissions and saves them to the database.
     /// </summary>
-    /// <returns>A result indicating success or failure.</returns>
-    Task<ServiceResult> ScanAndSavePermissionsAsync();
+    /// <returns>A result indicating success or failure, including counts of added and deleted permissions.</returns>
+    Task<ServiceResult<PermissionScanResponse>> ScanAndSavePermissionsAsync();
 }

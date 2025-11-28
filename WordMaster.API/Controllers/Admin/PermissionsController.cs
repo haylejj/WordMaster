@@ -48,7 +48,10 @@ public class PermissionsController(IPermissionService permissionService) : BaseC
     [RequirePermission("Admin", "Permissions", "UpdateRolePermissions", "PUT", "Update role permissions")]
     public async Task<IActionResult> UpdateRolePermissions([FromBody] UpdateRolePermissionsRequest request)
     {
-        ServiceResult result = await permissionService.UpdateRolePermissionsAsync(request);
+        string? userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        Guid userId = string.IsNullOrEmpty(userIdString) ? Guid.Empty : Guid.Parse(userIdString);
+
+        ServiceResult result = await permissionService.UpdateRolePermissionsAsync(request, userId);
         return CreateResult(result);
     }
 
@@ -60,7 +63,7 @@ public class PermissionsController(IPermissionService permissionService) : BaseC
     [RequirePermission("Admin", "Permissions", "Scan", "POST", "Scan for new permissions")]
     public async Task<IActionResult> Scan()
     {
-        ServiceResult result = await permissionService.ScanAndSavePermissionsAsync();
+        ServiceResult<PermissionScanResponse> result = await permissionService.ScanAndSavePermissionsAsync();
         return CreateResult(result);
     }
 }

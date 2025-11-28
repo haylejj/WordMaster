@@ -1,7 +1,8 @@
-using System.Net;
-using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Net;
+using System.Reflection;
+using Microsoft.Extensions.Logging;
 using WordMaster.Application.Attributes;
 using WordMaster.Application.Persistence;
 using WordMaster.Application.Persistence.Repositories;
@@ -13,7 +14,7 @@ using WordMaster.Domain.Results;
 
 namespace WordMaster.Infrastructure.Services;
 
-public class PermissionService(IPermissionRepository permissionRepository, IUnitOfWork unitOfWork) : IPermissionService
+public class PermissionService(IPermissionRepository permissionRepository, IUnitOfWork unitOfWork, ILogger<PermissionService> logger) : IPermissionService
 {
     /// <summary>
     /// Checks if a user has a specific permission.
@@ -23,7 +24,7 @@ public class PermissionService(IPermissionRepository permissionRepository, IUnit
     /// <returns>True if the user has the permission, otherwise false.</returns>
     public async Task<ServiceResult<bool>> HasPermissionAsync(Guid userId, string permissionKey)
     {
-        var hasPermission = await permissionRepository.HasPermissionAsync(userId, permissionKey);
+        bool hasPermission = await permissionRepository.HasPermissionAsync(userId, permissionKey);
 
         return ServiceResult<bool>.Success(hasPermission, HttpStatusCode.OK);
     }
@@ -34,7 +35,7 @@ public class PermissionService(IPermissionRepository permissionRepository, IUnit
     /// <returns>A list of all permissions.</returns>
     public async Task<ServiceResult<List<PermissionResponse>>> GetAllPermissionsAsync()
     {
-        var permissions = await permissionRepository.GetAll().ToListAsync();
+        List<Permission> permissions = await permissionRepository.GetAll().ToListAsync();
 
         var response = permissions.Select(p => new PermissionResponse
         {
@@ -57,7 +58,7 @@ public class PermissionService(IPermissionRepository permissionRepository, IUnit
     /// <returns>A list of permissions assigned to the role.</returns>
     public async Task<ServiceResult<List<PermissionResponse>>> GetPermissionsByRoleIdAsync(Guid roleId)
     {
-        var permissions = await permissionRepository.GetPermissionsByRoleIdAsync(roleId);
+        List<Permission> permissions = await permissionRepository.GetPermissionsByRoleIdAsync(roleId);
 
         var response = permissions.Select(p => new PermissionResponse
         {
@@ -77,16 +78,18 @@ public class PermissionService(IPermissionRepository permissionRepository, IUnit
     /// Updates the permissions assigned to a role.
     /// </summary>
     /// <param name="request">The request containing the role ID and the list of permission IDs.</param>
+    /// <param name="operatorId">The ID of the user performing the update.</param>
     /// <returns>A result indicating success or failure.</returns>
-    public async Task<ServiceResult> UpdateRolePermissionsAsync(UpdateRolePermissionsRequest request)
+    public async Task<ServiceResult> UpdateRolePermissionsAsync(UpdateRolePermissionsRequest request, Guid operatorId)
     {
-        var roleExists = await permissionRepository.RoleExistsAsync(request.RoleId);
+        bool roleExists = await permissionRepository.RoleExistsAsync(request.RoleId);
         if (!roleExists)
         {
+            logger.LogWarning("Role {RoleId} not found during permission update by User {OperatorId}.", request.RoleId, operatorId);
             return ServiceResult.Failure("Role not found", HttpStatusCode.NotFound);
         }
 
-        var existingPermissions = await permissionRepository.GetRolePermissionsAsync(request.RoleId);
+        List<RolePermission> existingPermissions = await permissionRepository.GetRolePermissionsAsync(request.RoleId);
 
         permissionRepository.RemoveRolePermissions(existingPermissions);
 
@@ -99,41 +102,46 @@ public class PermissionService(IPermissionRepository permissionRepository, IUnit
         await permissionRepository.AddRolePermissionsAsync(newPermissions);
         await unitOfWork.CommitAsync();
 
+        logger.LogInformation("Permissions updated successfully. Operator: {OperatorId}, Role: {RoleId}, New Permission IDs: {PermissionIds}",
+            operatorId, request.RoleId, string.Join(", ", request.PermissionIds));
+
         return ServiceResult.Success(HttpStatusCode.OK);
     }
 
     /// <summary>
-    /// Scans the application for permissions and saves them to the database.
+    /// Scans the application for permissions and synchronizes them with the database.
+    /// Adds new permissions found in code and removes permissions that no longer exist in code.
     /// </summary>
-    /// <returns>A result indicating success or failure.</returns>
-    public async Task<ServiceResult> ScanAndSavePermissionsAsync()
+    /// <returns>A result indicating success or failure, including counts of added and deleted permissions.</returns>
+    public async Task<ServiceResult<PermissionScanResponse>> ScanAndSavePermissionsAsync()
     {
+        logger.LogInformation("Starting permission scan and synchronization...");
+
         var assembly = Assembly.GetEntryAssembly(); // Get the API assembly
         if (assembly == null)
         {
-            return ServiceResult.Failure("Entry assembly not found", HttpStatusCode.InternalServerError);
+            logger.LogError("Entry assembly not found during permission scan.");
+            return ServiceResult<PermissionScanResponse>.Failure("Entry assembly not found", HttpStatusCode.InternalServerError);
         }
 
-        var controllers = assembly.GetTypes()
+        IEnumerable<Type> controllers = assembly.GetTypes()
             .Where(t => typeof(ControllerBase).IsAssignableFrom(t) && !t.IsAbstract);
 
-        var permissionsToAdd = new List<Permission>();
+        var codePermissions = new List<Permission>();
 
-        foreach (var controller in controllers)
+        foreach (Type? controller in controllers)
         {
-            var methods = controller.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
-            foreach (var method in methods)
+            MethodInfo[] methods = controller.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
+            foreach (MethodInfo method in methods)
             {
-                var attribute = method.GetCustomAttribute<RequirePermissionAttribute>();
+                RequirePermissionAttribute? attribute = method.GetCustomAttribute<RequirePermissionAttribute>();
                 if (attribute != null)
                 {
-                    var key = $"{attribute.AreaName}_{attribute.ControllerName}_{attribute.ActionName}_{attribute.HttpMethod}";
+                    string key = $"{attribute.AreaName}_{attribute.ControllerName}_{attribute.ActionName}_{attribute.HttpMethod}";
 
-                    // Check if permission already exists in DB
-                    var exists = await permissionRepository.PermissionExistsAsync(key);
-                    if (!exists && !permissionsToAdd.Any(p => p.Key == key))
+                    if (!codePermissions.Any(p => p.Key == key))
                     {
-                        permissionsToAdd.Add(new Permission
+                        codePermissions.Add(new Permission
                         {
                             Id = Guid.NewGuid(),
                             Key = key,
@@ -148,12 +156,41 @@ public class PermissionService(IPermissionRepository permissionRepository, IUnit
             }
         }
 
-        if (permissionsToAdd.Any())
+        var dbPermissions = await permissionRepository.GetAll().ToListAsync();
+
+        // 1. Permissions to ADD (In Code but not in DB)
+        var permissionsToAdd = codePermissions
+            .Where(cp => !dbPermissions.Any(dp => dp.Key == cp.Key))
+            .ToList();
+
+        // 2. Permissions to DELETE (In DB but not in Code)
+        var permissionsToDelete = dbPermissions
+            .Where(dp => !codePermissions.Any(cp => cp.Key == dp.Key))
+            .ToList();
+
+        if (permissionsToAdd.Count != 0)
         {
             await permissionRepository.AddPermissionsAsync(permissionsToAdd);
+        }
+
+        if (permissionsToDelete.Count != 0)
+        {
+            permissionRepository.RemoveRange(permissionsToDelete);
+        }
+
+        if (permissionsToAdd.Count != 0 || permissionsToDelete.Count != 0)
+        {
             await unitOfWork.CommitAsync();
         }
 
-        return ServiceResult.Success(HttpStatusCode.OK);
+        logger.LogInformation("Permission scan completed. Added: {AddedCount}, Deleted: {DeletedCount}", permissionsToAdd.Count, permissionsToDelete.Count);
+
+        var response = new PermissionScanResponse
+        {
+            AddedCount = permissionsToAdd.Count,
+            DeletedCount = permissionsToDelete.Count
+        };
+
+        return ServiceResult<PermissionScanResponse>.Success(response, HttpStatusCode.OK);
     }
 }
