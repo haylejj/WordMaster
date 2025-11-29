@@ -1,73 +1,71 @@
-# React + TypeScript + Vite
+# WordMaster Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+WordMaster Frontend, modern web teknolojileri kullanılarak geliştirilmiş, kullanıcı dostu ve performanslı bir kelime öğrenme platformu arayüzüdür.
 
-Currently, two official plugins are available:
+## 🚀 Teknolojiler
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Proje aşağıdaki temel teknolojiler üzerine inşa edilmiştir:
 
-## React Compiler
+*   **React 18**: Kullanıcı arayüzü kütüphanesi.
+*   **Vite**: Hızlı geliştirme ve build aracı.
+*   **TypeScript**: Tip güvenliği ve daha iyi geliştirme deneyimi için.
+*   **Tailwind CSS**: Hızlı ve esnek stillendirme için utility-first CSS framework'ü.
+*   **Axios**: HTTP istekleri için.
+*   **React Router DOM**: Sayfa yönlendirmeleri için.
+*   **React Hook Form & Zod**: Form yönetimi ve validasyon için.
+*   **Lucide React**: Modern ikon seti.
+*   **Radix UI / Shadcn UI**: Erişilebilir ve özelleştirilebilir UI bileşenleri.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 📂 Proje Yapısı
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+src/
+├── components/        # Yeniden kullanılabilir UI bileşenleri (Button, Input, Modal vb.)
+├── hooks/             # Custom React hook'ları
+├── layouts/           # Sayfa düzenleri (AuthLayout, DashboardLayout vb.)
+├── lib/               # Yardımcı kütüphaneler ve konfigürasyonlar (utils.ts vb.)
+├── pages/             # Uygulama sayfaları (Login, Dashboard, WordList vb.)
+├── services/          # API servisleri (AuthService, WordService vb.)
+├── types/             # TypeScript tip tanımları ve interface'ler
+├── App.tsx            # Ana uygulama bileşeni ve routing
+└── main.tsx           # Uygulama giriş noktası
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🔐 Kimlik Doğrulama ve Güvenlik
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Frontend uygulaması, Backend ile güvenli bir şekilde iletişim kurmak için **JWT (JSON Web Token)** yapısını kullanır.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### Axios Interceptor Yapısı (`src/services/api.ts`)
+
+Tüm HTTP istekleri merkezi bir `api` instance'ı üzerinden yönetilir.
+
+1.  **Request Interceptor:**
+    *   Her istekte `localStorage` kontrol edilir.
+    *   Eğer `accessToken` varsa, isteğin `Authorization` header'ına `Bearer <token>` olarak eklenir.
+    *   Login, Register gibi auth gerektirmeyen endpoint'ler bu işlemden muaf tutulur.
+
+2.  **Response Interceptor:**
+    *   **401 Unauthorized:** Sunucudan 401 hatası gelirse (Token süresi dolmuşsa):
+        *   Sistem otomatik olarak `refreshToken` ile yeni bir `accessToken` almaya çalışır.
+        *   Eğer başarılı olursa, başarısız olan ilk istek yeni token ile tekrar gönderilir (Kullanıcı kesinti hissetmez).
+        *   Eğer yenileme başarısız olursa, kullanıcı çıkışa zorlanır ve Login sayfasına yönlendirilir.
+    *   **403 Forbidden:** Kullanıcının yetkisi olmayan bir işlem yapması durumunda:
+        *   Global bir `permission-denied` eventi fırlatılır.
+        *   Bu event, kullanıcıya şık bir "Erişim Engellendi" modalı göstermek için dinlenir.
+
+## 🛠 Kurulum ve Çalıştırma
+
+Projeyi yerel ortamınızda çalıştırmak için:
+
+1.  Bağımlılıkları yükleyin:
+    ```bash
+    npm install
+    ```
+
+2.  Geliştirme sunucusunu başlatın:
+    ```bash
+    npm run dev
+    ```
+
+3.  Tarayıcıda görüntüleyin:
+    Genellikle `http://localhost:5173` adresinde çalışır.
