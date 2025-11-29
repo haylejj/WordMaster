@@ -85,6 +85,15 @@ Tüm kimlik doğrulama işlemleri `/api/auth` altında toplanmıştır.
 | `POST` | `/api/auth/logout` | Çıkış yapar (Refresh Token'ı sunucudan siler). | **User** |
 | `POST` | `/api/auth/admin-login` | Admin girişi yapar. Sadece admin rolüne sahip kullanıcılar giriş yapabilir. | Public |
 
+### User Profile Endpoint'leri
+
+Kullanıcı profil yönetimi `/api/user` altında toplanmıştır.
+
+| Metot | Endpoint | Açıklama | Yetki |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/user/profile` | Giriş yapmış kullanıcının profil bilgilerini getirir. | **User** |
+| `PUT` | `/api/user/profile` | Giriş yapmış kullanıcının profil bilgilerini günceller. | **User** |
+
 ### Word Endpoint'leri
 
 Kelime işlemleri `/api/words` altında toplanmıştır. Tüm işlemler giriş yapmış kullanıcıya özeldir.
@@ -140,6 +149,14 @@ Favori ve bilinmeyen kelime yönetimi için kullanılır.
 
 Admin paneli işlemleri `/api/admin` altında toplanmıştır. Tüm işlemler **admin** rolüne sahip kullanıcıya özeldir.
 
+#### Admin Word Endpoint'leri
+
+| Metot | Endpoint | Açıklama | Yetki |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/admin/words` | Kelimeleri sayfalı olarak listeler (Admin paneli için). | **Admin** |
+| `PUT` | `/api/admin/words/{id}` | Kelime bilgilerini günceller. | **Admin** |
+| `DELETE` | `/api/admin/words/{id}` | Kelimeyi siler. | **Admin** |
+
 #### Allowed IP Endpoint'leri
 
 | Metot | Endpoint | Açıklama | Yetki |
@@ -162,6 +179,15 @@ Admin paneli işlemleri `/api/admin` altında toplanmıştır. Tüm işlemler **
 | `GET` | `/api/admin/roles/assign/{userId}` | Kullanıcıya atanabilecek rolleri listeler. | **Admin** |
 | `POST` | `/api/admin/roles/assign` | Kullanıcıya rol ataması yapar. | **Admin** |
 
+#### Permission Endpoint'leri
+
+| Metot | Endpoint | Açıklama | Yetki |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/admin/permissions` | Tüm izinleri listeler. | **Admin** |
+| `GET` | `/api/admin/permissions/role/{roleId}` | Belirtilen role ait izinleri getirir. | **Admin** |
+| `PUT` | `/api/admin/permissions/role` | Role ait izinleri günceller. | **Admin** |
+| `POST` | `/api/admin/permissions/scan` | Sistemdeki izinleri tarar ve veritabanına kaydeder. | **Admin** |
+
 #### Dashboard Endpoint'leri
 
 | Metot | Endpoint | Açıklama | Yetki |
@@ -180,11 +206,60 @@ Admin paneli işlemleri `/api/admin` altında toplanmıştır. Tüm işlemler **
 | `DELETE` | `/api/admin/users/{id}` | Kullanıcıyı siler. | **Admin** |
 | `POST` | `/api/admin/users/{id}/reset-password` | Kullanıcı şifresini sıfırlar. | **Admin** |
 
-##  Kod Standartları
+## � Altyapı ve Kütüphaneler
 
-*   **Primary Constructors**: C# 12+ özelliği olan Primary Constructor yapısı kullanılır.
-*   **ServiceResult Pattern**: Tüm servis metodları `ServiceResult<T>` döner.
-*   **Async/Await**: Tüm işlemler asenkron olarak tasarlanmıştır.
+### 1. FluentValidation & Otomatik Doğrulama
+Gelen isteklerin (Request DTOs) doğrulanması için **FluentValidation** kütüphanesi kullanılmıştır.
+*   **Otomatik Kontrol**: `ValidationFilter` sayesinde, Controller'a istek ulaştığında validasyon kuralları otomatik olarak çalıştırılır.
+*   Eğer validasyon hatası varsa, Controller action'ı çalışmadan `400 Bad Request` ve hata detayları döner.
+
+### 2. Authentication (Kimlik Doğrulama)
+Kimlik doğrulama işlemleri **ASP.NET Core Identity** ve **JWT (JSON Web Token)** ile sağlanır.
+*   **Identity**: Kullanıcı ve rol yönetimi için kullanılır.
+*   **JWT**: Stateless bir yapı için Access ve Refresh Token mekanizması kurulmuştur.
+*   Giriş yapan kullanıcıya bir JWT verilir ve sonraki isteklerde bu token `Authorization: Bearer <token>` header'ı ile gönderilir.
+
+### 3. Authorization (Yetkilendirme) Sistemi
+Projede **Dinamik Attribute Tabanlı** gelişmiş bir yetkilendirme sistemi mevcuttur.
+*   **Role-Based Access Control (RBAC)** temel alınmıştır ancak izinler kod içerisindeki `[RequirePermission]` attribute'larından dinamik olarak taranır.
+*   **PermissionService**: Kod tarafındaki izinleri tarayıp veritabanı ile senkronize eder.
+*   Admin panelinden rollere bu izinler dinamik olarak atanabilir.
+*   *Detaylı bilgi için `docs/Authorization_System.md` dosyasına bakabilirsiniz.*
+
+### 4. Global Exception Handling
+Hata yönetimi merkezi bir **Middleware** (`GlobalExceptionHandlerMiddleware`) üzerinden yapılır.
+*   Uygulama genelinde fırlatılan tüm hatalar  bu katmanda yakalanır.
+*   İstemciye her zaman standart bir hata formatı dönülür.
+
+### 5. Redis Entegrasyonu
+Performans artışı için **Redis** kullanılmıştır.
+*   **Caching**: Sık erişilen veriler önbelleğe alınır.
+*   **Security Stamp**: Kullanıcı oturum güvenliği için Identity Security Stamp bilgileri Redis'te tutulur.
+
+### 6. Swagger (API Dokümantasyonu)
+API endpoint'lerini test etmek ve belgelemek için **Swagger UI** entegre edilmiştir.
+*   Geliştirme ortamında `/swagger` adresinden erişilebilir.
+*   JWT token girişi için "Authorize" butonu aktiftir.
+
+### 7. CORS Politikası
+Farklı originlerden (örneğin Frontend uygulamasından) gelen isteklere izin vermek için **CORS** yapılandırılmıştır.
+*   Belirlenen frontend URL'lerine (localhost:5173 vb.) `AllowCredentials` ile izin verilir.
+
+## �📏 Kod Standartları ve Prensipler
+
+Proje geliştirilirken aşağıdaki standartlara ve prensiplere sadık kalınmıştır:
+
+*   **SOLID Prensipleri**:
+    *   **SRP (Single Responsibility)**: Her sınıf ve metodun tek bir sorumluluğu vardır.
+    *   **OCP (Open/Closed)**: Sistem gelişime açık, değişime kapalı olacak şekilde tasarlanmıştır.
+    *   **ISP (Interface Segregation)**: Arayüzler (Interface) mümkün olduğunca küçük ve amaca yönelik tutulmuştur.
+    *   **DIP (Dependency Inversion)**: Üst seviye modüller, alt seviye modüllere doğrudan bağımlı değildir; her ikisi de soyutlamalara (Interface) bağımlıdır.
+*   **Clean Architecture**: Bağımlılıklar dıştan içe doğrudur. Domain katmanı en içte ve bağımsızdır.
+*   **Repository & Unit of Work Pattern**: Veri erişim katmanı soyutlanmış ve transaction yönetimi `UnitOfWork` ile merkezi hale getirilmiştir.
+*   **Primary Constructors**: C# 12+ özelliği olan Primary Constructor yapısı ile kod sadeliği sağlanmıştır.
+*   **ServiceResult Pattern**: Tüm servis metodları standart bir `ServiceResult<T>` yapısı dönerek hata yönetimi ve dönüş tiplerini standartlaştırır.
+*   **Async/Await**: I/O operasyonlarında bloklamayı önlemek için asenkron programlama kullanılmıştır.
+*   **Request/Response Pattern**: Application katmanında veri transferi için DTO'lar (Request/Response record'ları) kullanılmıştır.
 
 ---
 *WordMaster Backend Team*
