@@ -41,8 +41,7 @@ export default function AdminPermissionsPage() {
             } else {
                 toast.error(result.errorList?.[0] || "Roller yüklenirken bir hata oluştu.");
             }
-        } catch (error) {
-            console.error("Failed to load roles", error);
+        } catch {
             toast.error("Roller yüklenirken bir hata oluştu.");
         } finally {
             setIsLoadingRoles(false);
@@ -58,8 +57,7 @@ export default function AdminPermissionsPage() {
             } else {
                 toast.error(result.errorList?.[0] || "İzinler yüklenirken bir hata oluştu.");
             }
-        } catch (error) {
-            console.error("Failed to load permissions", error);
+        } catch {
             toast.error("İzinler yüklenirken bir hata oluştu.");
         } finally {
             setIsLoadingPermissions(false);
@@ -74,8 +72,7 @@ export default function AdminPermissionsPage() {
             } else {
                 toast.error(result.errorList?.[0] || "Rol izinleri yüklenirken bir hata oluştu.");
             }
-        } catch (error) {
-            console.error("Failed to load role permissions", error);
+        } catch {
             toast.error("Rol izinleri yüklenirken bir hata oluştu.");
         }
     };
@@ -95,7 +92,7 @@ export default function AdminPermissionsPage() {
             } else {
                 toast.error(result.errorList?.[0] || "İzin taraması başarısız oldu.");
             }
-        } catch (error) {
+        } catch {
             toast.error("İzin taraması sırasında bir hata oluştu.");
         } finally {
             setIsScanning(false);
@@ -116,7 +113,7 @@ export default function AdminPermissionsPage() {
             } else {
                 toast.error(result.errorList?.[0] || "İzinler güncellenirken bir hata oluştu.");
             }
-        } catch (error) {
+        } catch {
             toast.error("İzinler güncellenirken bir hata oluştu.");
         } finally {
             setIsSaving(false);

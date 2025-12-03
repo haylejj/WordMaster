@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { cn } from "@/lib/utils";
 
 const WORDS = [
-  "Word", "Master", "English", "Learn", "Speak", "Hello", "Book", "Pen", 
-  "Study", "Read", "Write", "Listen", "Vocabulary", "Grammar", "Success", 
+  "Word", "Master", "English", "Learn", "Speak", "Hello", "Book", "Pen",
+  "Study", "Read", "Write", "Listen", "Vocabulary", "Grammar", "Success",
   "Future", "Dream", "Global", "Fluency", "Practice", "Smart", "Think"
 ];
 const ITEM_COUNT = 40; // Daha yoğun ama kontrollü
@@ -21,14 +21,12 @@ interface FallingItem {
 }
 
 export default function AuthLayout({ children, title }: { children: React.ReactNode; title: string }) {
-  const [items, setItems] = useState<FallingItem[]>([]);
-
-  useEffect(() => {
+  const items = React.useMemo(() => {
     const newItems: FallingItem[] = [];
     for (let i = 0; i < ITEM_COUNT; i++) {
       const depth = Math.random(); // 0 to 1, 1 is closest
       const duration = Math.floor(Math.random() * 15) + 15; // 15-30s (daha yavaş ve zarif)
-      
+
       newItems.push({
         id: i,
         text: WORDS[Math.floor(Math.random() * WORDS.length)],
@@ -41,7 +39,7 @@ export default function AuthLayout({ children, title }: { children: React.ReactN
         blur: (1 - depth) * 4 // Arkadakiler flu olsun (0px - 4px blur)
       });
     }
-    setItems(newItems);
+    return newItems;
   }, []);
 
   return (
@@ -56,8 +54,8 @@ export default function AuthLayout({ children, title }: { children: React.ReactN
             key={item.id}
             className={cn(
               "absolute top-0 font-bold whitespace-nowrap select-none animate-fall will-change-transform",
-              item.isYellow 
-                ? "text-primary-yellow animate-glow font-extrabold z-10" 
+              item.isYellow
+                ? "text-primary-yellow animate-glow font-extrabold z-10"
                 : "text-white z-0"
             )}
             style={{
@@ -72,9 +70,9 @@ export default function AuthLayout({ children, title }: { children: React.ReactN
             }}
           >
             {/* Sway animation container */}
-            <div 
-              className="animate-float" 
-              style={{ 
+            <div
+              className="animate-float"
+              style={{
                 animationDuration: `${item.duration / 3}s`,
                 animationDelay: `${item.delay}s`
               }}
@@ -89,7 +87,7 @@ export default function AuthLayout({ children, title }: { children: React.ReactN
       <div className="relative z-20 w-full max-w-[450px] m-5">
         {/* Glow Effect behind Card */}
         <div className="absolute -inset-1 bg-gradient-to-r from-primary-yellow to-yellow-600 rounded-[16px] blur opacity-20 animate-pulse transition-opacity duration-500 group-hover:opacity-40"></div>
-        
+
         <div className="relative bg-white/95 backdrop-blur-sm rounded-[15px] shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/10 overflow-hidden">
           {/* Top Decorative Bar */}
           <div className="h-1.5 w-full bg-gradient-to-r from-primary-yellow via-yellow-400 to-yellow-600" />

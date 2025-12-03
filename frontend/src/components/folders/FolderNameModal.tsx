@@ -26,8 +26,8 @@ export default function FolderNameModal({
 
     useEffect(() => {
         if (open) {
-            setName(initialName);
-            setError(null);
+            if (name !== initialName) setName(initialName);
+            if (error !== null) setError(null);
         }
     }, [open, initialName]);
 
