@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 using System.Reflection;
 using System.Text.Json.Serialization;
 using WordMaster.API.Extensions;
@@ -9,7 +10,9 @@ using WordMaster.Infrastructure.EfCore;
 using WordMaster.Infrastructure.Extensions;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
-
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
 // Add services to the container.
 
 // ValidationFilter'ı global olarak ekle (tüm controller'larda model doğrulama hatalarını otomatik yakalar)
@@ -20,6 +23,8 @@ builder.Services.AddControllers(configure =>
 {
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
+// Serilog yapılandırması
+builder.Host.AddSerilogConfigurations();
 
 // Fluent Validation yapılandırması
 builder.Services.AddValidationConfigurations();
@@ -74,7 +79,8 @@ builder.Services.AddCors(options =>
 
 WebApplication app = builder.Build();
 
-// Configure the HTTP request pipeline.
+app.UseForwardedHeaders();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

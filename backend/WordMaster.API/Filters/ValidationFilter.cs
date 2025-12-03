@@ -12,6 +12,12 @@ namespace WordMaster.API.Filters;
 /// </summary>
 public class ValidationFilter : IAsyncActionFilter
 {
+    /// <summary>
+    /// Action çalıştırılmadan önce devreye girer ve model doğrulamasını kontrol eder.
+    /// </summary>
+    /// <param name="context">Action çalıştırma bağlamı ve istek verileri.</param>
+    /// <param name="next">Zincirdeki bir sonraki adımı temsil eden delege.</param>
+    /// <returns>Asenkron işlem görevi.</returns>
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
         if (!context.ModelState.IsValid)
