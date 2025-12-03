@@ -2,9 +2,9 @@ name: Audit
 
 on:
   push:
-    branches: [feature/*,api/*]
+    branches: [feature/*, api/*]
   pull_request:
-    branches: [feature/*,api-*]
+    branches: [feature/*, api-*]
 
 jobs:
   codeql-analysis:
@@ -23,10 +23,10 @@ jobs:
         with:
           languages: csharp
 
-      - name: Setup .NET 9 SDK
+      - name: Setup .NET 10 SDK
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: "9.0.x"
+          dotnet-version: "10.0.x"
           cache: true
           cache-dependency-path: |
             WordMaster.Domain/packages.lock.json
@@ -51,10 +51,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup .NET 9 SDK
+      - name: Setup .NET 10 SDK
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: "9.0.x"
+          dotnet-version: "10.0.x"
           cache: true
           cache-dependency-path: |
             WordMaster.Domain/packages.lock.json
