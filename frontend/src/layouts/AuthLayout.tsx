@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { cn } from "@/lib/utils";
 
 const WORDS = [
@@ -21,7 +21,9 @@ interface FallingItem {
 }
 
 export default function AuthLayout({ children, title }: { children: React.ReactNode; title: string }) {
-  const items = React.useMemo(() => {
+  const [items, setItems] = useState<FallingItem[]>([]);
+
+  useEffect(() => {
     const newItems: FallingItem[] = [];
     for (let i = 0; i < ITEM_COUNT; i++) {
       const depth = Math.random(); // 0 to 1, 1 is closest
@@ -39,7 +41,7 @@ export default function AuthLayout({ children, title }: { children: React.ReactN
         blur: (1 - depth) * 4 // Arkadakiler flu olsun (0px - 4px blur)
       });
     }
-    return newItems;
+    setItems(newItems);
   }, []);
 
   return (
