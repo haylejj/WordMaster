@@ -56,12 +56,26 @@ export default function ImportCsvModal({ isOpen, onClose, onImported }: ImportCs
         setSuccess(null);
         try {
             const response = await wordService.importCsv(file);
-            if (response.isSuccess) {
-                setSuccess("Kelimeler başarıyla içe aktarıldı!");
-                setTimeout(() => {
-                    handleClose();
-                    onImported?.();
-                }, 1500);
+            if (response.isSuccess && response.data) {
+                const { totalProcessed, addedCount, duplicateCount, failedCount, failedRows } = response.data;
+
+                let message = `İşlem Tamamlandı!\nTopam: ${totalProcessed}\nEklenen: ${addedCount}\nZaten Mevcut: ${duplicateCount}\nHatalı: ${failedCount}`;
+
+                if (failedRows && failedRows.length > 0) {
+                    message += `\n\nHatalı Satırlar:\n${failedRows.slice(0, 5).join("\n")}`;
+                    if (failedRows.length > 5) message += `\n...ve ${failedRows.length - 5} daha.`;
+                }
+
+                setSuccess(message);
+
+                // Eğer hiç eklenen yoksa ve hepsi hataysa veya duplicate ise hemen kapatmayalım, kullanıcı okusun.
+                // Başarılı ekleme varsa biraz bekleyip kapatalım veya onImported çağıralım.
+                if (addedCount > 0) {
+                    setTimeout(() => {
+                        handleClose();
+                        onImported?.();
+                    }, 3000); // Okuması için süreyi biraz uzattım
+                }
             } else {
                 setError(response.errorList?.join(" ") || "İçe aktarma başarısız.");
             }
@@ -166,8 +180,8 @@ export default function ImportCsvModal({ isOpen, onClose, onImported }: ImportCs
                         Sadece .csv dosyaları. Maksimum 10MB.
                     </div>
 
-                    {error && <div className="mt-4 bg-red-100 text-red-700 p-3 rounded text-sm">{error}</div>}
-                    {success && <div className="mt-4 bg-green-100 text-green-700 p-3 rounded text-sm">{success}</div>}
+                    {error && <div className="mt-4 bg-red-100 text-red-700 p-3 rounded text-sm whitespace-pre-wrap">{error}</div>}
+                    {success && <div className="mt-4 bg-green-100 text-green-700 p-3 rounded text-sm whitespace-pre-wrap">{success}</div>}
 
                     <button
                         onClick={handleUpload}

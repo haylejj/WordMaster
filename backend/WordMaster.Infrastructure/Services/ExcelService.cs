@@ -156,7 +156,7 @@ public class ExcelService(AppDbContext context, ILogger<ExcelService> logger) : 
                 logger.LogInformation("Import işlemi başarılı. User: {UserId}, Added: {Added}, Duplicate: {Duplicate}, Failed: {Failed}",
                     userId, summary.AddedCount, summary.DuplicateCount, summary.FailedCount);
 
-                return ServiceResult<WordImportSummaryResponse>.Success(summary, HttpStatusCode.Created);
+                return ServiceResult<WordImportSummaryResponse>.SuccessAsCreated(summary);
             }
             catch (Exception ex)
             {
