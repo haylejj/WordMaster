@@ -9,6 +9,7 @@ import { X } from "lucide-react";
 interface PracticeResult {
     word: FolderWordResponse;
     isCorrect: boolean;
+    userAnswer?: string;
 }
 
 export default function FolderPracticePage() {
@@ -52,7 +53,9 @@ export default function FolderPracticePage() {
         const normalizedCorrect = currentWord.turkishWord.trim().toLocaleLowerCase("tr-TR");
         const isCorrect = normalizedAnswer === normalizedCorrect;
 
-        setResults(prev => [...prev, { word: currentWord, isCorrect }]);
+        // If 'answer' is empty string, it means "I don't know" button was clicked
+        // because "Cevabı Kontrol Et" button is disabled when input is empty.
+        setResults(prev => [...prev, { word: currentWord, isCorrect, userAnswer: answer }]);
         return isCorrect;
     };
 
@@ -161,7 +164,11 @@ export default function FolderPracticePage() {
                                             <div key={idx} className="p-2 border-b last:border-0">
                                                 <div className="font-bold">{r.word.englishWord}</div>
                                                 <div className="text-sm text-gray-500">Türkçe: {r.word.turkishWord}</div>
-                                                <div className="text-xs text-gray-400 mt-1">Bilmiyorum seçildi.</div>
+                                                <div className="text-xs text-red-500 mt-1">
+                                                    {r.userAnswer
+                                                        ? `Yanıtınız: ${r.userAnswer}`
+                                                        : "Bilmiyorum seçildi."}
+                                                </div>
                                             </div>
                                         ))
                                     )}
