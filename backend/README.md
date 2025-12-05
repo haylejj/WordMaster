@@ -245,13 +245,8 @@ API endpoint'lerini test etmek ve belgelemek için **Swagger UI** entegre edilmi
 Farklı originlerden (örneğin Frontend uygulamasından) gelen isteklere izin vermek için **CORS** yapılandırılmıştır.
 *   Belirlenen frontend URL'lerine (localhost:5173 vb.) `AllowCredentials` ile izin verilir.
 
-## �📏 Kod Standartları ve Prensipler
-
-Proje geliştirilirken aşağıdaki standartlara ve prensiplere sadık kalınmıştır:
-
-*   **SOLID Prensipleri**:
-    *   **SRP (Single Responsibility)**: Her sınıf ve metodun tek bir sorumluluğu vardır.
-    *   **OCP (Open/Closed)**: Sistem gelişime açık, değişime kapalı olacak şekilde tasarlanmıştır.
+### 8. Logging (Serilog)
+Uygulama genelinde yapılandırılmış (structured) loglama için **Serilog** kullanılmıştır.
     *   **ISP (Interface Segregation)**: Arayüzler (Interface) mümkün olduğunca küçük ve amaca yönelik tutulmuştur.
     *   **DIP (Dependency Inversion)**: Üst seviye modüller, alt seviye modüllere doğrudan bağımlı değildir; her ikisi de soyutlamalara (Interface) bağımlıdır.
 *   **Clean Architecture**: Bağımlılıklar dıştan içe doğrudur. Domain katmanı en içte ve bağımsızdır.

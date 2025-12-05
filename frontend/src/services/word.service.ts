@@ -7,6 +7,7 @@ import type {
   FavoriteWithWordResponse,
   UnknowsWithWordResponse,
   PracticeWordResponse,
+  WordImportSummaryResponse,
 } from "@/types/word";
 
 const buildQueryString = (search: string, page: number, pageSize: number) => {
@@ -114,7 +115,7 @@ export const wordService = {
   importCsv: async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
-    const response = await api.post<ServiceResult>("/words/import-csv", formData, {
+    const response = await api.post<ServiceResultWithData<WordImportSummaryResponse>>("/words/import-csv", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },

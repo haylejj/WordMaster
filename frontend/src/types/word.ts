@@ -72,3 +72,11 @@ export interface CheckTranslationRequest {
   isFromUnknows?: boolean;
 }
 
+
+export interface WordImportSummaryResponse {
+  totalProcessed: number;
+  addedCount: number;
+  duplicateCount: number;
+  failedCount: number;
+  failedRows: string[];
+}

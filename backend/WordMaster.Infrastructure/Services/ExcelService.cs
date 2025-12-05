@@ -1,9 +1,12 @@
 using CsvHelper;
 using CsvHelper.Configuration;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging;
 using System.Globalization;
 using System.Net;
 using System.Text.RegularExpressions;
+using WordMaster.Application.Responses.Word;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Extensions;
@@ -12,9 +15,9 @@ using WordMaster.Infrastructure.EfCore;
 
 namespace WordMaster.Infrastructure.Services;
 
-public class ExcelService(AppDbContext context) : IExcelService
+public class ExcelService(AppDbContext context, ILogger<ExcelService> logger) : IExcelService
 {
-    public async Task<ServiceResult> ImportWordsAsync(Stream fileStream, Guid userId)
+    public async Task<ServiceResult<WordImportSummaryResponse>> ImportWordsAsync(Stream fileStream, Guid userId)
     {
         try
         {
@@ -33,13 +36,13 @@ public class ExcelService(AppDbContext context) : IExcelService
             // Başlığı oku
             if (!await csv.ReadAsync() || !csv.ReadHeader())
             {
-                return ServiceResult.Failure("Dosya boş veya başlık satırı okunamadı.", HttpStatusCode.BadRequest);
+                return ServiceResult<WordImportSummaryResponse>.Failure("Dosya boş veya başlık satırı okunamadı.", HttpStatusCode.BadRequest);
             }
 
             string[]? headers = csv.HeaderRecord;
             if (headers == null)
             {
-                return ServiceResult.Failure("Başlıklar okunamadı.", HttpStatusCode.BadRequest);
+                return ServiceResult<WordImportSummaryResponse>.Failure("Başlıklar okunamadı.", HttpStatusCode.BadRequest);
             }
 
             // WORD ve MEANING sütunlarını dinamik olarak bul
@@ -53,19 +56,33 @@ public class ExcelService(AppDbContext context) : IExcelService
 
             if (string.IsNullOrEmpty(wordHeader) || string.IsNullOrEmpty(meaningHeader))
             {
-                return ServiceResult.Failure("CSV dosyasında 'WORD' ve 'MEANING' sütunları bulunamadı (veya bunları içeren sütunlar).", HttpStatusCode.BadRequest);
+                return ServiceResult<WordImportSummaryResponse>.Failure("CSV dosyasında 'WORD' ve 'MEANING' sütunları bulunamadı (veya bunları içeren sütunlar).", HttpStatusCode.BadRequest);
             }
+
+            // Kullanıcının mevcut kelimelerini çek (Duplicate kontrolü için)
+            List<string> existingWords = await context.Words
+                .Where(x => x.UserId == userId && x.EnglishWord != null)
+                .Select(x => x.EnglishWord!)
+                .ToListAsync();
+
+            HashSet<string> existingWordSet = new(existingWords, StringComparer.OrdinalIgnoreCase);
 
             List<Word> wordsToAdd = new();
             DateTime now = DateTime.UtcNow;
 
+            WordImportSummaryResponse summary = new();
+
             while (await csv.ReadAsync())
             {
+                summary.TotalProcessed++;
+
                 string? wordVal = csv.GetField(wordHeader);
                 string? meaningVal = csv.GetField(meaningHeader);
 
                 if (string.IsNullOrWhiteSpace(wordVal) || string.IsNullOrWhiteSpace(meaningVal))
                 {
+                    summary.FailedCount++;
+                    summary.FailedRows.Add($"Satır {summary.TotalProcessed}: Kelime veya anlam boş.");
                     continue;
                 }
 
@@ -78,8 +95,29 @@ public class ExcelService(AppDbContext context) : IExcelService
 
                 if (string.IsNullOrWhiteSpace(cleanWord) || string.IsNullOrWhiteSpace(cleanMeaning))
                 {
+                    summary.FailedCount++;
+                    summary.FailedRows.Add($"Satır {summary.TotalProcessed}: Normalize sonrası kelime veya anlam boş kaldı.");
                     continue;
                 }
+
+                // Duplicate kontrolü
+                if (existingWordSet.Contains(cleanWord))
+                {
+                    summary.DuplicateCount++;
+                    continue;
+                }
+
+                // Yeni kelimeyi set'e de ekle ki CSV içinde tekrar ediyorsa eklenmesin
+                if (wordsToAdd.Any(w => w.EnglishWord == cleanWord))
+                {
+                    summary.DuplicateCount++;
+                    continue;
+                }
+
+                // Set'e ekleyelim ki sonraki satırlarda tekrar kontrol edebilelim (yukarıdaki Any kontrolü yerine set'e eklemek daha performanslı olabilir ama wordsToAdd listesi henüz save edilmediği için set'e eklemek mantıklı)
+                // Ancak existingWordSet zaten veritabanındaki kelimeleri tutuyor. CSV içindeki mükerrerleri yakalamak için wordsToAdd listesine bakmak yerine,
+                // eklediğimiz kelimeyi existingWordSet'e de ekleyebiliriz.
+                existingWordSet.Add(cleanWord);
 
                 wordsToAdd.Add(new Word
                 {
@@ -95,9 +133,16 @@ public class ExcelService(AppDbContext context) : IExcelService
                 });
             }
 
+            summary.AddedCount = wordsToAdd.Count;
+
             if (wordsToAdd.Count == 0)
             {
-                return ServiceResult.Failure("Eklenecek geçerli kelime bulunamadı.", HttpStatusCode.BadRequest);
+                logger.LogWarning("Import işlemi tamamlandı ancak eklenecek kelime bulunamadı. User: {UserId}, Total: {Total}, Duplicate: {Duplicate}, Failed: {Failed}",
+                    userId, summary.TotalProcessed, summary.DuplicateCount, summary.FailedCount);
+
+                // Hata dönmek yerine başarılı dönüp istatistikleri göstermek daha iyi olabilir.
+                // Kullanıcı "neden eklenmedi" diye sorarsa istatistikten anlar.
+                return ServiceResult<WordImportSummaryResponse>.Success(summary, HttpStatusCode.OK);
             }
 
             // Transaction
@@ -108,17 +153,22 @@ public class ExcelService(AppDbContext context) : IExcelService
                 await context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                return ServiceResult.SuccessAsCreated();
+                logger.LogInformation("Import işlemi başarılı. User: {UserId}, Added: {Added}, Duplicate: {Duplicate}, Failed: {Failed}",
+                    userId, summary.AddedCount, summary.DuplicateCount, summary.FailedCount);
+
+                return ServiceResult<WordImportSummaryResponse>.SuccessAsCreated(summary);
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                return ServiceResult.Failure($"Veritabanı hatası: {ex.Message}", HttpStatusCode.InternalServerError);
+                logger.LogError(ex, "Import işlemi sırasında veritabanı hatası. User: {UserId}", userId);
+                return ServiceResult<WordImportSummaryResponse>.Failure($"Veritabanı hatası: {ex.Message}", HttpStatusCode.InternalServerError);
             }
         }
         catch (Exception ex)
         {
-            return ServiceResult.Failure($"Beklenmeyen hata: {ex.Message}", HttpStatusCode.InternalServerError);
+            logger.LogError(ex, "Import işlemi sırasında beklenmeyen hata. User: {UserId}", userId);
+            return ServiceResult<WordImportSummaryResponse>.Failure($"Beklenmeyen hata: {ex.Message}", HttpStatusCode.InternalServerError);
         }
     }
 }

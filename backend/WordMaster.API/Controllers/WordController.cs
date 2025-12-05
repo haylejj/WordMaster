@@ -120,7 +120,7 @@ public class WordController(IWordService wordService, IExcelService excelService
         }
 
         using Stream stream = file.OpenReadStream();
-        ServiceResult result = await excelService.ImportWordsAsync(stream, userId);
+        ServiceResult<WordImportSummaryResponse> result = await excelService.ImportWordsAsync(stream, userId);
         return CreateResult(result);
     }
 

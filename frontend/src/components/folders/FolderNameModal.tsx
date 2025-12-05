@@ -26,9 +26,10 @@ export default function FolderNameModal({
 
     useEffect(() => {
         if (open) {
-            setName(initialName);
-            setError(null);
+            if (name !== initialName) setName(initialName);
+            if (error !== null) setError(null);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, initialName]);
 
     if (!open) return null;

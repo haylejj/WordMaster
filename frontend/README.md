@@ -53,6 +53,18 @@ Tüm HTTP istekleri merkezi bir `api` instance'ı üzerinden yönetilir.
         *   Global bir `permission-denied` eventi fırlatılır.
         *   Bu event, kullanıcıya şık bir "Erişim Engellendi" modalı göstermek için dinlenir.
 
+*   **403 Forbidden:** Kullanıcının yetkisi olmayan bir işlem yapması durumunda:
+        *   Global bir `permission-denied` eventi fırlatılır.
+        *   Bu event, kullanıcıya şık bir "Erişim Engellendi" modalı göstermek için dinlenir.
+
+## 🚀 CI/CD (GitHub Actions)
+
+Frontend projesi için otomatik derleme ve kontrol süreçleri **GitHub Actions** ile yönetilmektedir. `.github/workflows/audit.yaml` dosyasındaki `frontend-audit` işi şunları yapar:
+
+*   **Node.js Kurulumu**: Node.js 20 sürümünü kurar.
+*   **Bağımlılık Yükleme**: `npm ci` komutu ile bağımlılıkları temiz bir şekilde yükler.
+*   **Build Kontrolü**: `npm run build` komutu ile projenin hatasız derlendiğini doğrular.
+
 ## 🛠 Kurulum ve Çalıştırma
 
 Projeyi yerel ortamınızda çalıştırmak için:
