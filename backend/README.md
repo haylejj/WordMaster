@@ -247,6 +247,11 @@ Farklı originlerden (örneğin Frontend uygulamasından) gelen isteklere izin v
 
 ### 8. Logging (Serilog)
 Uygulama genelinde yapılandırılmış (structured) loglama için **Serilog** kullanılmıştır.
+### 9. Thread-Safe Random Kullanımı
+Uygulama genelinde ve özellikle pratik modüllerinde (rastgele kelime seçimi vb.) **Random.Shared** yapısına geçilmiştir.
+*   **Thread Safety**: Statik `Random` nesnelerinin çoklu iş parçacığı (multi-thread) ortamlarında neden olabileceği sorunlar (race condition vb.) giderilmiştir.
+*   **Performans**: .NET 6+ ile gelen `Random.Shared`, her thread için optimize edilmiş güvenli bir örnek sunar.
+
     *   **ISP (Interface Segregation)**: Arayüzler (Interface) mümkün olduğunca küçük ve amaca yönelik tutulmuştur.
     *   **DIP (Dependency Inversion)**: Üst seviye modüller, alt seviye modüllere doğrudan bağımlı değildir; her ikisi de soyutlamalara (Interface) bağımlıdır.
 *   **Clean Architecture**: Bağımlılıklar dıştan içe doğrudur. Domain katmanı en içte ve bağımsızdır.

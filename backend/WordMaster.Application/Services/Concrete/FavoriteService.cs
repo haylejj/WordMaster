@@ -16,8 +16,8 @@ namespace WordMaster.Application.Services.Concrete;
 
 public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork unitOfWork, IWordService wordService, ICacheService cacheService) : IFavoriteService
 {
-    private static readonly Random _random = new();
-    private static readonly TimeSpan PracticeCacheExpiration = TimeSpan.FromMinutes(5);
+
+
 
     public async Task<ServiceResult> DeleteFavoriteAsync(int favoriteId, Guid userId)
     {
@@ -85,7 +85,7 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
 
             if (practiceFavorites.Count > 0)
             {
-                await cacheService.SetAsync(cacheKey, practiceFavorites, PracticeCacheExpiration);
+                await cacheService.SetAsync(cacheKey, practiceFavorites, CacheDurations.Practice);
             }
         }
 
@@ -94,7 +94,7 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
             return ServiceResult<PracticeWordResponse>.Failure("Kayıt bulunamadı.", HttpStatusCode.NotFound);
         }
 
-        int index = _random.Next(0, practiceFavorites.Count);
+        int index = Random.Shared.Next(0, practiceFavorites.Count);
         PracticeFavoriteKey randomFavorite = practiceFavorites[index];
 
         PracticeWordResponse response = new()
