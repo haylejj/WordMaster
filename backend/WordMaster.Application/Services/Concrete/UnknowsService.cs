@@ -16,9 +16,7 @@ namespace WordMaster.Application.Services.Concrete;
 
 public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork unitOfWork, IWordService wordService, ICacheService cacheService) : IUnknowsService
 {
-    private static readonly Random _random = new();
-    private static readonly TimeSpan PracticeCacheExpiration = TimeSpan.FromMinutes(5);
-    private static readonly TimeSpan GetByIdCacheExpiration = TimeSpan.FromMinutes(10);
+
 
     public async Task<ServiceResult> DeleteUnknowsAsync(int unknowsId, Guid userId)
     {
@@ -60,7 +58,7 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
 
             if (practiceUnknows.Count > 0)
             {
-                await cacheService.SetAsync(cacheKey, practiceUnknows, PracticeCacheExpiration);
+                await cacheService.SetAsync(cacheKey, practiceUnknows, CacheDurations.Practice);
             }
         }
 
@@ -69,7 +67,7 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
             return ServiceResult<PracticeWordResponse>.Failure("Kayıt bulunamadı.", HttpStatusCode.NotFound);
         }
 
-        int index = _random.Next(0, practiceUnknows.Count);
+        int index = Random.Shared.Next(0, practiceUnknows.Count);
         PracticeUnknowsKey randomUnknow = practiceUnknows[index];
 
         PracticeWordResponse response = new()

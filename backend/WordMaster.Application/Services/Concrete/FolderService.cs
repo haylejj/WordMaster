@@ -39,7 +39,7 @@ public class FolderService(
             WordCount = f.WordFolders.Count
         }).ToList();
 
-        await cacheService.SetAsync(cacheKey, folderDtos, TimeSpan.FromMinutes(10));
+        await cacheService.SetAsync(cacheKey, folderDtos, CacheDurations.Normal);
         return ServiceResult<List<FolderResponse>>.Success(folderDtos, HttpStatusCode.OK);
     }
 
@@ -173,7 +173,7 @@ public class FolderService(
             TurkishWord = w.TurkishWord ?? string.Empty
         }).ToList();
 
-        await cacheService.SetAsync(cacheKey, wordDtos, TimeSpan.FromMinutes(10));
+        await cacheService.SetAsync(cacheKey, wordDtos, CacheDurations.Normal);
         return ServiceResult<List<FolderWordResponse>>.Success(wordDtos, HttpStatusCode.OK);
     }
 

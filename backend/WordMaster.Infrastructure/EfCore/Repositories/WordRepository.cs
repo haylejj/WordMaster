@@ -21,6 +21,13 @@ public class WordRepository(AppDbContext context) : GenericRepository<Word>(cont
             .FirstOrDefaultAsync(x => x.Id == wordId && x.UserId == userId);
     }
 
+    public async Task<Word?> GetWordForUserTrackedWithFoldersAsync(long wordId, Guid userId)
+    {
+        return await _context.Words
+            .Include(x => x.WordFolders)
+            .FirstOrDefaultAsync(x => x.Id == wordId && x.UserId == userId);
+    }
+
     public async Task<Word?> GetWordByNormalizedEnglishAsync(Guid userId, string normalizedEnglishWord)
     {
         return await _context.Words
@@ -58,14 +65,6 @@ public class WordRepository(AppDbContext context) : GenericRepository<Word>(cont
 
         return (words, totalCount);
     }
-
-    public async Task<Word?> GetLastWord()
-    {
-        return await _context.Words
-            .OrderByDescending(x => x.Id)
-            .FirstOrDefaultAsync();
-    }
-
     public async Task<(List<Word> Words, int TotalCount)> GetAdminPagedWordsAsync(string? search, int page, int pageSize)
     {
         IQueryable<Word> query = _context.Words

@@ -18,9 +18,7 @@ namespace WordMaster.Application.Services.Concrete;
 
 public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork, ICacheService cacheService, ILogger<WordService> logger) : IWordService
 {
-    private static readonly Random _random = new();
-    private static readonly TimeSpan PracticeCacheExpiration = TimeSpan.FromMinutes(5);
-    private static readonly TimeSpan GetByIdCacheExpiration = TimeSpan.FromMinutes(10);
+
 
     public async Task<ServiceResult<WordResponse>> GetWordForUserAsync(long id, Guid userId)
     {
@@ -45,7 +43,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
             FavoriteId = word.Favorite?.Id,
             UnknowsId = word.Unknows?.Id
         };
-        await cacheService.SetAsync(cacheKey, wordDto, GetByIdCacheExpiration);
+        await cacheService.SetAsync(cacheKey, wordDto, CacheDurations.Normal);
         return ServiceResult<WordResponse>.Success(wordDto, HttpStatusCode.OK);
     }
 
@@ -85,7 +83,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
 
     public async Task<ServiceResult<WordResponse>> UpdateWordAsync(long wordId, UpdateWordRequest request, Guid userId)
     {
-        Word? existingWord = await wordRepository.GetWordForUserTrackedAsync(wordId, userId);
+        Word? existingWord = await wordRepository.GetWordForUserTrackedWithFoldersAsync(wordId, userId);
         if (existingWord == null)
         {
             return ServiceResult<WordResponse>.Failure("Kelime bulunamadı veya size ait değil.", HttpStatusCode.NotFound);
@@ -124,6 +122,15 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
         await cacheService.RemoveAsync(CacheKeys.Favorites(userId));
         await cacheService.RemoveAsync(CacheKeys.Unknows(userId));
 
+        // Invalidate folder caches
+        if (existingWord.WordFolders != null)
+        {
+            foreach (var wordFolder in existingWord.WordFolders)
+            {
+                await cacheService.RemoveAsync(CacheKeys.FolderWords(wordFolder.FolderId, userId));
+            }
+        }
+
         WordResponse response = new()
         {
             Id = existingWord.Id,
@@ -136,7 +143,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
 
     public async Task<ServiceResult> DeleteWordAsync(long wordId, Guid userId)
     {
-        Word? word = await wordRepository.GetWordForUserTrackedAsync(wordId, userId);
+        Word? word = await wordRepository.GetWordForUserTrackedWithFoldersAsync(wordId, userId);
         if (word == null)
         {
             return ServiceResult.Failure("Kelime bulunamadı veya size ait değil.", HttpStatusCode.NotFound);
@@ -152,6 +159,15 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
         // Also invalidate practice lists that might contain this word
         await cacheService.RemoveAsync(CacheKeys.Favorites(userId));
         await cacheService.RemoveAsync(CacheKeys.Unknows(userId));
+
+        // Invalidate folder caches
+        if (word.WordFolders != null)
+        {
+            foreach (var wordFolder in word.WordFolders)
+            {
+                await cacheService.RemoveAsync(CacheKeys.FolderWords(wordFolder.FolderId, userId));
+            }
+        }
 
         return ServiceResult.Success(HttpStatusCode.NoContent);
     }
@@ -191,7 +207,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
 
             if (practiceWords.Count > 0)
             {
-                await cacheService.SetAsync(cacheKey, practiceWords, PracticeCacheExpiration);
+                await cacheService.SetAsync(cacheKey, practiceWords, CacheDurations.Practice);
             }
         }
 
@@ -200,7 +216,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
             return ServiceResult<PracticeWordResponse>.Failure("Kayıt bulunamadı.", HttpStatusCode.NotFound);
         }
 
-        int index = _random.Next(0, practiceWords.Count);
+        int index = Random.Shared.Next(0, practiceWords.Count);
         PracticeWordKey randomWord = practiceWords[index];
 
         PracticeWordResponse response = new()
@@ -243,10 +259,6 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
 
         wordRepository.Update(word);
         await unitOfWork.CommitAsync();
-
-        // Cache invalidation - kelime güncellendiği için cache'i temizle
-        await cacheService.RemoveAsync(CacheKeys.Word(word.Id, userId));
-        await cacheService.RemoveAsync(CacheKeys.Words(userId));
 
         return ServiceResult<bool>.Success(isCorrect, HttpStatusCode.OK);
     }
@@ -306,7 +318,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
             .AsNoTracking()
             .ToListAsync();
 
-        await cacheService.SetAsync(cacheKey, words, TimeSpan.FromMinutes(10));
+        await cacheService.SetAsync(cacheKey, words, CacheDurations.Normal);
         return ServiceResult<List<WordLookupResponse>>.Success(words, HttpStatusCode.OK);
     }
     public async Task<ServiceResult<bool>> BulkUpdateStatsAsync(Guid userId, BulkUpdateStatsRequest request)
