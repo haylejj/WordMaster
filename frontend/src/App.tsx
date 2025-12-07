@@ -49,12 +49,12 @@ function App() {
 
         {/* Protected Dashboard Routes */}
         <Route path="/" element={<DashboardLayout />}>
-          <Route index element={<WordsPage />} />
+          <Route index element={<WordsPage key="words" />} />
           <Route path="add-word" element={<CreateWordPage />} />
           <Route path="folders" element={<FoldersPage />} />
           <Route path="folders/:id" element={<FolderDetailPage />} />
-          <Route path="favorites" element={<WordsPage variant="favorites" />} />
-          <Route path="unknowns" element={<WordsPage variant="unknowns" />} />
+          <Route path="favorites" element={<WordsPage key="favorites" variant="favorites" />} />
+          <Route path="unknowns" element={<WordsPage key="unknowns" variant="unknowns" />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="change-password" element={<ChangePasswordPage />} />
           <Route path="practice/:type" element={<GeneralPracticePage />} />
