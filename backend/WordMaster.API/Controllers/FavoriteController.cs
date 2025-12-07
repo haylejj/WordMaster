@@ -48,19 +48,7 @@ public class FavoriteController(IFavoriteService favoriteService) : BaseControll
         return CreateResult(result);
     }
 
-    /// <summary>
-    /// Belirtilen favori kaydını siler.
-    /// </summary>
-    /// <param name="id">Favori ID'si.</param>
-    /// <returns>İşlem sonucu.</returns>
-    [HttpDelete("{id}")]
-    [RequirePermission("Public", "Favorites", "DeleteFavorite", "DELETE", "Delete favorite")]
-    public async Task<IActionResult> DeleteFavorite(int id)
-    {
-        Guid userId = User.GetUserId();
-        ServiceResult result = await favoriteService.DeleteFavoriteAsync(id, userId);
-        return CreateResult(result);
-    }
+
 
     /// <summary>
     /// Favorilerden pratik yapmak için rastgele bir kelime getirir.

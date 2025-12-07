@@ -45,11 +45,6 @@ public class PermissionRepository(AppDbContext context) : GenericRepository<Perm
         await _context.RolePermissions.AddRangeAsync(rolePermissions);
     }
 
-    public async Task<bool> PermissionExistsAsync(string key)
-    {
-        return await _context.Permissions.AnyAsync(p => p.Key == key);
-    }
-
     public async Task AddPermissionsAsync(IEnumerable<Permission> permissions)
     {
         await _context.Permissions.AddRangeAsync(permissions);

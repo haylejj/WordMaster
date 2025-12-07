@@ -43,7 +43,6 @@ public class EmailService(IOptions<EmailSettings> settings) : IEmailService
             return ServiceResult.Failure($"Email gönderilirken hata oluştu: {ex.Message}", HttpStatusCode.InternalServerError);
         }
     }
-
     public async Task<ServiceResult> SendPasswordToEmailAsync(string password, string toEmail, string userName)
     {
         try

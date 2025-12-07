@@ -16,26 +16,6 @@ namespace WordMaster.Application.Services.Concrete;
 
 public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork unitOfWork, IWordService wordService, ICacheService cacheService) : IUnknowsService
 {
-
-
-    public async Task<ServiceResult> DeleteUnknowsAsync(int unknowsId, Guid userId)
-    {
-        Unknows? unknow = await unknowsRepository.GetByIdForUserAsync(unknowsId, userId);
-        if (unknow == null)
-        {
-            return ServiceResult.Failure("Bilinmeyen kelime bulunamadı veya size ait değil.", HttpStatusCode.NotFound);
-        }
-
-        unknowsRepository.Remove(unknow);
-        await unitOfWork.CommitAsync();
-
-        // Cache invalidation
-        await cacheService.RemoveAsync(CacheKeys.Unknow(unknowsId, userId));
-        await cacheService.RemoveAsync(CacheKeys.Unknows(userId));
-
-        return ServiceResult.Success(HttpStatusCode.NoContent);
-    }
-
     public async Task<ServiceResult<PracticeWordResponse>> GetRandomWordFromUnknowsAsync(Guid userId)
     {
         string cacheKey = CacheKeys.Unknows(userId);
@@ -79,7 +59,6 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
 
         return ServiceResult<PracticeWordResponse>.Success(response, HttpStatusCode.OK);
     }
-
     public Task<ServiceResult<bool>> CheckTranslationAndUpdateAsync(Guid userId, CheckTranslationRequest request)
     {
         return wordService.CheckTranslationAndUpdateAsync(userId, request);

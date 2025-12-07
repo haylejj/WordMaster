@@ -42,7 +42,6 @@ public class FolderService(
         await cacheService.SetAsync(cacheKey, folderDtos, CacheDurations.Normal);
         return ServiceResult<List<FolderResponse>>.Success(folderDtos, HttpStatusCode.OK);
     }
-
     public async Task<ServiceResult<FolderResponse>> GetUserFolderAsync(long folderId, Guid userId)
     {
         Folder? folder = await folderRepository.GetUserFolderAsync(folderId, userId);
@@ -61,7 +60,6 @@ public class FolderService(
 
         return ServiceResult<FolderResponse>.Success(folderDto, HttpStatusCode.OK);
     }
-
     public async Task<ServiceResult<FolderResponse>> AddFolderAsync(CreateFolderRequest request, Guid userId)
     {
         if (string.IsNullOrWhiteSpace(request.Name))
@@ -97,7 +95,6 @@ public class FolderService(
 
         return ServiceResult<FolderResponse>.SuccessAsCreated(response, null);
     }
-
     public async Task<ServiceResult<FolderResponse>> UpdateFolderAsync(long folderId, UpdateFolderRequest request, Guid userId)
     {
         if (string.IsNullOrWhiteSpace(request.Name))
@@ -133,7 +130,6 @@ public class FolderService(
 
         return ServiceResult<FolderResponse>.Success(response, HttpStatusCode.OK);
     }
-
     public async Task<ServiceResult> DeleteFolderAsync(long folderId, Guid userId)
     {
         Folder? folder = await folderRepository.GetUserFolderAsync(folderId, userId);
@@ -149,7 +145,6 @@ public class FolderService(
 
         return ServiceResult.Success(HttpStatusCode.NoContent);
     }
-
     public async Task<ServiceResult<List<FolderWordResponse>>> GetWordsInFolderAsync(long folderId, Guid userId)
     {
         // Ensure folder belongs to user
@@ -176,7 +171,6 @@ public class FolderService(
         await cacheService.SetAsync(cacheKey, wordDtos, CacheDurations.Normal);
         return ServiceResult<List<FolderWordResponse>>.Success(wordDtos, HttpStatusCode.OK);
     }
-
     public async Task<ServiceResult> AddWordToFolderAsync(AddWordToFolderRequest request, Guid userId)
     {
         bool folderExists = await folderRepository.AnyAsync(f => f.Id == request.FolderId && f.UserId == userId);
@@ -200,8 +194,6 @@ public class FolderService(
 
         return ServiceResult.SuccessAsCreated();
     }
-
-
     public async Task<ServiceResult> RemoveWordFromFolderAsync(AddWordToFolderRequest request, Guid userId)
     {
         bool folderExists = await folderRepository.AnyAsync(f => f.Id == request.FolderId && f.UserId == userId);
@@ -224,7 +216,6 @@ public class FolderService(
 
         return ServiceResult.Success(HttpStatusCode.NoContent);
     }
-
     public Task<ServiceResult<bool>> CheckTranslationAndUpdateAsync(Guid userId, CheckTranslationRequest request)
     {
         return wordService.CheckTranslationAndUpdateAsync(userId, request);

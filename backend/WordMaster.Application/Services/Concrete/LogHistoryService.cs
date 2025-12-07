@@ -31,7 +31,6 @@ public class LogHistoryService(ILogHistoryRepository logHistoryRepository, IUnit
         await logHistoryRepository.AddAsync(log);
         await unitOfWork.CommitAsync();
     }
-
     public async Task<UserLoginStatsResponse> GetUserLoginStatsAsync(string userId)
     {
         if (!Guid.TryParse(userId, out Guid userGuid))
@@ -51,7 +50,6 @@ public class LogHistoryService(ILogHistoryRepository logHistoryRepository, IUnit
             FailedLogins = failedLogins
         };
     }
-
     public async Task<LastLoginInfoResponse> GetLastSuccessfulLoginAsync(string userId)
     {
         if (!Guid.TryParse(userId, out Guid userGuid))
@@ -81,7 +79,6 @@ public class LogHistoryService(ILogHistoryRepository logHistoryRepository, IUnit
         };
 
     }
-
     public async Task<LoginStatisticsResponse> GetLoginStatisticsAsync()
     {
         int totalLogins = await logHistoryRepository.CountAsync();

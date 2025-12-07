@@ -41,7 +41,6 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
         await cacheService.SetAsync(AllowedIpAddressesCacheKey, viewModels, CacheExpiration);
         return ServiceResult<List<AllowedIpAddressResponse>>.Success(viewModels, HttpStatusCode.OK);
     }
-
     public async Task<ServiceResult<AllowedIpAddressResponse>> GetByIdAsync(int id)
     {
         AllowedIpAddress? entity = await repository.GetByIdAsync(id);
@@ -61,7 +60,6 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
 
         return ServiceResult<AllowedIpAddressResponse>.Success(viewModel, HttpStatusCode.OK);
     }
-
     public async Task<ServiceResult> CreateAsync(AllowedIpAddressCreateRequest request)
     {
         // IP adresi zaten var mı kontrol et
@@ -88,7 +86,6 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
 
         return ServiceResult.SuccessAsCreated();
     }
-
     public async Task<ServiceResult> UpdateAsync(AllowedIpAddressUpdateRequest request)
     {
         AllowedIpAddress? entity = await repository.GetByIdAsTrackingAsync(request.Id);
@@ -121,7 +118,6 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
 
         return ServiceResult.Success(HttpStatusCode.NoContent);
     }
-
     public async Task<ServiceResult> DeleteAsync(int id)
     {
         AllowedIpAddress? entity = await repository.GetByIdAsTrackingAsync(id);
@@ -138,7 +134,6 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
 
         return ServiceResult.Success(HttpStatusCode.NoContent);
     }
-
     public async Task<ServiceResult<bool>> IsIpAllowedAsync(string ipAddress)
     {
         if (string.IsNullOrWhiteSpace(ipAddress))

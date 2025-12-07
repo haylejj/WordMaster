@@ -10,6 +10,5 @@ public interface IPermissionRepository : IGenericRepository<Permission>
     Task<List<RolePermission>> GetRolePermissionsAsync(Guid roleId);
     void RemoveRolePermissions(IEnumerable<RolePermission> rolePermissions);
     Task AddRolePermissionsAsync(IEnumerable<RolePermission> rolePermissions);
-    Task<bool> PermissionExistsAsync(string key);
     Task AddPermissionsAsync(IEnumerable<Permission> permissions);
 }

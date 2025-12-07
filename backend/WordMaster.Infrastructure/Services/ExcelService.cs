@@ -139,13 +139,9 @@ public class ExcelService(AppDbContext context, ILogger<ExcelService> logger) : 
             {
                 logger.LogWarning("Import işlemi tamamlandı ancak eklenecek kelime bulunamadı. User: {UserId}, Total: {Total}, Duplicate: {Duplicate}, Failed: {Failed}",
                     userId, summary.TotalProcessed, summary.DuplicateCount, summary.FailedCount);
-
-                // Hata dönmek yerine başarılı dönüp istatistikleri göstermek daha iyi olabilir.
-                // Kullanıcı "neden eklenmedi" diye sorarsa istatistikten anlar.
                 return ServiceResult<WordImportSummaryResponse>.Success(summary, HttpStatusCode.OK);
             }
 
-            // Transaction
             using IDbContextTransaction transaction = await context.Database.BeginTransactionAsync();
             try
             {
