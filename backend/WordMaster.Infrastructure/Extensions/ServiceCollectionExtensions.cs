@@ -56,6 +56,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IExcelService, ExcelService>();
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IPermissionService, PermissionService>();
+        services.AddScoped<IDatabaseService, DatabaseService>();
 
         // Helpers
         services.AddScoped<IDataProtectionHelper, DataProtectionHelper>();

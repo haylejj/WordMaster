@@ -9,7 +9,9 @@ import {
     ExternalLink,
     Menu,
     BookOpen,
-    Lock
+    Lock,
+    Database,
+    Activity
 } from "lucide-react";
 import { authService } from "@/services/auth.service";
 import { useState } from "react";
@@ -37,6 +39,8 @@ export default function AdminLayout() {
         { icon: Shield, label: "Roller", path: "/admin/roles" },
         { icon: Lock, label: "Yetkilendirme", path: "/admin/permissions" },
         { icon: Network, label: "IP Adresler", path: "/admin/ip-addresses" },
+        { icon: Activity, label: "Log Geçmişi", path: "/admin/logs" },
+        { icon: Database, label: "Veritabanı", path: "/admin/database" },
     ];
 
     return (
@@ -44,7 +48,7 @@ export default function AdminLayout() {
             {/* Sidebar */}
             <aside
                 className={cn(
-                    "fixed inset-y-0 left-0 z-50 w-64 bg-[#0a0a0a] border-r border-red-900/20 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-auto",
+                    "fixed inset-y-0 left-0 z-50 w-64 bg-[#0a0a0a] border-r border-red-900/20 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:sticky lg:top-0 lg:h-screen",
                     !isSidebarOpen && "-translate-x-full lg:hidden"
                 )}
             >
@@ -61,7 +65,7 @@ export default function AdminLayout() {
                     </div>
 
                     {/* Navigation */}
-                    <nav className="flex-1 px-4 py-6 space-y-2">
+                    <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
                         {navItems.map((item) => {
                             const isActive = location.pathname === item.path;
                             return (
