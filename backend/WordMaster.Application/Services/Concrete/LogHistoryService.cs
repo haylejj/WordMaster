@@ -1,10 +1,14 @@
 using Microsoft.EntityFrameworkCore;
+using System.Net;
 using WordMaster.Application.Persistence;
 using WordMaster.Application.Persistence.Repositories;
+using WordMaster.Application.Requests.LogHistory;
 using WordMaster.Application.Responses.Admin;
+using WordMaster.Application.Responses.LogHistory;
 using WordMaster.Application.Responses.User;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Entities;
+using WordMaster.Domain.Results;
 
 namespace WordMaster.Application.Services.Concrete;
 
@@ -130,6 +134,52 @@ public class LogHistoryService(ILogHistoryRepository logHistoryRepository, IUnit
             FailedLogins = failedLogins,
             DailyLoginStats = dailyStats
         };
+    }
+    public async Task<ServiceResult<PagedResult<LogHistoryResponse>>> GetPagedLogHistoryAsync(GetLogHistoryRequest request)
+    {
+        if (request.Page < 1) request.Page = 1;
+        if (request.Size <= 0) request.Size = 20;
+
+        IQueryable<LogHistory> query = logHistoryRepository.GetAll().AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+        {
+            string term = request.SearchTerm.Trim();
+            query = query.Where(x =>
+                (request.SearchInUserId && x.AppUserId.ToString().Contains(term)) ||
+                (request.SearchInEmail && x.Email.Contains(term)) ||
+                (request.SearchInIp && x.IpAddress.Contains(term))
+            );
+        }
+
+        int totalCount = await query.CountAsync();
+
+        List<LogHistory> logs = await query
+            .OrderByDescending(x => x.AttemptedAt)
+            .Skip((request.Page - 1) * request.Size)
+            .Take(request.Size)
+            .ToListAsync();
+
+        List<LogHistoryResponse> responseItems = logs.Select(x => new LogHistoryResponse
+        {
+            Id = x.Id,
+            AppUserId = x.AppUserId,
+            Email = x.Email,
+            IpAddress = x.IpAddress,
+            IsSuccessful = x.IsSuccessful,
+            AttemptedAt = x.AttemptedAt,
+            Source = x.Source
+        }).ToList();
+
+        PagedResult<LogHistoryResponse> result = new()
+        {
+            Items = responseItems,
+            PageNumber = request.Page,
+            PageSize = request.Size,
+            TotalCount = totalCount
+        };
+
+        return ServiceResult<PagedResult<LogHistoryResponse>>.Success(result, HttpStatusCode.OK);
     }
 }
 

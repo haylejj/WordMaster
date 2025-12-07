@@ -23,6 +23,7 @@ import AdminRolesPage from "@/pages/admin/AdminRolesPage";
 import AdminPermissionsPage from "@/pages/admin/AdminPermissionsPage";
 import AdminIpAddressesPage from "@/pages/admin/AdminIpAddressesPage";
 import DatabaseResetPage from "@/pages/admin/DatabaseResetPage";
+import AdminLogHistoryPage from "@/pages/admin/AdminLogHistoryPage";
 
 import PermissionDeniedModal from "@/components/common/PermissionDeniedModal";
 
@@ -46,6 +47,7 @@ function App() {
           <Route path="roles" element={<AdminRolesPage />} />
           <Route path="permissions" element={<AdminPermissionsPage />} />
           <Route path="ip-addresses" element={<AdminIpAddressesPage />} />
+          <Route path="logs" element={<AdminLogHistoryPage />} />
           <Route path="database" element={<DatabaseResetPage />} />
         </Route>
 
