@@ -9,7 +9,8 @@ import {
     ExternalLink,
     Menu,
     BookOpen,
-    Lock
+    Lock,
+    Database
 } from "lucide-react";
 import { authService } from "@/services/auth.service";
 import { useState } from "react";
@@ -37,6 +38,7 @@ export default function AdminLayout() {
         { icon: Shield, label: "Roller", path: "/admin/roles" },
         { icon: Lock, label: "Yetkilendirme", path: "/admin/permissions" },
         { icon: Network, label: "IP Adresler", path: "/admin/ip-addresses" },
+        { icon: Database, label: "Veritabanı", path: "/admin/database" },
     ];
 
     return (
