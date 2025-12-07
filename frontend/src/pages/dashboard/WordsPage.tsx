@@ -81,14 +81,37 @@ export default function WordsPage({ variant = "all" }: WordsPageProps) {
     }
   };
 
+  // Sync state with URL parameters (Handles Back/Forward browser navigation)
+  useEffect(() => {
+    const paramsPage = parseInt(searchParams.get("page") || "1", 10);
+    const paramsPageSize = parseInt(searchParams.get("pageSize") || "10", 10);
+    const paramsSearch = searchParams.get("search") || "";
+
+    if (paramsPage !== page) setPage(paramsPage);
+    if (paramsPageSize !== pageSize) setPageSize(paramsPageSize);
+    if (paramsSearch !== searchTerm) {
+      setSearchTerm(paramsSearch);
+      setSearchInput(paramsSearch);
+    }
+  }, [searchParams]);
+
   useEffect(() => {
     fetchWords(searchTerm, page, pageSize);
 
-    const params = new URLSearchParams();
-    if (searchTerm) params.set("search", searchTerm);
-    if (page > 1) params.set("page", page.toString());
-    if (pageSize !== 10) params.set("pageSize", pageSize.toString());
-    setSearchParams(params);
+    // Only update URL if it differs from state to avoid redundant history entries
+    setSearchParams((prev) => {
+      const newParams = new URLSearchParams(prev);
+      if (searchTerm) newParams.set("search", searchTerm);
+      else newParams.delete("search");
+
+      if (page > 1) newParams.set("page", page.toString());
+      else newParams.delete("page");
+
+      if (pageSize !== 10) newParams.set("pageSize", pageSize.toString());
+      else newParams.delete("pageSize");
+
+      return newParams;
+    });
   }, [searchTerm, page, pageSize, variant]);
 
   const handleSearch = () => {
@@ -132,6 +155,8 @@ export default function WordsPage({ variant = "all" }: WordsPageProps) {
     setIsUpdateModalOpen(true);
   };
 
+  const OPTIMISTIC_ID = 1;
+
   const handleToggleFavorite = async (word: WordResponse) => {
     const previousWords = [...words];
 
@@ -141,7 +166,7 @@ export default function WordsPage({ variant = "all" }: WordsPageProps) {
         if (w.id === word.id) {
           // If it has an ID, it means it's active, so we set to null (remove).
           // If it's null, we set to a dummy ID (e.g. 1) to make it active in UI.
-          return { ...w, favoriteId: w.favoriteId ? null : 1 };
+          return { ...w, favoriteId: w.favoriteId ? null : OPTIMISTIC_ID };
         }
         return w;
       })
@@ -164,7 +189,7 @@ export default function WordsPage({ variant = "all" }: WordsPageProps) {
     setWords((currentWords) =>
       currentWords.map((w) => {
         if (w.id === word.id) {
-          return { ...w, unknowsId: w.unknowsId ? null : 1 };
+          return { ...w, unknowsId: w.unknowsId ? null : OPTIMISTIC_ID };
         }
         return w;
       })
