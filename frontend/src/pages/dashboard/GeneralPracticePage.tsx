@@ -8,6 +8,7 @@ import { X } from "lucide-react";
 interface PracticeResult {
     word: PracticeWordResponse;
     isCorrect: boolean;
+    userAnswer?: string;
 }
 
 export default function GeneralPracticePage() {
@@ -62,7 +63,7 @@ export default function GeneralPracticePage() {
         const normalizedCorrect = currentWord.turkishWord.trim().toLocaleLowerCase("tr-TR");
         const isCorrect = normalizedAnswer === normalizedCorrect;
 
-        setResults(prev => [...prev, { word: currentWord, isCorrect }]);
+        setResults(prev => [...prev, { word: currentWord, isCorrect, userAnswer: answer }]);
         return isCorrect;
     };
 
@@ -180,6 +181,11 @@ export default function GeneralPracticePage() {
                                             <div key={idx} className="p-2 border-b last:border-0">
                                                 <div className="font-bold">{r.word.englishWord}</div>
                                                 <div className="text-sm text-gray-500">Türkçe: {r.word.turkishWord}</div>
+                                                <div className="text-xs text-red-500 mt-1">
+                                                    {r.userAnswer
+                                                        ? `Yanıtınız: ${r.userAnswer}`
+                                                        : "Bilmiyorum seçildi."}
+                                                </div>
                                             </div>
                                         ))
                                     )}
