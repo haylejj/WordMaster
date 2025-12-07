@@ -100,8 +100,8 @@ export function PracticeCard({
             </div>
 
             {status === "unknown" && (
-                <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 font-medium">
-                    Bilmiyorum seçildi. Doğru cevap: {turkishWord}
+                <div className="mb-6 p-4 bg-orange-100 border border-orange-200 rounded-lg text-orange-800 font-medium">
+                    Doğru cevap: {turkishWord}
                 </div>
             )}
 

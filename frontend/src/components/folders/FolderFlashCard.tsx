@@ -12,6 +12,9 @@ interface FolderFlashCardProps {
 export default function FolderFlashCard({ word, onEdit, onRemove }: FolderFlashCardProps) {
     const [flipped, setFlipped] = useState(false);
 
+    // Debugging data
+    // console.log("FlashCard Word:", word);
+
     return (
         <div
             className="relative h-48 w-full max-w-[320px] cursor-pointer [perspective:1000px]"
@@ -50,7 +53,9 @@ export default function FolderFlashCard({ word, onEdit, onRemove }: FolderFlashC
                 </div>
 
                 <div className="absolute inset-0 flex items-center justify-center rounded-3xl bg-[#1f2a37] px-6 text-2xl text-white [backface-visibility:hidden] [transform:rotateY(180deg)]">
-                    <span className="tracking-wide">{word.turkishWord}</span>
+                    <span className="tracking-wide">
+                        {word.turkishWord ? word.turkishWord : "Çeviri yok"}
+                    </span>
                 </div>
             </div>
         </div>
