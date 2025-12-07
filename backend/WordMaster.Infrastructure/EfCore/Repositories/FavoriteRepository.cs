@@ -6,27 +6,11 @@ namespace WordMaster.Infrastructure.EfCore.Repositories;
 
 public class FavoriteRepository(AppDbContext context) : GenericRepository<Favorite>(context), IFavoriteRepository
 {
-    public async Task<Favorite?> GetByIdForUserAsync(int favoriteId, Guid userId)
-    {
-        return await _context.Favorites
-            .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == favoriteId && x.UserId == userId);
-    }
-
     public async Task<Favorite?> GetByWordForUserAsync(long wordId, Guid userId)
     {
         return await _context.Favorites
             .FirstOrDefaultAsync(x => x.WordId == wordId && x.UserId == userId);
     }
-
-    public async Task<Favorite?> GetFavoriteWithWordAsync(int favoriteId, Guid userId)
-    {
-        return await _context.Favorites
-            .Include(x => x.Word)
-            .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == favoriteId && x.UserId == userId);
-    }
-
     public async Task<List<Favorite>> GetUserFavoritesWithWordAsync(Guid userId)
     {
         return await _context.Favorites
@@ -35,7 +19,6 @@ public class FavoriteRepository(AppDbContext context) : GenericRepository<Favori
             .AsNoTracking()
             .ToListAsync();
     }
-
     public async Task<(List<Favorite> Favorites, int TotalCount)> GetPagedFavoritesAsync(Guid userId, string? search, int page, int pageSize)
     {
         IQueryable<Favorite> query = _context.Favorites
@@ -57,12 +40,5 @@ public class FavoriteRepository(AppDbContext context) : GenericRepository<Favori
             .ToListAsync();
 
         return (favorites, totalCount);
-    }
-
-    public async Task<Favorite?> GetLastFavorite()
-    {
-        return await _context.Favorites
-            .OrderByDescending(x => x.Id)
-            .FirstOrDefaultAsync();
     }
 }

@@ -4,6 +4,7 @@ import { wordService } from "@/services/word.service";
 import type { WordResponse } from "@/types/word";
 import { Search, X, Edit, Trash2, Star, HelpCircle, AlertCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import UpdateWordModal from "@/components/dashboard/UpdateWordModal";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 
@@ -112,12 +113,14 @@ export default function WordsPage({ variant = "all" }: WordsPageProps) {
     try {
       const response = await wordService.deleteWord(deleteTarget.id);
       if (response.isSuccess) {
+        toast.success("Kelime başarıyla silindi.");
         fetchWords();
       } else {
-        alert(response.errorList?.join(" ") || "Silme başarısız oldu.");
+        toast.error(response.errorList?.join(" ") || "Silme başarısız oldu.");
       }
     } catch (error) {
       console.error("Delete failed", error);
+      toast.error("Beklenmeyen bir hata oluştu.");
     } finally {
       setDeleteLoading(false);
       setDeleteTarget(null);

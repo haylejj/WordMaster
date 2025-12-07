@@ -28,6 +28,14 @@ public class WordRepository(AppDbContext context) : GenericRepository<Word>(cont
             .FirstOrDefaultAsync(x => x.Id == wordId && x.UserId == userId);
     }
 
+    public async Task<Word?> GetWordForDeleteAsync(long wordId, Guid userId)
+    {
+        return await _context.Words
+            .Include(x => x.WordFolders)
+            .Include(x => x.Favorite)
+            .Include(x => x.Unknows)
+            .FirstOrDefaultAsync(x => x.Id == wordId && x.UserId == userId);
+    }
     public async Task<Word?> GetWordByNormalizedEnglishAsync(Guid userId, string normalizedEnglishWord)
     {
         return await _context.Words
@@ -96,5 +104,23 @@ public class WordRepository(AppDbContext context) : GenericRepository<Word>(cont
             .ToListAsync();
 
         return (words, totalCount);
+    }
+
+
+    public void DeleteWordWithRelations(Word word)
+    {
+        if (word.WordFolders != null && word.WordFolders.Count != 0)
+        {
+            _context.WordFolders.RemoveRange(word.WordFolders);
+        }
+        if (word.Favorite != null)
+        {
+            _context.Favorites.Remove(word.Favorite);
+        }
+        if (word.Unknows != null)
+        {
+            _context.Unknows.Remove(word.Unknows);
+        }
+        _context.Words.Remove(word);
     }
 }

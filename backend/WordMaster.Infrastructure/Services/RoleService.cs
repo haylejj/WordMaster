@@ -28,7 +28,6 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
         await cacheService.SetAsync(RolesCacheKey, roleViewModel, RolesCacheExpiration);
         return ServiceResult<List<RoleResponse>>.Success(roleViewModel, HttpStatusCode.OK);
     }
-
     public async Task<ServiceResult> CreateRoleAsync(RoleCreateRequest request)
     {
         IdentityResult result = await roleManager.CreateAsync(new AppRole() { Name = request.Name });
@@ -42,7 +41,6 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
         List<string> errors = result.Errors.Select(e => e.Description).ToList();
         return ServiceResult.Failure(errors, HttpStatusCode.BadRequest);
     }
-
     public async Task<ServiceResult<RoleUpdateResponse>> FindByIdReturnRoleUpdateViewModelAsync(string id)
     {
         AppRole? role = await roleManager.FindByIdAsync(id);
@@ -53,7 +51,6 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
         RoleUpdateResponse roleUpdateViewModel = new() { Id = role.Id.ToString(), Name = role.Name! };
         return ServiceResult<RoleUpdateResponse>.Success(roleUpdateViewModel, HttpStatusCode.OK);
     }
-
     public async Task<ServiceResult> UpdateRoleAsync(RoleUpdateRequest request)
     {
         AppRole? role = await roleManager.FindByIdAsync(request.Id);
@@ -73,7 +70,6 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
         List<string> errors = result.Errors.Select(e => e.Description).ToList();
         return ServiceResult.Failure(errors, HttpStatusCode.BadRequest);
     }
-
     public async Task<ServiceResult> DeleteRoleAsync(string id)
     {
         AppRole? role = await roleManager.FindByIdAsync(id);
@@ -93,7 +89,6 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
         List<string> errors = result.Errors.Select(e => e.Description).ToList();
         return ServiceResult.Failure(errors, HttpStatusCode.BadRequest);
     }
-
     public async Task<ServiceResult<List<AssignToRoleResponse>>> GetRoleByIdReturnAssignToRoleAsync(string id)
     {
         AppUser? user = await userManager.FindByIdAsync(id);

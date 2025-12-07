@@ -16,25 +16,6 @@ namespace WordMaster.Application.Services.Concrete;
 
 public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork unitOfWork, IWordService wordService, ICacheService cacheService) : IFavoriteService
 {
-
-
-
-    public async Task<ServiceResult> DeleteFavoriteAsync(int favoriteId, Guid userId)
-    {
-        Favorite? favorite = await favoriteRepository.GetByIdForUserAsync(favoriteId, userId);
-        if (favorite == null)
-        {
-            return ServiceResult.Failure("Favori bulunamadı veya size ait değil.", HttpStatusCode.NotFound);
-        }
-
-        favoriteRepository.Remove(favorite);
-        await unitOfWork.CommitAsync();
-
-        await cacheService.RemoveAsync(CacheKeys.Favorite(favoriteId, userId));
-        await cacheService.RemoveAsync(CacheKeys.Favorites(userId));
-
-        return ServiceResult.Success(HttpStatusCode.NoContent);
-    }
     public async Task<ServiceResult<bool>> ToggleFavoriteAsync(ToggleFavoriteRequest request, Guid userId)
     {
         ServiceResult<WordResponse> wordExists = await wordService.GetWordForUserAsync(request.WordId, userId);

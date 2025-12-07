@@ -47,21 +47,6 @@ public class UnknowsController(IUnknowsService unknowsService) : BaseController
         ServiceResult<bool> result = await unknowsService.ToggleUnknowsAsync(request, userId);
         return CreateResult(result);
     }
-
-    /// <summary>
-    /// Belirtilen bilinmeyen kaydını siler.
-    /// </summary>
-    /// <param name="id">Bilinmeyen ID'si.</param>
-    /// <returns>İşlem sonucu.</returns>
-    [HttpDelete("{id}")]
-    [RequirePermission("Public", "Unknowns", "DeleteUnknows", "DELETE", "Bilinmeyen kelime sil")]
-    public async Task<IActionResult> DeleteUnknows(int id)
-    {
-        Guid userId = User.GetUserId();
-        ServiceResult result = await unknowsService.DeleteUnknowsAsync(id, userId);
-        return CreateResult(result);
-    }
-
     /// <summary>
     /// Bilinmeyen kelimelerden pratik yapmak için rastgele bir kelime getirir.
     /// </summary>

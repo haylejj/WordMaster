@@ -18,8 +18,6 @@ namespace WordMaster.Application.Services.Concrete;
 
 public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork, ICacheService cacheService, ILogger<WordService> logger) : IWordService
 {
-
-
     public async Task<ServiceResult<WordResponse>> GetWordForUserAsync(long id, Guid userId)
     {
         string cacheKey = CacheKeys.Word(id, userId);
@@ -46,7 +44,6 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
         await cacheService.SetAsync(cacheKey, wordDto, CacheDurations.Normal);
         return ServiceResult<WordResponse>.Success(wordDto, HttpStatusCode.OK);
     }
-
     public async Task<ServiceResult> AddWordAsync(CreateWordRequest request, Guid userId)
     {
         request.EnglishWord = request.EnglishWord?.NormalizeEnglishWord()!;
@@ -80,7 +77,6 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
 
         return ServiceResult.SuccessAsCreated();
     }
-
     public async Task<ServiceResult<WordResponse>> UpdateWordAsync(long wordId, UpdateWordRequest request, Guid userId)
     {
         Word? existingWord = await wordRepository.GetWordForUserTrackedWithFoldersAsync(wordId, userId);
@@ -118,14 +114,13 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
         await cacheService.RemoveAsync(CacheKeys.Word(wordId, userId));
         await cacheService.RemoveAsync(CacheKeys.Words(userId));
         await cacheService.RemoveAsync(CacheKeys.UserWordsDropdown(userId));
-        // Also invalidate practice lists that might contain this word
         await cacheService.RemoveAsync(CacheKeys.Favorites(userId));
         await cacheService.RemoveAsync(CacheKeys.Unknows(userId));
 
         // Invalidate folder caches
         if (existingWord.WordFolders != null)
         {
-            foreach (var wordFolder in existingWord.WordFolders)
+            foreach (WordFolder wordFolder in existingWord.WordFolders)
             {
                 await cacheService.RemoveAsync(CacheKeys.FolderWords(wordFolder.FolderId, userId));
             }
@@ -140,30 +135,28 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
 
         return ServiceResult<WordResponse>.Success(response, HttpStatusCode.OK);
     }
-
     public async Task<ServiceResult> DeleteWordAsync(long wordId, Guid userId)
     {
-        Word? word = await wordRepository.GetWordForUserTrackedWithFoldersAsync(wordId, userId);
+        Word? word = await wordRepository.GetWordForDeleteAsync(wordId, userId);
         if (word == null)
         {
             return ServiceResult.Failure("Kelime bulunamadı veya size ait değil.", HttpStatusCode.NotFound);
         }
 
-        wordRepository.Remove(word);
+        wordRepository.DeleteWordWithRelations(word);
         await unitOfWork.CommitAsync();
 
         // Cache invalidation
         await cacheService.RemoveAsync(CacheKeys.Word(wordId, userId));
         await cacheService.RemoveAsync(CacheKeys.Words(userId));
         await cacheService.RemoveAsync(CacheKeys.UserWordsDropdown(userId));
-        // Also invalidate practice lists that might contain this word
         await cacheService.RemoveAsync(CacheKeys.Favorites(userId));
         await cacheService.RemoveAsync(CacheKeys.Unknows(userId));
 
         // Invalidate folder caches
         if (word.WordFolders != null)
         {
-            foreach (var wordFolder in word.WordFolders)
+            foreach (WordFolder wordFolder in word.WordFolders)
             {
                 await cacheService.RemoveAsync(CacheKeys.FolderWords(wordFolder.FolderId, userId));
             }
@@ -171,7 +164,6 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
 
         return ServiceResult.Success(HttpStatusCode.NoContent);
     }
-
     public async Task<ServiceResult<bool>> IsWordDuplicateAsync(string englishWord, Guid userId)
     {
         if (string.IsNullOrWhiteSpace(englishWord))
@@ -184,7 +176,6 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
 
         return ServiceResult<bool>.Success(existingWord != null, HttpStatusCode.OK);
     }
-
     public async Task<ServiceResult<PracticeWordResponse>> GetRandomWordAsync(Guid userId)
     {
         string cacheKey = CacheKeys.Words(userId);
@@ -228,7 +219,6 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
 
         return ServiceResult<PracticeWordResponse>.Success(response, HttpStatusCode.OK);
     }
-
     public async Task<ServiceResult<bool>> CheckTranslationAndUpdateAsync(Guid userId, CheckTranslationRequest request)
     {
         Word? word = await wordRepository.GetWordForUserTrackedAsync(request.WordId, userId);
@@ -262,7 +252,6 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
 
         return ServiceResult<bool>.Success(isCorrect, HttpStatusCode.OK);
     }
-
     public async Task<ServiceResult<PagedResult<WordResponse>>> GetPagedWordsAsync(Guid userId, string? search, int page, int pageSize)
     {
         if (page < 1)
@@ -296,7 +285,6 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
 
         return ServiceResult<PagedResult<WordResponse>>.Success(pagedResult, HttpStatusCode.OK);
     }
-
     public async Task<ServiceResult<List<WordLookupResponse>>> GetUserWordsAsync(Guid userId)
     {
         // Cache all user's words for dropdown usage; client will filter locally
@@ -374,9 +362,6 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
 
         return ServiceResult<bool>.Success(true, HttpStatusCode.OK);
     }
-
-
-    // Admin Methods
     public async Task<ServiceResult<PagedResult<AdminWordResponse>>> GetAdminPagedWordsAsync(string? search, int page, int pageSize)
     {
         if (page < 1) page = 1;
@@ -404,7 +389,6 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
 
         return ServiceResult<PagedResult<AdminWordResponse>>.Success(pagedResult, HttpStatusCode.OK);
     }
-
     public async Task<ServiceResult<AdminWordResponse>> AdminUpdateWordAsync(long wordId, UpdateWordRequest request)
     {
         Word? existingWord = await wordRepository.GetByIdAsync((int)wordId);
@@ -469,7 +453,6 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
 
         return ServiceResult<AdminWordResponse>.Success(response, HttpStatusCode.OK);
     }
-
     public async Task<ServiceResult> AdminDeleteWordAsync(long wordId)
     {
         Word? word = await wordRepository.GetByIdAsync((int)wordId);

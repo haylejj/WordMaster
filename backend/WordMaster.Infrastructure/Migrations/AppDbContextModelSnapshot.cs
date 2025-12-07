@@ -322,7 +322,7 @@ namespace WordMaster.Infrastructure.Migrations
                     b.HasIndex("WordId")
                         .IsUnique();
 
-                    b.ToTable("Favorites");
+                    b.ToTable("Favorites", (string)null);
                 });
 
             modelBuilder.Entity("WordMaster.Domain.Entities.Folder", b =>
@@ -348,7 +348,7 @@ namespace WordMaster.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Folders");
+                    b.ToTable("Folders", (string)null);
                 });
 
             modelBuilder.Entity("WordMaster.Domain.Entities.LogHistory", b =>
@@ -418,7 +418,7 @@ namespace WordMaster.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Permissions");
+                    b.ToTable("Permissions", (string)null);
                 });
 
             modelBuilder.Entity("WordMaster.Domain.Entities.RolePermission", b =>
@@ -433,7 +433,7 @@ namespace WordMaster.Infrastructure.Migrations
 
                     b.HasIndex("PermissionId");
 
-                    b.ToTable("RolePermissions");
+                    b.ToTable("RolePermissions", (string)null);
                 });
 
             modelBuilder.Entity("WordMaster.Domain.Entities.Unknows", b =>
@@ -460,7 +460,7 @@ namespace WordMaster.Infrastructure.Migrations
                     b.HasIndex("WordId")
                         .IsUnique();
 
-                    b.ToTable("Unknows");
+                    b.ToTable("Unknows", (string)null);
                 });
 
             modelBuilder.Entity("WordMaster.Domain.Entities.Word", b =>
@@ -526,7 +526,7 @@ namespace WordMaster.Infrastructure.Migrations
 
                     b.HasIndex("UserId", "TurkishWord");
 
-                    b.ToTable("Words");
+                    b.ToTable("Words", (string)null);
                 });
 
             modelBuilder.Entity("WordMaster.Domain.Entities.WordFolder", b =>

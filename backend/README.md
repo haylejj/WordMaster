@@ -134,12 +134,10 @@ Favori ve bilinmeyen kelime yönetimi için kullanılır.
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/favorites` | Favori kelimeleri sayfalı listeler. | **User** |
 | `POST` | `/api/favorites/toggle` | Kelimeyi favorilere ekler/çıkarır. | **User** |
-| `DELETE` | `/api/favorites/{id}` | Favori kaydını siler. | **User** |
 | `GET` | `/api/favorites/practice/random` | Favorilerden pratik için rastgele kelime getirir. | **User** |
 | `POST` | `/api/favorites/practice/check` | Favori pratik çeviri kontrolü yapar. | **User** |
 | `GET` | `/api/unknows` | Bilinmeyen kelimeleri sayfalı listeler. | **User** |
 | `POST` | `/api/unknows/toggle` | Kelimeyi bilinmeyenlere ekler/çıkarır. | **User** |
-| `DELETE` | `/api/unknows/{id}` | Bilinmeyen kaydını siler. | **User** |
 | `GET` | `/api/unknows/practice/random` | Bilinmeyenlerden pratik için rastgele kelime getirir. | **User** |
 | `POST` | `/api/unknows/practice/check` | Bilinmeyen pratik çeviri kontrolü yapar. | **User** |
 
