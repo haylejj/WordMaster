@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WordMaster.Application.Attributes;
 using WordMaster.Application.Requests.Word;
@@ -11,7 +10,6 @@ namespace WordMaster.API.Controllers.Admin;
 /// <summary>
 /// Controller for managing words by administrators.
 /// </summary>
-[Authorize(Roles = "admin")]
 [Route("api/admin/words")]
 public class AdminWordController(IWordService wordService) : BaseController
 {

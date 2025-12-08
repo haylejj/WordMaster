@@ -188,8 +188,8 @@ public class AuthController(ILoginService loginService, IRegisterService registe
     /// </remarks>
     /// <response code="200">Çıkış işlemi başarılı.</response>
     /// <response code="401">Yetkisiz erişim (Token geçersiz veya yok).</response>
-    [Authorize]
     [HttpPost("logout")]
+    [Authorize]
     [RequirePermission("Public", "Auth", "Logout", "POST", "Çıkış yap")]
     public async Task<IActionResult> Logout()
     {

@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WordMaster.API.Extensions;
 using WordMaster.Application.Attributes;
@@ -12,7 +11,6 @@ namespace WordMaster.API.Controllers;
 /// <summary>
 /// Kullanıcı profil işlemlerini yöneten controller.
 /// </summary>
-[Authorize]
 [Route("api/user")]
 public class UserController(IUserService userService) : BaseController
 {

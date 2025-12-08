@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WordMaster.API.Extensions;
 using WordMaster.Application.Attributes;
@@ -14,7 +13,6 @@ namespace WordMaster.API.Controllers;
 /// <summary>
 /// Bilinmeyen kelime işlemlerini (Listeleme, Ekleme/Çıkarma) yöneten controller.
 /// </summary>
-[Authorize]
 [Route("api/unknows")]
 public class UnknowsController(IUnknowsService unknowsService) : BaseController
 {

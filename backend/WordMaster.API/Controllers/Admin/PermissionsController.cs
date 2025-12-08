@@ -11,7 +11,6 @@ namespace WordMaster.API.Controllers.Admin;
 /// Controller for managing permissions and role assignments.
 /// </summary>
 [Route("api/admin/permissions")]
-[ApiController]
 public class PermissionsController(IPermissionService permissionService) : BaseController
 {
     /// <summary>
@@ -19,7 +18,7 @@ public class PermissionsController(IPermissionService permissionService) : BaseC
     /// </summary>
     /// <returns>A list of permissions.</returns>
     [HttpGet]
-    [RequirePermission("Admin", "Permissions", "GetAll", "GET", "View all permissions")]
+    [RequirePermission("Admin", "Permissions", "GetAll", "GET", "Tüm yetkileri görüntüle")]
     public async Task<IActionResult> GetAll()
     {
         ServiceResult<List<PermissionResponse>> result = await permissionService.GetAllPermissionsAsync();
@@ -32,7 +31,7 @@ public class PermissionsController(IPermissionService permissionService) : BaseC
     /// <param name="roleId">The ID of the role.</param>
     /// <returns>A list of permissions for the role.</returns>
     [HttpGet("role/{roleId}")]
-    [RequirePermission("Admin", "Permissions", "GetByRole", "GET", "View permissions by role")]
+    [RequirePermission("Admin", "Permissions", "GetByRole", "GET", "Role göre yetkileri görüntüle")]
     public async Task<IActionResult> GetByRole(Guid roleId)
     {
         ServiceResult<List<PermissionResponse>> result = await permissionService.GetPermissionsByRoleIdAsync(roleId);
@@ -45,7 +44,7 @@ public class PermissionsController(IPermissionService permissionService) : BaseC
     /// <param name="request">The update request.</param>
     /// <returns>Result of the update operation.</returns>
     [HttpPut("role")]
-    [RequirePermission("Admin", "Permissions", "UpdateRolePermissions", "PUT", "Update role permissions")]
+    [RequirePermission("Admin", "Permissions", "UpdateRolePermissions", "PUT", "Rol yetkilerini güncelle")]
     public async Task<IActionResult> UpdateRolePermissions([FromBody] UpdateRolePermissionsRequest request)
     {
         string? userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -60,7 +59,7 @@ public class PermissionsController(IPermissionService permissionService) : BaseC
     /// </summary>
     /// <returns>Result of the scan operation.</returns>
     [HttpPost("scan")]
-    [RequirePermission("Admin", "Permissions", "Scan", "POST", "Scan for new permissions")]
+    [RequirePermission("Admin", "Permissions", "Scan", "POST", "Yeni yetkileri tara")]
     public async Task<IActionResult> Scan()
     {
         ServiceResult<PermissionScanResponse> result = await permissionService.ScanAndSavePermissionsAsync();

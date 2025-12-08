@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WordMaster.Application.Attributes;
 using WordMaster.Application.Responses.Admin;
@@ -10,7 +9,6 @@ namespace WordMaster.API.Controllers.Admin;
 /// <summary>
 /// Admin paneli dashboard işlemlerini yöneten controller.
 /// </summary>
-[Authorize(Roles = "admin")]
 [Route("api/admin/dashboard")]
 public class DashboardController(IAdminDashboardService adminDashboardService) : BaseController
 {

@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WordMaster.Application.Attributes;
 using WordMaster.Application.Requests.AllowedIpAddress;
@@ -11,7 +10,6 @@ namespace WordMaster.API.Controllers.Admin;
 /// <summary>
 /// İzin verilen IP adreslerini yöneten admin controller.
 /// </summary>
-[Authorize(Roles = "admin")]
 [Route("api/admin/allowed-ips")]
 public class AllowedIpAddressController(IAllowedIpAddressService allowedIpAddressService) : BaseController
 {

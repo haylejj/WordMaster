@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using WordMaster.API.Extensions;
@@ -15,7 +14,6 @@ namespace WordMaster.API.Controllers;
 /// <summary>
 /// Kelime işlemlerini (Listeleme, Ekleme, Güncelleme, Silme, İçe Aktarma) yöneten controller.
 /// </summary>
-[Authorize]
 [Route("api/words")]
 public class WordController(IWordService wordService, IExcelService excelService) : BaseController
 {
@@ -26,7 +24,6 @@ public class WordController(IWordService wordService, IExcelService excelService
     /// <param name="page">Sayfa numarası (varsayılan 1).</param>
     /// <param name="pageSize">Sayfa boyutu (varsayılan 10).</param>
     /// <returns>Sayfalanmış kelime listesi.</returns>
-    [Authorize]
     [HttpGet]
     [RequirePermission("Public", "Words", "GetWords", "GET", "Kelimeleri listele")]
     public async Task<IActionResult> GetWords([FromQuery] string? search, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
@@ -41,7 +38,6 @@ public class WordController(IWordService wordService, IExcelService excelService
     /// </summary>
     /// <param name="id">Kelime ID'si.</param>
     /// <returns>Kelime detayları.</returns>
-    [Authorize]
     [HttpGet("{id}")]
     [RequirePermission("Public", "Words", "GetWord", "GET", "Kelime detayını getir")]
     public async Task<IActionResult> GetWord(long id)
@@ -56,7 +52,6 @@ public class WordController(IWordService wordService, IExcelService excelService
     /// </summary>
     /// <param name="request">Eklenecek kelime bilgileri.</param>
     /// <returns>İşlem sonucu.</returns>
-    [Authorize]
     [HttpPost]
     [RequirePermission("Public", "Words", "AddWord", "POST", "Kelime ekle")]
     public async Task<IActionResult> AddWord([FromBody] CreateWordRequest request)
@@ -71,7 +66,6 @@ public class WordController(IWordService wordService, IExcelService excelService
     /// </summary>
     /// <param name="request">Güncellenecek kelime bilgileri.</param>
     /// <returns>İşlem sonucu.</returns>
-    [Authorize]
     [HttpPut]
     [RequirePermission("Public", "Words", "UpdateWord", "PUT", "Kelime güncelle")]
     public async Task<IActionResult> UpdateWord([FromBody] UpdateWordRequest request)
@@ -86,7 +80,6 @@ public class WordController(IWordService wordService, IExcelService excelService
     /// </summary>
     /// <param name="id">Silinecek kelime ID'si.</param>
     /// <returns>İşlem sonucu.</returns>
-    [Authorize]
     [HttpDelete("{id}")]
     [RequirePermission("Public", "Words", "DeleteWord", "DELETE", "Kelime sil")]
     public async Task<IActionResult> DeleteWord(long id)
@@ -102,7 +95,6 @@ public class WordController(IWordService wordService, IExcelService excelService
     /// </summary>
     /// <param name="file">Yüklenecek CSV dosyası.</param>
     /// <returns>İşlem sonucu.</returns>
-    [Authorize]
     [HttpPost("import-csv")]
     [RequirePermission("Public", "Words", "ImportCsv", "POST", "CSV içe aktar")]
     public async Task<IActionResult> ImportCsv(IFormFile file)
@@ -128,7 +120,6 @@ public class WordController(IWordService wordService, IExcelService excelService
     /// Kullanıcının tüm kelimelerini (dropdown için) listeler.
     /// </summary>
     /// <returns>Kelime listesi (ID ve İngilizce karşılık).</returns>
-    [Authorize]
     [HttpGet("user-words")]
     [RequirePermission("Public", "Words", "GetUserWords", "GET", "Kullanıcı kelimelerini listele")]
     public async Task<IActionResult> GetUserWords()
@@ -142,7 +133,6 @@ public class WordController(IWordService wordService, IExcelService excelService
     /// Pratik yapmak için rastgele bir kelime getirir.
     /// </summary>
     /// <returns>Kelime detayları (WordResponse).</returns>
-    [Authorize]
     [HttpGet("practice/random")]
     [RequirePermission("Public", "Words", "GetRandomWord", "GET", "Rastgele kelime getir")]
     public async Task<IActionResult> GetRandomWord()
@@ -157,7 +147,6 @@ public class WordController(IWordService wordService, IExcelService excelService
     /// </summary>
     /// <param name="request">Kontrol edilecek kelime bilgileri.</param>
     /// <returns>Doğru/Yanlış bilgisi.</returns>
-    [Authorize]
     [HttpPost("practice/check")]
     [RequirePermission("Public", "Words", "CheckTranslation", "POST", "Çeviri kontrolü")]
     public async Task<IActionResult> CheckTranslation([FromBody] CheckTranslationRequest request)
@@ -172,7 +161,6 @@ public class WordController(IWordService wordService, IExcelService excelService
     /// </summary>
     /// <param name="request">Sonuç listesi.</param>
     /// <returns>İşlem sonucu.</returns>
-    [Authorize]
     [HttpPost("practice/batch-update")]
     [RequirePermission("Public", "Words", "BulkUpdateStats", "POST", "Toplu istatistik güncelle")]
     public async Task<IActionResult> BulkUpdateStats([FromBody] BulkUpdateStatsRequest request)

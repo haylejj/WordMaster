@@ -2,7 +2,7 @@
 
 WordMaster API, kelime öğrenme ve yönetimi uygulaması olan WordMaster'ın backend servisidir. En son **.NET 10** teknolojisi ve Clean Architecture prensipleri kullanılarak geliştirilmiştir. Güvenli, ölçeklenebilir ve performanslı bir RESTful API sunar.
 
-## � Kurulum ve Çalıştırma (Getting Started)
+## 🏁 Kurulum ve Çalıştırma (Getting Started)
 
 Projeyi yerel ortamınızda çalıştırmak için aşağıdaki adımları izleyin.
 
@@ -70,141 +70,172 @@ Proje 4 ana katmandan oluşur:
 
 API, JWT tabanlı güvenli bir kimlik doğrulama sistemi kullanır.
 
+> ℹ️ **Not:** Yanında 🛡️ işareti bulunan endpoint'ler `[RequirePermission]` attribute'ü ile korunmaktadır ve veritabanı tabanlı gelişmiş yetkilendirme sistemi tarafından denetlenir.
+
 ### Auth Endpoint'leri
 
 Tüm kimlik doğrulama işlemleri `/api/auth` altında toplanmıştır.
 
-| Metot | Endpoint | Açıklama | Yetki |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/api/auth/register` | Yeni kullanıcı kaydı oluşturur. | Public |
-| `POST` | `/api/auth/login` | Kullanıcı girişi yapar. Access ve Refresh Token döner. | Public |
-| `POST` | `/api/auth/refresh-token` | Süresi dolan Access Token'ı yeniler. | Public |
-| `POST` | `/api/auth/forget-password`| Şifre sıfırlama bağlantısı gönderir (MailHog üzerinden izlenebilir). | Public |
-| `POST` | `/api/auth/reset-password` | Şifre sıfırlama işlemini tamamlar. | Public |
-| `POST` | `/api/auth/change-password`| Giriş yapmış kullanıcının şifresini değiştirir. | **User** |
-| `POST` | `/api/auth/logout` | Çıkış yapar (Refresh Token'ı sunucudan siler). | **User** |
-| `POST` | `/api/auth/admin-login` | Admin girişi yapar. Sadece admin rolüne sahip kullanıcılar giriş yapabilir. | Public |
+| Metot | Endpoint | Açıklama |
+| :--- | :--- | :--- |
+| `POST` | `/api/auth/register` | Yeni kullanıcı kaydı oluşturur. |
+| `POST` | `/api/auth/login` | Kullanıcı girişi yapar. Access ve Refresh Token döner. |
+| `POST` | `/api/auth/admin-login` | Admin girişi yapar (Sadece admin paneli erişimi için). |
+| `POST` | `/api/auth/refresh-token` | Süresi dolan Access Token'ı yeniler. |
+| `POST` | `/api/auth/forget-password`| Şifre sıfırlama bağlantısı gönderir. |
+| `POST` | `/api/auth/reset-password` | Şifre sıfırlama işlemini tamamlar. |
+| `GET` | `/api/auth/session-check` | Oturumun (Token) geçerliliğini kontrol eder. |
+| `POST` | `/api/auth/change-password` 🛡️ | Giriş yapmış kullanıcının şifresini değiştirir. |
+| `POST` | `/api/auth/logout` 🛡️ | Çıkış yapar ve Refresh Token'ı siler. |
 
 ### User Profile Endpoint'leri
 
 Kullanıcı profil yönetimi `/api/user` altında toplanmıştır.
 
-| Metot | Endpoint | Açıklama | Yetki |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/user/profile` | Giriş yapmış kullanıcının profil bilgilerini getirir. | **User** |
-| `PUT` | `/api/user/profile` | Giriş yapmış kullanıcının profil bilgilerini günceller. | **User** |
+| Metot | Endpoint | Açıklama |
+| :--- | :--- | :--- |
+| `GET` | `/api/user/profile` 🛡️ | Kullanıcının profil bilgilerini getirir. |
+| `PUT` | `/api/user/profile` 🛡️ | Kullanıcının profil bilgilerini günceller. |
 
 ### Word Endpoint'leri
 
-Kelime işlemleri `/api/words` altında toplanmıştır. Tüm işlemler giriş yapmış kullanıcıya özeldir.
+Kelime işlemleri `/api/words` altında toplanmıştır.
 
-| Metot | Endpoint | Açıklama | Yetki |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/words` | Kullanıcının kelimelerini sayfalı olarak listeler. | **User** |
-| `GET` | `/api/words/{id}` | Belirtilen ID'ye sahip kelimenin detaylarını getirir. | **User** |
-| `POST` | `/api/words` | Yeni bir kelime ekler. | **User** |
-| `PUT` | `/api/words` | Mevcut bir kelimeyi günceller. | **User** |
-| `DELETE` | `/api/words/{id}` | Belirtilen kelimeyi siler. | **User** |
-| `POST` | `/api/words/import-csv` | CSV dosyasından toplu kelime yükler. | **User** |
-| `GET` | `/api/words/user-words` | Tüm kelimeleri basit liste olarak (Dropdown için) getirir. | **User** |
-| `GET` | `/api/words/practice/random` | Pratik için rastgele kelime getirir. | **User** |
-| `POST` | `/api/words/practice/check` | Pratik çeviri kontrolü yapar. | **User** |
+| Metot | Endpoint | Açıklama |
+| :--- | :--- | :--- |
+| `GET` | `/api/words` 🛡️ | Kullanıcının kelimelerini sayfalı olarak listeler. |
+| `GET` | `/api/words/{id}` 🛡️ | Belirtilen ID'ye sahip kelimenin detaylarını getirir. |
+| `POST` | `/api/words` 🛡️ | Yeni bir kelime ekler. |
+| `PUT` | `/api/words` 🛡️ | Mevcut bir kelimeyi günceller. |
+| `DELETE` | `/api/words/{id}` 🛡️ | Belirtilen kelimeyi siler. |
+| `POST` | `/api/words/import-csv` 🛡️ | CSV dosyasından toplu kelime yükler. |
+| `GET` | `/api/words/user-words` 🛡️ | Tüm kelimeleri basit liste olarak (Dropdown için) getirir. |
+| `GET` | `/api/words/practice/random` 🛡️ | Pratik için rastgele kelime getirir. |
+| `POST` | `/api/words/practice/check` 🛡️ | Pratik çeviri kontrolü yapar. |
+| `POST` | `/api/words/practice/batch-update` 🛡️ | Pratik istatistiklerini toplu olarak günceller. |
 
 ### Folder Endpoint'leri
 
 Klasör işlemleri `/api/folders` altında toplanmıştır.
 
-| Metot | Endpoint | Açıklama | Yetki |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/folders` | Kullanıcının klasörlerini listeler. | **User** |
-| `GET` | `/api/folders/{id}` | Klasör detaylarını getirir. | **User** |
-| `POST` | `/api/folders` | Yeni klasör oluşturur. | **User** |
-| `PUT` | `/api/folders` | Klasör ismini günceller. | **User** |
-| `DELETE` | `/api/folders/{id}` | Klasörü siler. | **User** |
-| `GET` | `/api/folders/{id}/words` | Klasör içeriğindeki kelimeleri listeler. | **User** |
-| `POST` | `/api/folders/words` | Klasöre kelime ekler. | **User** |
-| `DELETE` | `/api/folders/words` | Klasörden kelime çıkarır. | **User** |
-| `POST` | `/api/folders/practice/check` | Klasör pratik çeviri kontrolü yapar. | **User** |
+| Metot | Endpoint | Açıklama |
+| :--- | :--- | :--- |
+| `GET` | `/api/folders` 🛡️ | Kullanıcının klasörlerini listeler. |
+| `GET` | `/api/folders/{id}` 🛡️ | Klasör detaylarını getirir. |
+| `POST` | `/api/folders` 🛡️ | Yeni klasör oluşturur. |
+| `PUT` | `/api/folders` 🛡️ | Klasör ismini günceller. |
+| `DELETE` | `/api/folders/{id}` 🛡️ | Klasörü siler. |
+| `GET` | `/api/folders/{id}/words` 🛡️ | Klasör içeriğindeki kelimeleri listeler. |
+| `POST` | `/api/folders/words` 🛡️ | Klasöre kelime ekler. |
+| `DELETE` | `/api/folders/words` 🛡️ | Klasörden kelime çıkarır. |
+| `POST` | `/api/folders/practice/check` 🛡️ | Klasör pratik çeviri kontrolü yapar. |
 
-### Favorite & Unknowns Endpoint'leri
+### Favorite Endpoint'leri
 
-Favori ve bilinmeyen kelime yönetimi için kullanılır.
+Favori kelime yönetimi `/api/favorites` altında toplanmıştır.
 
-| Metot | Endpoint | Açıklama | Yetki |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/favorites` | Favori kelimeleri sayfalı listeler. | **User** |
-| `POST` | `/api/favorites/toggle` | Kelimeyi favorilere ekler/çıkarır. | **User** |
-| `GET` | `/api/favorites/practice/random` | Favorilerden pratik için rastgele kelime getirir. | **User** |
-| `POST` | `/api/favorites/practice/check` | Favori pratik çeviri kontrolü yapar. | **User** |
-| `GET` | `/api/unknows` | Bilinmeyen kelimeleri sayfalı listeler. | **User** |
-| `POST` | `/api/unknows/toggle` | Kelimeyi bilinmeyenlere ekler/çıkarır. | **User** |
-| `GET` | `/api/unknows/practice/random` | Bilinmeyenlerden pratik için rastgele kelime getirir. | **User** |
-| `POST` | `/api/unknows/practice/check` | Bilinmeyen pratik çeviri kontrolü yapar. | **User** |
+| Metot | Endpoint | Açıklama |
+| :--- | :--- | :--- |
+| `GET` | `/api/favorites` 🛡️ | Favori kelimeleri sayfalı listeler. |
+| `POST` | `/api/favorites/toggle` 🛡️ | Kelimeyi favorilere ekler/çıkarır. |
+| `GET` | `/api/favorites/practice/random` 🛡️ | Favorilerden pratik için rastgele kelime getirir. |
+| `POST` | `/api/favorites/practice/check` 🛡️ | Favori pratik çeviri kontrolü yapar. |
 
+### Unknowns Endpoint'leri
 
+Bilinmeyen kelime yönetimi `/api/unknows` altında toplanmıştır.
+
+| Metot | Endpoint | Açıklama |
+| :--- | :--- | :--- |
+| `GET` | `/api/unknows` 🛡️ | Bilinmeyen kelimeleri sayfalı listeler. |
+| `POST` | `/api/unknows/toggle` 🛡️ | Kelimeyi bilinmeyenlere ekler/çıkarır. |
+| `GET` | `/api/unknows/practice/random` 🛡️ | Bilinmeyenlerden pratik için rastgele kelime getirir. |
+| `POST` | `/api/unknows/practice/check` 🛡️ | Bilinmeyen pratik çeviri kontrolü yapar. |
 
 ### Admin Endpoint'leri
 
-Admin paneli işlemleri `/api/admin` altında toplanmıştır. Tüm işlemler **admin** rolüne sahip kullanıcıya özeldir.
+Admin paneli işlemleri `/api/admin` altında toplanmıştır. Sadece yöneticilerin erişebilmesi gereken servislere ev sahipliği yapar.
 
 #### Admin Word Endpoint'leri
 
-| Metot | Endpoint | Açıklama | Yetki |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/admin/words` | Kelimeleri sayfalı olarak listeler (Admin paneli için). | **Admin** |
-| `PUT` | `/api/admin/words/{id}` | Kelime bilgilerini günceller. | **Admin** |
-| `DELETE` | `/api/admin/words/{id}` | Kelimeyi siler. | **Admin** |
+Adminlerin kelimeleri yönetmesi içindir.
+
+| Metot | Endpoint | Açıklama |
+| :--- | :--- | :--- |
+| `GET` | `/api/admin/words` 🛡️ | Yönetim panelinde kelimeleri listeler. |
+| `PUT` | `/api/admin/words/{id}` 🛡️ | Kelime bilgilerini günceller. |
+| `DELETE` | `/api/admin/words/{id}` 🛡️ | Kelimeyi siler. |
 
 #### Allowed IP Endpoint'leri
 
-| Metot | Endpoint | Açıklama | Yetki |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/admin/allowed-ips` | İzin verilen IP adreslerini listeler. | **Admin** |
-| `GET` | `/api/admin/allowed-ips/{id}` | Belirtilen ID'ye sahip IP adresini getirir. | **Admin** |
-| `POST` | `/api/admin/allowed-ips` | Yeni bir IP adresi ekler. | **Admin** |
-| `PUT` | `/api/admin/allowed-ips` | Mevcut bir IP adresini günceller. | **Admin** |
-| `DELETE` | `/api/admin/allowed-ips/{id}` | Belirtilen IP adresini siler. | **Admin** |
+İzin verilen IP adreslerinin yönetimi.
+
+| Metot | Endpoint | Açıklama |
+| :--- | :--- | :--- |
+| `GET` | `/api/admin/allowed-ips` 🛡️ | İzin verilen IP adreslerini listeler. |
+| `GET` | `/api/admin/allowed-ips/{id}` 🛡️ | IP adresi detayını getirir. |
+| `POST` | `/api/admin/allowed-ips` 🛡️ | Yeni bir IP adresi ekler. |
+| `PUT` | `/api/admin/allowed-ips` 🛡️ | Mevcut IP adresini günceller. |
+| `DELETE` | `/api/admin/allowed-ips/{id}` 🛡️ | IP adresini siler. |
 
 #### Role Endpoint'leri
 
-| Metot | Endpoint | Açıklama | Yetki |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/admin/roles` | Tüm rolleri listeler. | **Admin** |
-| `GET` | `/api/admin/roles/{id}` | Belirtilen ID'ye sahip rolü getirir. | **Admin** |
-| `POST` | `/api/admin/roles` | Yeni bir rol oluşturur. | **Admin** |
-| `PUT` | `/api/admin/roles` | Mevcut bir rolü günceller. | **Admin** |
-| `DELETE` | `/api/admin/roles/{id}` | Belirtilen rolü siler. | **Admin** |
-| `GET` | `/api/admin/roles/assign/{userId}` | Kullanıcıya atanabilecek rolleri listeler. | **Admin** |
-| `POST` | `/api/admin/roles/assign` | Kullanıcıya rol ataması yapar. | **Admin** |
+Sistem rollerinin yönetimi.
+
+| Metot | Endpoint | Açıklama |
+| :--- | :--- | :--- |
+| `GET` | `/api/admin/roles` 🛡️ | Tüm rolleri listeler. |
+| `GET` | `/api/admin/roles/{id}` 🛡️ | Rol detayını getirir. |
+| `POST` | `/api/admin/roles` 🛡️ | Yeni rol oluşturur. |
+| `PUT` | `/api/admin/roles` 🛡️ | Rolü günceller. |
+| `DELETE` | `/api/admin/roles/{id}` 🛡️ | Rolü siler. |
+| `GET` | `/api/admin/roles/assign/{userId}` 🛡️ | Kullanıcıya atanabilir rolleri gösterir. |
+| `POST` | `/api/admin/roles/assign` 🛡️ | Kullanıcıya rol ataması yapar. |
 
 #### Permission Endpoint'leri
 
-| Metot | Endpoint | Açıklama | Yetki |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/admin/permissions` | Tüm izinleri listeler. | **Admin** |
-| `GET` | `/api/admin/permissions/role/{roleId}` | Belirtilen role ait izinleri getirir. | **Admin** |
-| `PUT` | `/api/admin/permissions/role` | Role ait izinleri günceller. | **Admin** |
-| `POST` | `/api/admin/permissions/scan` | Sistemdeki izinleri tarar ve veritabanına kaydeder. | **Admin** |
+Dinamik yetki (izin) yönetimi.
+
+| Metot | Endpoint | Açıklama |
+| :--- | :--- | :--- |
+| `GET` | `/api/admin/permissions` 🛡️ | Tüm izinleri listeler. |
+| `GET` | `/api/admin/permissions/role/{roleId}` 🛡️ | Role ait izinleri getirir. |
+| `PUT` | `/api/admin/permissions/role` 🛡️ | Role izin tanımı yapar. |
+| `POST` | `/api/admin/permissions/scan` 🛡️ | Koddaki yeni izinleri tarar ve veritabanına ekler. |
 
 #### Dashboard Endpoint'leri
 
-| Metot | Endpoint | Açıklama | Yetki |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/admin/dashboard` | Admin dashboard istatistiklerini getirir. | **Admin** |
+| Metot | Endpoint | Açıklama |
+| :--- | :--- | :--- |
+| `GET` | `/api/admin/dashboard` 🛡️ | Admin dashboard istatistiklerini getirir. |
 
-#### User Endpoint'leri
+#### User Management Endpoint'leri
 
-| Metot | Endpoint | Açıklama | Yetki |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/admin/users` | Kullanıcıları sayfalı listeler (Arama destekler). | **Admin** |
-| `GET` | `/api/admin/users/all` | Tüm kullanıcıları listeler. | **Admin** |
-| `GET` | `/api/admin/users/{id}` | Kullanıcı detaylarını (Edit için) getirir. | **Admin** |
-| `GET` | `/api/admin/users/{id}/detail` | Kullanıcı detaylarını (View için) getirir. | **Admin** |
-| `PUT` | `/api/admin/users` | Kullanıcıyı günceller. | **Admin** |
-| `DELETE` | `/api/admin/users/{id}` | Kullanıcıyı siler. | **Admin** |
-| `POST` | `/api/admin/users/{id}/reset-password` | Kullanıcı şifresini sıfırlar. | **Admin** |
+Adminlerin kullanıcıları yönetmesi içindir.
 
-## � Altyapı ve Kütüphaneler
+| Metot | Endpoint | Açıklama |
+| :--- | :--- | :--- |
+| `GET` | `/api/admin/users` 🛡️ | Kullanıcıları sayfalı listeler. |
+| `GET` | `/api/admin/users/all` 🛡️ | Tüm kullanıcıları listeler. |
+| `GET` | `/api/admin/users/{id}` 🛡️ | Kullanıcı düzenleme detaylarını getirir. |
+| `GET` | `/api/admin/users/{id}/detail` 🛡️ | Kullanıcı görüntüleme detaylarını getirir. |
+| `PUT` | `/api/admin/users` 🛡️ | Kullanıcı bilgilerini günceller. |
+| `DELETE` | `/api/admin/users/{id}` 🛡️ | Kullanıcıyı siler. |
+| `POST` | `/api/admin/users/{id}/reset-password` 🛡️ | Kullanıcının şifresini sıfırlar ve mail atar. |
+| `POST` | `/api/admin/users/{id}/change-role` 🛡️ | Kullanıcının rollerini değiştirir. |
+
+#### Log History & Database Endpoint'leri
+
+Sistem logları ve veritabanı temizliği.
+
+| Metot | Endpoint | Açıklama |
+| :--- | :--- | :--- |
+| `GET` | `/api/admin/logHistory` 🛡️ | Sistem loglarını filtreli/sayfalı listeler. |
+| `POST` | `/api/admin/database/reset` 🛡️ | Belirtilen tabloyu sıfırlar (Admin şifresi gerektirir). |
+
+---
+
+## 🔧 Altyapı ve Kütüphaneler
 
 ### 1. FluentValidation & Otomatik Doğrulama
 Gelen isteklerin (Request DTOs) doğrulanması için **FluentValidation** kütüphanesi kullanılmıştır.
@@ -245,19 +276,12 @@ Farklı originlerden (örneğin Frontend uygulamasından) gelen isteklere izin v
 
 ### 8. Logging (Serilog)
 Uygulama genelinde yapılandırılmış (structured) loglama için **Serilog** kullanılmıştır.
+
 ### 9. Thread-Safe Random Kullanımı
 Uygulama genelinde ve özellikle pratik modüllerinde (rastgele kelime seçimi vb.) **Random.Shared** yapısına geçilmiştir.
 *   **Thread Safety**: Statik `Random` nesnelerinin çoklu iş parçacığı (multi-thread) ortamlarında neden olabileceği sorunlar (race condition vb.) giderilmiştir.
 *   **Performans**: .NET 6+ ile gelen `Random.Shared`, her thread için optimize edilmiş güvenli bir örnek sunar.
 
-    *   **ISP (Interface Segregation)**: Arayüzler (Interface) mümkün olduğunca küçük ve amaca yönelik tutulmuştur.
-    *   **DIP (Dependency Inversion)**: Üst seviye modüller, alt seviye modüllere doğrudan bağımlı değildir; her ikisi de soyutlamalara (Interface) bağımlıdır.
-*   **Clean Architecture**: Bağımlılıklar dıştan içe doğrudur. Domain katmanı en içte ve bağımsızdır.
-*   **Repository & Unit of Work Pattern**: Veri erişim katmanı soyutlanmış ve transaction yönetimi `UnitOfWork` ile merkezi hale getirilmiştir.
-*   **Primary Constructors**: C# 12+ özelliği olan Primary Constructor yapısı ile kod sadeliği sağlanmıştır.
-*   **ServiceResult Pattern**: Tüm servis metodları standart bir `ServiceResult<T>` yapısı dönerek hata yönetimi ve dönüş tiplerini standartlaştırır.
-*   **Async/Await**: I/O operasyonlarında bloklamayı önlemek için asenkron programlama kullanılmıştır.
-*   **Request/Response Pattern**: Application katmanında veri transferi için DTO'lar (Request/Response record'ları) kullanılmıştır.
-
 ---
+
 *WordMaster Backend Team*

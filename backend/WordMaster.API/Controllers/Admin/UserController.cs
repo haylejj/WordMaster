@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WordMaster.Application.Attributes;
 using WordMaster.Application.Requests.User;
@@ -11,7 +10,6 @@ namespace WordMaster.API.Controllers.Admin;
 /// <summary>
 /// Kullanıcı yönetim işlemlerini gerçekleştiren controller.
 /// </summary>
-[Authorize(Roles = "admin")]
 [Route("api/admin/users")]
 public class UserController(IUserService userService) : BaseController
 {
@@ -117,7 +115,7 @@ public class UserController(IUserService userService) : BaseController
     [RequirePermission("Admin", "AdminUsers", "ChangeRole", "POST", "Kullanıcı rolünü değiştir")]
     public async Task<IActionResult> ChangeRole(string id, [FromBody] List<string> roles)
     {
-        var request = new ChangeUserRoleRequest { UserId = id, Roles = roles };
+        ChangeUserRoleRequest request = new() { UserId = id, Roles = roles };
         ServiceResult result = await userService.ChangeUserRoleAsync(request);
         return CreateResult(result);
     }

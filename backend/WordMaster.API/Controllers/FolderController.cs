@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WordMaster.API.Extensions;
 using WordMaster.Application.Attributes;
@@ -13,7 +12,6 @@ namespace WordMaster.API.Controllers;
 /// <summary>
 /// Klasör işlemlerini (Listeleme, Ekleme, Güncelleme, Silme, Kelime Ekleme/Çıkarma) yöneten controller.
 /// </summary>
-[Authorize]
 [Route("api/folders")]
 public class FolderController(IFolderService folderService) : BaseController
 {

@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WordMaster.Application.Attributes;
 using WordMaster.Application.Requests.Role;
@@ -11,7 +10,6 @@ namespace WordMaster.API.Controllers.Admin;
 /// <summary>
 /// Rol yönetim işlemlerini gerçekleştiren controller.
 /// </summary>
-[Authorize(Roles = "admin")]
 [Route("api/admin/roles")]
 public class RoleController(IRoleService roleService) : BaseController
 {

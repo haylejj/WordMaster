@@ -1,6 +1,6 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WordMaster.API.Extensions;
+using WordMaster.Application.Attributes;
 using WordMaster.Application.Requests.Database;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Results;
@@ -11,7 +11,6 @@ namespace WordMaster.API.Controllers.Admin;
 /// Controller for administrative database operations such as resetting tables.
 /// Requires 'admin' role.
 /// </summary>
-[Authorize(Roles = "admin")]
 [Route("api/admin/database")]
 public class DatabaseController(IDatabaseService databaseService) : BaseController
 {
@@ -22,6 +21,7 @@ public class DatabaseController(IDatabaseService databaseService) : BaseControll
     /// <param name="request">The reset request containing table name and admin password.</param>
     /// <returns>A result indicating success or failure.</returns>
     [HttpPost("reset")]
+    [RequirePermission("Admin", "Database", "ResetTable", "POST", "Veritabanı tablolarının verilerini siler.")]
     public async Task<IActionResult> ResetTable([FromBody] ResetTableRequest request)
     {
         Guid userId = User.GetUserId();

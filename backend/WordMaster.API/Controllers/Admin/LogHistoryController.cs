@@ -1,6 +1,5 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WordMaster.Application.Constants;
+using WordMaster.Application.Attributes;
 using WordMaster.Application.Requests.LogHistory;
 using WordMaster.Application.Responses.LogHistory;
 using WordMaster.Application.Services.Abstract;
@@ -13,8 +12,6 @@ namespace WordMaster.API.Controllers.Admin;
 /// </summary>
 /// <param name="logHistoryService">Log geçmişi işlemlerini yürüten servis.</param>
 [Route("api/admin/logHistory")]
-[ApiController]
-[Authorize(Roles = ApplicationRoles.Admin)]
 public class LogHistoryController(ILogHistoryService logHistoryService) : BaseController
 {
     /// <summary>
@@ -23,6 +20,7 @@ public class LogHistoryController(ILogHistoryService logHistoryService) : BaseCo
     /// <param name="request">Sayfalama ve filtreleme parametreleri</param>
     /// <returns>Log kayıtları listesi</returns>
     [HttpGet]
+    [RequirePermission("Admin", "LogHistory", "Get", "GET", "LogHistory tablosundan verileri sayfalama ile getirir.")]
     public async Task<IActionResult> Get([FromQuery] GetLogHistoryRequest request)
     {
         ServiceResult<PagedResult<LogHistoryResponse>> result = await logHistoryService.GetPagedLogHistoryAsync(request);
