@@ -120,6 +120,20 @@ api.interceptors.response.use(
             window.dispatchEvent(new Event("permission-denied"));
         }
 
+        if (status === 429) {
+            // Backend'den dönen ServiceResult formatındaki hatayı al
+            const errorList = error.response?.data?.errorList;
+            const message = errorList && errorList.length > 0
+                ? errorList[0]
+                : "Çok fazla istek gönderildi. Lütfen bekleyin.";
+
+            // CustomEvent ile mesajı taşı
+            const event = new CustomEvent("rate-limit-exceeded", {
+                detail: { message }
+            });
+            window.dispatchEvent(event);
+        }
+
         return Promise.reject(error);
     }
 );

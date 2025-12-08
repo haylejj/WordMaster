@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using WordMaster.API.Extensions;
 using WordMaster.Application.Attributes;
 using WordMaster.Application.Requests.Favorite;
@@ -14,6 +15,7 @@ namespace WordMaster.API.Controllers;
 /// Favori kelime işlemlerini (Listeleme, Ekleme/Çıkarma) yöneten controller.
 /// </summary>
 [Route("api/favorites")]
+[EnableRateLimiting("GeneralPolicy")]
 public class FavoriteController(IFavoriteService favoriteService) : BaseController
 {
     /// <summary>

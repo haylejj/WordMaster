@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using Microsoft.AspNetCore.RateLimiting;
 using WordMaster.API.Extensions;
 using WordMaster.Application.Attributes;
 using WordMaster.Application.Requests.Practice;
@@ -15,6 +16,7 @@ namespace WordMaster.API.Controllers;
 /// Kelime işlemlerini (Listeleme, Ekleme, Güncelleme, Silme, İçe Aktarma) yöneten controller.
 /// </summary>
 [Route("api/words")]
+[EnableRateLimiting("GeneralPolicy")]
 public class WordController(IWordService wordService, IExcelService excelService) : BaseController
 {
     /// <summary>

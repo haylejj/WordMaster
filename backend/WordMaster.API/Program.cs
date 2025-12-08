@@ -64,6 +64,9 @@ builder.Services.AddIdentityConfigurations();
 // Swagger yapılandırması
 builder.Services.AddSwaggerConfigurations();
 
+// Rate Limiting
+builder.Services.AddRateLimitingConfigurations();
+
 // CORS Politikası
 builder.Services.AddCors(options =>
 {
@@ -92,6 +95,8 @@ app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 app.UseHttpsRedirection();
 
 app.UseCors("AllowSpecificOrigins");
+
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();
