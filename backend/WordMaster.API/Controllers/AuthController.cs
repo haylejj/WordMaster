@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using WordMaster.API.Extensions;
@@ -15,6 +16,7 @@ namespace WordMaster.API.Controllers;
 /// Login, Register, Token yenileme gibi işlemleri içerir.
 /// </summary>
 [Route("api/auth")]
+[EnableRateLimiting("StrictPolicy")]
 public class AuthController(ILoginService loginService, IRegisterService registerService, IUserService userService, IJwtService jwtService) : BaseController
 {
     /// <summary>

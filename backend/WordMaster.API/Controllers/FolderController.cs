@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using WordMaster.API.Extensions;
 using WordMaster.Application.Attributes;
 using WordMaster.Application.Requests.Folder;
@@ -13,6 +14,7 @@ namespace WordMaster.API.Controllers;
 /// Klasör işlemlerini (Listeleme, Ekleme, Güncelleme, Silme, Kelime Ekleme/Çıkarma) yöneten controller.
 /// </summary>
 [Route("api/folders")]
+[EnableRateLimiting("GeneralPolicy")]
 public class FolderController(IFolderService folderService) : BaseController
 {
     /// <summary>

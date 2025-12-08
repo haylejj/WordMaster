@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using WordMaster.API.Extensions;
 using WordMaster.Application.Attributes;
 using WordMaster.Application.Requests.User;
@@ -12,6 +13,7 @@ namespace WordMaster.API.Controllers;
 /// Kullanıcı profil işlemlerini yöneten controller.
 /// </summary>
 [Route("api/user")]
+[EnableRateLimiting("GeneralPolicy")]
 public class UserController(IUserService userService) : BaseController
 {
     /// <summary>

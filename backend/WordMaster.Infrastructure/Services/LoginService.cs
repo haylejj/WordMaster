@@ -62,7 +62,7 @@ public class LoginService(
         AppUser? user = await userManager.FindByEmailAsync(request.Email);
         if (user == null)
         {
-            await logHistoryService.RecordAsync(null, request.Email, ipAddress, false, "APILogin");
+            await logHistoryService.RecordAsync(null, request.Email, ipAddress, false, "PublicLogin");
             return ServiceResult<LoginResponse>.Failure("Email veya şifre yanlış", HttpStatusCode.NotFound);
         }
 

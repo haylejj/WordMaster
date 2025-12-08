@@ -295,6 +295,23 @@ Pratik modüllerinde "Sıradaki Kelime" özelliği için kullanılan rastgele ke
     3.  Eğer seçilen kelime, hariç tutulması gereken kelime ise, **filtreleme yapıp yeni liste oluşturmak yerine**, mevcut listedeki **bir sonraki eleman** (`(index + 1) % Count`) seçilir.
 *   **Sonuç**: Bellekte gereksiz liste kopyaları oluşturulmadan O(1) bellek karmaşıklığı ile çalışır ve aynı kelimenin arka arkaya gelmesi %100 engellenir (listede 1'den fazla kelime varsa).
 
+### 11. Rate Limiting (Hız Sınırlama)
+Sistemi aşırı yük ve kaba kuvvet (brute-force) saldırılarından korumak için ASP.NET Core Rate Limiting middleware'i entegre edilmiştir. İki temel politika uygulanır:
+
+1.  **StrictPolicy (Katı Kural)**:
+    *   **Hedef**: Auth (Login, Register vb.) endpoint'leri.
+    *   **Limit**: IP adresi başına dakikada **10 istek**.
+    *   **Algoritma**: Sliding Window (Kayan Pencere).
+    *   **Amaç**: Brute-force ve şifre deneme saldırılarını engellemek.
+
+2.  **GeneralPolicy (Genel Kural)**:
+    *   **Hedef**: Kelime, Favori, Klasör gibi kaynak tüketen endpoint'ler.
+    *   **Limit**: Kullanıcı (User ID) veya IP başına dakikada **60 istek**.
+    *   **Algoritma**: Fixed Window (Sabit Pencere).
+    *   **Amaç**: Adil kullanım sağlamak ve sunucu kaynaklarını korumak.
+
+> ℹ️ **Not:** Hız limiti aşıldığında (429 Too Many Requests), sistem standart hata sayfası yerine JSON formatında ve Türkçe olarak ne kadar beklemeniz gerektiğini söyleyen bir mesaj döner (Örn: "Lütfen 1 dakika sonra tekrar deneyiniz.").
+
 ---
 
 *WordMaster Backend Team*
