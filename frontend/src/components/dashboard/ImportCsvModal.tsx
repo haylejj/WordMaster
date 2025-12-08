@@ -1,7 +1,8 @@
 import { useState, useRef } from "react";
-import { X, UploadCloud, HelpCircle, Download, FileSpreadsheet } from "lucide-react";
+import { X, UploadCloud, HelpCircle, Download, FileSpreadsheet, AlertCircle, CheckCircle } from "lucide-react";
 import { wordService } from "@/services/word.service";
 import { getErrorMessage } from "@/lib/utils";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface ImportCsvModalProps {
     isOpen: boolean;
@@ -180,8 +181,28 @@ export default function ImportCsvModal({ isOpen, onClose, onImported }: ImportCs
                         Sadece .csv dosyaları. Maksimum 10MB.
                     </div>
 
-                    {error && <div className="mt-4 bg-red-100 text-red-700 p-3 rounded text-sm whitespace-pre-wrap">{error}</div>}
-                    {success && <div className="mt-4 bg-green-100 text-green-700 p-3 rounded text-sm whitespace-pre-wrap">{success}</div>}
+                    {error && (
+                        <div className="mt-4">
+                            <Alert variant="destructive">
+                                <AlertCircle className="h-4 w-4" />
+                                <AlertTitle>Hata</AlertTitle>
+                                <AlertDescription className="whitespace-pre-wrap">
+                                    {error}
+                                </AlertDescription>
+                            </Alert>
+                        </div>
+                    )}
+                    {success && (
+                        <div className="mt-4">
+                            <Alert variant="success">
+                                <CheckCircle className="h-4 w-4" />
+                                <AlertTitle>Başarılı</AlertTitle>
+                                <AlertDescription className="whitespace-pre-wrap">
+                                    {success}
+                                </AlertDescription>
+                            </Alert>
+                        </div>
+                    )}
 
                     <button
                         onClick={handleUpload}
@@ -199,4 +220,3 @@ export default function ImportCsvModal({ isOpen, onClose, onImported }: ImportCs
         </div>
     );
 }
-

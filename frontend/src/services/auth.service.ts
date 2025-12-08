@@ -47,4 +47,9 @@ export const authService = {
         const response = await api.get<ServiceResult>("/auth/session-check");
         return response.data;
     },
+
+    verifyEmail: async (userId: string, token: string) => {
+        const response = await api.get<ServiceResult>(`/auth/confirm-email?userId=${encodeURIComponent(userId)}&token=${encodeURIComponent(token)}`);
+        return response.data;
+    },
 };

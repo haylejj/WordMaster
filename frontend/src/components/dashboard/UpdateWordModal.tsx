@@ -5,8 +5,9 @@ import { updateWordSchema } from "@/types/word";
 import type { UpdateWordRequest, WordResponse } from "@/types/word";
 import type { FolderWordResponse } from "@/types/folder";
 import { wordService } from "@/services/word.service";
-import { X } from "lucide-react";
+import { X, AlertCircle, CheckCircle } from "lucide-react";
 import { cn, getErrorMessage } from "@/lib/utils";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface UpdateWordModalProps {
   isOpen: boolean;
@@ -88,14 +89,22 @@ export default function UpdateWordModal({ isOpen, onClose, onSuccess, word }: Up
 
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
           {error && (
-            <div className="bg-red-100 text-red-700 p-3 rounded text-sm">
-              {error}
-            </div>
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Hata</AlertTitle>
+              <AlertDescription>
+                {error}
+              </AlertDescription>
+            </Alert>
           )}
           {success && (
-            <div className="bg-green-100 text-green-700 p-3 rounded text-sm">
-              {success}
-            </div>
+            <Alert variant="success">
+              <CheckCircle className="h-4 w-4" />
+              <AlertTitle>Başarılı</AlertTitle>
+              <AlertDescription>
+                {success}
+              </AlertDescription>
+            </Alert>
           )}
 
           <input type="hidden" {...register("id", { valueAsNumber: true })} />
@@ -157,4 +166,3 @@ export default function UpdateWordModal({ isOpen, onClose, onSuccess, word }: Up
     </div>
   );
 }
-

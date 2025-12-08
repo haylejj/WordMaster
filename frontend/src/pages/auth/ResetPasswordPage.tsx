@@ -7,7 +7,8 @@ import type { ResetPasswordRequest } from "@/types/auth";
 import { authService } from "@/services/auth.service";
 import { cn, getErrorMessage } from "@/lib/utils";
 import AuthLayout from "@/layouts/AuthLayout";
-import { Eye, EyeOff, Lock, ShieldCheck, Check, X } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Eye, EyeOff, Lock, ShieldCheck, Check, X, AlertCircle, CheckCircle } from "lucide-react";
 
 
 const passwordRequirements = [
@@ -91,15 +92,23 @@ export default function ResetPasswordPage() {
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 {error && (
-                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative text-sm" role="alert">
-                        <span className="block sm:inline">{error}</span>
-                    </div>
+                    <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Hata</AlertTitle>
+                        <AlertDescription>
+                            {error}
+                        </AlertDescription>
+                    </Alert>
                 )}
 
                 {success && (
-                    <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative text-sm" role="alert">
-                        <span className="block sm:inline">{success}</span>
-                    </div>
+                    <Alert variant="success">
+                        <CheckCircle className="h-4 w-4" />
+                        <AlertTitle>Başarılı</AlertTitle>
+                        <AlertDescription>
+                            {success}
+                        </AlertDescription>
+                    </Alert>
                 )}
 
                 <div className="space-y-1">

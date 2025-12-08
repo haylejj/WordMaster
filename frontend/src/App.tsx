@@ -3,6 +3,7 @@ import { Toaster } from "sonner";
 import LoginPage from "@/pages/auth/LoginPage";
 import RegisterPage from "@/pages/auth/RegisterPage";
 import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage";
+import ConfirmEmailPage from "@/pages/auth/ConfirmEmailPage";
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
 import AdminLoginPage from "@/pages/admin/AdminLoginPage";
 import DashboardLayout from "@/layouts/DashboardLayout";
@@ -35,6 +36,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/confirm-email" element={<ConfirmEmailPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/ResetPassword" element={<ResetPasswordPage />} />
 

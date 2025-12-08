@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Net;
 using System.Net.Mail;
@@ -7,7 +8,7 @@ using WordMaster.Domain.Results;
 
 namespace WordMaster.Infrastructure.Services;
 
-public class EmailService(IOptions<EmailSettings> settings) : IEmailService
+public class EmailService(IOptions<EmailSettings> settings, ILogger<EmailService> logger) : IEmailService
 {
     public async Task<ServiceResult> SendResetPasswordLinkToEmailAsync(string resetEmailLink, string toEmail)
     {
@@ -36,10 +37,12 @@ public class EmailService(IOptions<EmailSettings> settings) : IEmailService
             mailMessage.IsBodyHtml = true;
             await smtpClient.SendMailAsync(mailMessage);
 
+            logger.LogInformation("Password reset link sent successfully to {Email}", toEmail);
             return ServiceResult.Success(HttpStatusCode.OK);
         }
         catch (Exception ex)
         {
+            logger.LogError(ex, "Error sending password reset link to {Email}", toEmail);
             return ServiceResult.Failure($"Email gönderilirken hata oluştu: {ex.Message}", HttpStatusCode.InternalServerError);
         }
     }
@@ -73,10 +76,48 @@ public class EmailService(IOptions<EmailSettings> settings) : IEmailService
             mailMessage.IsBodyHtml = true;
             await smtpClient.SendMailAsync(mailMessage);
 
+            logger.LogInformation("New password sent successfully to {Email}", toEmail);
             return ServiceResult.Success(HttpStatusCode.OK);
         }
         catch (Exception ex)
         {
+            logger.LogError(ex, "Error sending new password to {Email}", toEmail);
+            return ServiceResult.Failure($"Email gönderilirken hata oluştu: {ex.Message}", HttpStatusCode.InternalServerError);
+        }
+    }
+    public async Task<ServiceResult> SendEmailConfirmationLinkAsync(string link, string toEmail)
+    {
+        try
+        {
+            SmtpClient smtpClient = new()
+            {
+                Host = settings.Value.Host!,
+                DeliveryMethod = SmtpDeliveryMethod.Network,
+                UseDefaultCredentials = false,
+                Port = 587,
+                Credentials = new NetworkCredential(settings.Value.Email, settings.Value.Password),
+                EnableSsl = true
+            };
+
+            MailMessage mailMessage = new()
+            {
+                From = new MailAddress(settings.Value.Email!)
+            };
+            mailMessage.To.Add(toEmail);
+
+            mailMessage.Subject = "WordMaster | Email Doğrulama";
+            mailMessage.Body = $@"
+                        <h4>Email adresinizi doğrulamak için aşağıdaki linke tıklayınız.</h4>
+                        <p><a href='{link}'>Email Doğrulama Linki</a><p/>";
+            mailMessage.IsBodyHtml = true;
+            await smtpClient.SendMailAsync(mailMessage);
+
+            logger.LogInformation("Email confirmation link sent successfully to {Email}", toEmail);
+            return ServiceResult.Success(HttpStatusCode.OK);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error sending email confirmation link to {Email}", toEmail);
             return ServiceResult.Failure($"Email gönderilirken hata oluştu: {ex.Message}", HttpStatusCode.InternalServerError);
         }
     }

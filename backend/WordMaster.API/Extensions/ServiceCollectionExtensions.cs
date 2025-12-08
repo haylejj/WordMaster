@@ -233,6 +233,7 @@ public static class ServiceCollectionExtensions
         // jwt için IdentityCore kullanıyoruz, AddIdentity değil.Çünkü cookie tabanlı auth kullanmıyoruz.
         services.AddIdentityCore<AppUser>(options =>
         {
+            options.SignIn.RequireConfirmedEmail = true;
             options.User.RequireUniqueEmail = true;
             options.Password.RequireDigit = true;
             options.Password.RequireLowercase = true;

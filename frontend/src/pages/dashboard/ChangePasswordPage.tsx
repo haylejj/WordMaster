@@ -6,6 +6,7 @@ import { Key, KeyRound, Lock, ShieldCheck, Save, Loader2, AlertCircle, CheckCirc
 import { changePasswordSchema, type ChangePasswordRequest } from "@/types/auth";
 import { authService } from "@/services/auth.service";
 import { cn, getErrorMessage } from "@/lib/utils";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const passwordRequirements = [
   { id: "length", label: "En az 6 karakter", test: (pwd: string) => pwd.length >= 6 },
@@ -97,18 +98,24 @@ export default function ChangePasswordPage() {
         <form onSubmit={handleSubmit(onSubmit)} className="p-8 space-y-5">
           {/* Success Message */}
           {successMessage && (
-            <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl text-green-700">
-              <CheckCircle size={20} />
-              <span className="text-sm font-medium">{successMessage}</span>
-            </div>
+            <Alert variant="success">
+              <CheckCircle className="h-4 w-4" />
+              <AlertTitle>Başarılı</AlertTitle>
+              <AlertDescription>
+                {successMessage}
+              </AlertDescription>
+            </Alert>
           )}
 
           {/* Error Message */}
           {errorMessage && (
-            <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700">
-              <AlertCircle size={20} />
-              <span className="text-sm font-medium">{errorMessage}</span>
-            </div>
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Hata</AlertTitle>
+              <AlertDescription>
+                {errorMessage}
+              </AlertDescription>
+            </Alert>
           )}
 
           {/* Old Password */}
