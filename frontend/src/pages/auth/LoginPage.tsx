@@ -7,7 +7,8 @@ import type { LoginRequest } from "@/types/auth";
 import { authService } from "@/services/auth.service";
 import { cn, getErrorMessage } from "@/lib/utils";
 import AuthLayout from "@/layouts/AuthLayout";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 
 export default function LoginPage() {
@@ -58,9 +59,13 @@ export default function LoginPage() {
     <AuthLayout title="Giriş Yap">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative text-sm" role="alert">
-            <span className="block sm:inline">{error}</span>
-          </div>
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Hata</AlertTitle>
+            <AlertDescription>
+              {error}
+            </AlertDescription>
+          </Alert>
         )}
 
         <div className="space-y-1">

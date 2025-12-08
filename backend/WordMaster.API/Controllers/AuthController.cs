@@ -156,6 +156,18 @@ public class AuthController(ILoginService loginService, IRegisterService registe
         return CreateResult(result);
     }
     /// <summary>
+    /// Email doğrulama işlemini gerçekleştirir.
+    /// </summary>
+    /// <param name="userId">Şifrelenmiş kullanıcı ID'si.</param>
+    /// <param name="token">Email doğrulama token'ı.</param>
+    /// <returns>Doğrulama sonucunu döner.</returns>
+    [HttpGet("confirm-email")]
+    public async Task<IActionResult> ConfirmEmail([FromQuery] string userId, [FromQuery] string token)
+    {
+        ServiceResult result = await registerService.ConfirmEmailAsync(userId, token);
+        return CreateResult(result);
+    }
+    /// <summary>
     /// Giriş yapmış kullanıcının şifresini değiştirir.
     /// </summary>
     /// <param name="request">Eski ve yeni şifre bilgilerini içeren istek.</param>

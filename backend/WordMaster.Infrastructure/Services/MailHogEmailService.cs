@@ -88,5 +88,42 @@ public class MailHogEmailService(IOptions<MailHogSettings> settings, ILogger<Mai
             return ServiceResult.Failure($"Email gönderilirken hata oluştu: {ex.Message}", HttpStatusCode.InternalServerError);
         }
     }
+
+
+    public async Task<ServiceResult> SendEmailConfirmationLinkAsync(string link, string toEmail)
+    {
+        try
+        {
+            SmtpClient smtpClient = new()
+            {
+                Host = settings.Value.Host,
+                DeliveryMethod = SmtpDeliveryMethod.Network,
+                UseDefaultCredentials = true,
+                Port = settings.Value.Port,
+                EnableSsl = settings.Value.EnableSsl
+            };
+
+            MailMessage mailMessage = new()
+            {
+                From = new MailAddress(settings.Value.FromEmail)
+            };
+            mailMessage.To.Add(toEmail);
+
+            mailMessage.Subject = "WordMaster | Email Doğrulama";
+            mailMessage.Body = $@"
+                        <h4>Email adresinizi doğrulamak için aşağıdaki linke tıklayınız.</h4>
+                        <p><a href='{link}'>Email Doğrulama Linki</a><p/>";
+            mailMessage.IsBodyHtml = true;
+            await smtpClient.SendMailAsync(mailMessage);
+
+            logger.LogInformation("Email confirmation link sent successfully to {Email}", toEmail);
+            return ServiceResult.Success(HttpStatusCode.OK);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error sending email confirmation link to {Email}", toEmail);
+            return ServiceResult.Failure($"Email gönderilirken hata oluştu: {ex.Message}", HttpStatusCode.InternalServerError);
+        }
+    }
 }
 

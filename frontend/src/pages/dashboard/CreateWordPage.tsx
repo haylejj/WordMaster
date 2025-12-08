@@ -4,8 +4,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { createWordSchema } from "@/types/word";
 import type { CreateWordRequest } from "@/types/word";
 import { wordService } from "@/services/word.service";
-import { Plus, FileDown } from "lucide-react";
+import { Plus, FileDown, AlertCircle, CheckCircle } from "lucide-react";
 import { cn, getErrorMessage } from "@/lib/utils";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 import ImportCsvModal from "@/components/dashboard/ImportCsvModal";
 
@@ -91,14 +92,22 @@ export default function CreateWordPage() {
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                     {error && (
-                        <div className="bg-red-100 text-red-700 p-3 rounded text-sm">
-                            {error}
-                        </div>
+                        <Alert variant="destructive">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertTitle>Hata</AlertTitle>
+                            <AlertDescription>
+                                {error}
+                            </AlertDescription>
+                        </Alert>
                     )}
                     {success && (
-                        <div className="bg-green-100 text-green-700 p-3 rounded text-sm">
-                            {success}
-                        </div>
+                        <Alert variant="success">
+                            <CheckCircle className="h-4 w-4" />
+                            <AlertTitle>Başarılı</AlertTitle>
+                            <AlertDescription>
+                                {success}
+                            </AlertDescription>
+                        </Alert>
                     )}
 
                     <div className="space-y-1">
@@ -155,4 +164,3 @@ export default function CreateWordPage() {
         </div>
     );
 }
-

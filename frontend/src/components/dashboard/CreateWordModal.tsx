@@ -4,8 +4,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { createWordSchema } from "@/types/word";
 import type { CreateWordRequest } from "@/types/word";
 import { wordService } from "@/services/word.service";
-import { X } from "lucide-react";
+import { X, AlertCircle } from "lucide-react";
 import { cn, getErrorMessage } from "@/lib/utils";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface CreateWordModalProps {
   isOpen: boolean;
@@ -65,9 +66,13 @@ export default function CreateWordModal({ isOpen, onClose, onSuccess }: CreateWo
 
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
           {error && (
-            <div className="bg-red-100 text-red-700 p-3 rounded text-sm">
-              {error}
-            </div>
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Hata</AlertTitle>
+              <AlertDescription>
+                {error}
+              </AlertDescription>
+            </Alert>
           )}
 
           <div className="space-y-1">
@@ -127,4 +132,3 @@ export default function CreateWordModal({ isOpen, onClose, onSuccess }: CreateWo
     </div>
   );
 }
-
