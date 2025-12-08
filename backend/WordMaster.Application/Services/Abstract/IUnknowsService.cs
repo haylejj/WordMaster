@@ -9,7 +9,7 @@ namespace WordMaster.Application.Services.Abstract;
 public interface IUnknowsService
 {
     Task<ServiceResult<bool>> ToggleUnknowsAsync(ToggleUnknowsRequest request, Guid userId);
-    Task<ServiceResult<PracticeWordResponse>> GetRandomWordFromUnknowsAsync(Guid userId);
+    Task<ServiceResult<PracticeWordResponse>> GetRandomWordFromUnknowsAsync(Guid userId, long? excludeWordId = null);
     Task<ServiceResult<bool>> CheckTranslationAndUpdateAsync(Guid userId, CheckTranslationRequest request);
     Task<ServiceResult<PagedResult<UnknowsWithWordResponse>>> GetPagedUnknowsAsync(Guid userId, string? search, int page, int pageSize);
 }

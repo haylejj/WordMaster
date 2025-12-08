@@ -51,10 +51,10 @@ public class UnknowsController(IUnknowsService unknowsService) : BaseController
     /// <returns>Kelime detayları (WordResponse).</returns>
     [HttpGet("practice/random")]
     [RequirePermission("Public", "Unknowns", "GetRandomWord", "GET", "Rastgele bilinmeyen kelime getir")]
-    public async Task<IActionResult> GetRandomWord()
+    public async Task<IActionResult> GetRandomWord([FromQuery] int? excludeWordId)
     {
         Guid userId = User.GetUserId();
-        ServiceResult<PracticeWordResponse> result = await unknowsService.GetRandomWordFromUnknowsAsync(userId);
+        ServiceResult<PracticeWordResponse> result = await unknowsService.GetRandomWordFromUnknowsAsync(userId, excludeWordId);
         return CreateResult(result);
     }
 

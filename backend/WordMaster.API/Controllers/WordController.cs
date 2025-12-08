@@ -135,10 +135,10 @@ public class WordController(IWordService wordService, IExcelService excelService
     /// <returns>Kelime detayları (WordResponse).</returns>
     [HttpGet("practice/random")]
     [RequirePermission("Public", "Words", "GetRandomWord", "GET", "Rastgele kelime getir")]
-    public async Task<IActionResult> GetRandomWord()
+    public async Task<IActionResult> GetRandomWord([FromQuery] int? excludeWordId)
     {
         Guid userId = User.GetUserId();
-        ServiceResult<PracticeWordResponse> result = await wordService.GetRandomWordAsync(userId);
+        ServiceResult<PracticeWordResponse> result = await wordService.GetRandomWordAsync(userId, excludeWordId);
         return CreateResult(result);
     }
 

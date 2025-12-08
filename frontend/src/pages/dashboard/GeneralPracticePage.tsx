@@ -26,12 +26,13 @@ export default function GeneralPracticePage() {
         setError(null);
         try {
             let result;
+            const excludeId = currentWord?.id;
             if (type === "favorites") {
-                result = await wordService.getPracticeRandomFavorite();
+                result = await wordService.getPracticeRandomFavorite(excludeId);
             } else if (type === "unknowns") {
-                result = await wordService.getPracticeRandomUnknown();
+                result = await wordService.getPracticeRandomUnknown(excludeId);
             } else {
-                result = await wordService.getPracticeRandomWord();
+                result = await wordService.getPracticeRandomWord(excludeId);
             }
 
             if (result.isSuccess && result.data) {
@@ -59,8 +60,8 @@ export default function GeneralPracticePage() {
         if (!currentWord) return false;
 
         // Local check
-        const normalizedAnswer = answer.trim().toLocaleLowerCase("tr-TR");
-        const normalizedCorrect = currentWord.turkishWord.trim().toLocaleLowerCase("tr-TR");
+        const normalizedAnswer = answer.replace(/\s+/g, ' ').trim().toLocaleLowerCase("tr-TR");
+        const normalizedCorrect = currentWord.turkishWord.replace(/\s+/g, ' ').trim().toLocaleLowerCase("tr-TR");
         const isCorrect = normalizedAnswer === normalizedCorrect;
 
         setResults(prev => [...prev, { word: currentWord, isCorrect, userAnswer: answer }]);

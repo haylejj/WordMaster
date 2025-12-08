@@ -44,7 +44,19 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
 
         return ServiceResult<bool>.Success(false, HttpStatusCode.OK);
     }
-    public async Task<ServiceResult<PracticeWordResponse>> GetRandomWordFromFavoritesAsync(Guid userId)
+    /// <summary>
+    /// Kullanıcının favorilerinden rastgele bir pratik kelimesi getirir.
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID'si.</param>
+    /// <param name="excludeWordId">Varsa, bu ID'ye sahip kelime hariç tutulur (Ardışık tekrarı önlemek için).</param>
+    /// <returns>Rastgele seçilen favori kelime.</returns>
+    /// <remarks>
+    /// Performans Optimizasyonu:
+    /// Rastgele seçim sırasında bellekte yeni bir liste oluşturmamak (allocation-free) için
+    /// LINQ Where() yerine indeks tabanlı seçim ve kaydırma (retry) mantığı kullanılmıştır.
+    /// Eğer rastgele seçilen indeks 'excludeWordId'ye denk gelirse, bir sonraki eleman seçilir.
+    /// </remarks>
+    public async Task<ServiceResult<PracticeWordResponse>> GetRandomWordFromFavoritesAsync(Guid userId, long? excludeWordId = null)
     {
         string cacheKey = CacheKeys.Favorites(userId);
         List<PracticeFavoriteKey>? cachedFavorites = await cacheService.GetAsync<List<PracticeFavoriteKey>>(cacheKey);
@@ -77,6 +89,12 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
 
         int index = Random.Shared.Next(0, practiceFavorites.Count);
         PracticeFavoriteKey randomFavorite = practiceFavorites[index];
+
+        if (excludeWordId.HasValue && randomFavorite.Id == excludeWordId.Value && practiceFavorites.Count > 1)
+        {
+            index = (index + 1) % practiceFavorites.Count;
+            randomFavorite = practiceFavorites[index];
+        }
 
         PracticeWordResponse response = new()
         {

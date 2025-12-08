@@ -16,7 +16,19 @@ namespace WordMaster.Application.Services.Concrete;
 
 public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork unitOfWork, IWordService wordService, ICacheService cacheService) : IUnknowsService
 {
-    public async Task<ServiceResult<PracticeWordResponse>> GetRandomWordFromUnknowsAsync(Guid userId)
+    /// <summary>
+    /// Kullanıcının bilinmeyen kelimelerinden rastgele bir pratik kelimesi getirir.
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID'si.</param>
+    /// <param name="excludeWordId">Varsa, bu ID'ye sahip kelime hariç tutulur (Ardışık tekrarı önlemek için).</param>
+    /// <returns>Rastgele seçilen bilinmeyen kelime.</returns>
+    /// <remarks>
+    /// Performans Optimizasyonu:
+    /// Rastgele seçim sırasında bellekte yeni bir liste oluşturmamak (allocation-free) için
+    /// LINQ Where() yerine indeks tabanlı seçim ve kaydırma (retry) mantığı kullanılmıştır.
+    /// Eğer rastgele seçilen indeks 'excludeWordId'ye denk gelirse, bir sonraki eleman seçilir.
+    /// </remarks>
+    public async Task<ServiceResult<PracticeWordResponse>> GetRandomWordFromUnknowsAsync(Guid userId, long? excludeWordId = null)
     {
         string cacheKey = CacheKeys.Unknows(userId);
         List<PracticeUnknowsKey>? cachedUnknows = await cacheService.GetAsync<List<PracticeUnknowsKey>>(cacheKey);
@@ -49,6 +61,12 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
 
         int index = Random.Shared.Next(0, practiceUnknows.Count);
         PracticeUnknowsKey randomUnknow = practiceUnknows[index];
+
+        if (excludeWordId.HasValue && randomUnknow.Id == excludeWordId.Value && practiceUnknows.Count > 1)
+        {
+            index = (index + 1) % practiceUnknows.Count;
+            randomUnknow = practiceUnknows[index];
+        }
 
         PracticeWordResponse response = new()
         {

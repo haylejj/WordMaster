@@ -176,7 +176,19 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
 
         return ServiceResult<bool>.Success(existingWord != null, HttpStatusCode.OK);
     }
-    public async Task<ServiceResult<PracticeWordResponse>> GetRandomWordAsync(Guid userId)
+    /// <summary>
+    /// Kullanıcı için rastgele bir pratik kelimesi getirir.
+    /// </summary>
+    /// <param name="userId">Kullanıcı ID'si.</param>
+    /// <param name="excludeWordId">Varsa, bu ID'ye sahip kelime hariç tutulur (Ardışık tekrarı önlemek için).</param>
+    /// <returns>Rastgele seçilen kelime.</returns>
+    /// <remarks>
+    /// Performans Optimizasyonu:
+    /// Rastgele seçim sırasında bellekte yeni bir liste oluşturmamak (allocation-free) için
+    /// LINQ Where() yerine indeks tabanlı seçim ve kaydırma (retry) mantığı kullanılmıştır.
+    /// Eğer rastgele seçilen indeks 'excludeWordId'ye denk gelirse, bir sonraki eleman seçilir.
+    /// </remarks>
+    public async Task<ServiceResult<PracticeWordResponse>> GetRandomWordAsync(Guid userId, long? excludeWordId = null)
     {
         string cacheKey = CacheKeys.Words(userId);
         List<PracticeWordKey>? cachedWords = await cacheService.GetAsync<List<PracticeWordKey>>(cacheKey);
@@ -209,6 +221,14 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
 
         int index = Random.Shared.Next(0, practiceWords.Count);
         PracticeWordKey randomWord = practiceWords[index];
+
+        if (excludeWordId.HasValue && randomWord.Id == excludeWordId.Value && practiceWords.Count > 1)
+        {
+            // If we hit the excluded word, pick the next one circular.
+            // This avoids creating a new list or iterating with Where.
+            index = (index + 1) % practiceWords.Count;
+            randomWord = practiceWords[index];
+        }
 
         PracticeWordResponse response = new()
         {

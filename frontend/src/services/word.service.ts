@@ -123,8 +123,9 @@ export const wordService = {
     return response.data;
   },
 
-  getPracticeRandomWord: async () => {
-    const response = await api.get<ServiceResultWithData<PracticeWordResponse>>("/words/practice/random");
+  getPracticeRandomWord: async (excludeWordId?: number) => {
+    const params = excludeWordId ? `?excludeWordId=${excludeWordId}` : "";
+    const response = await api.get<ServiceResultWithData<PracticeWordResponse>>(`/words/practice/random${params}`);
     return response.data;
   },
 
@@ -133,8 +134,9 @@ export const wordService = {
     return response.data;
   },
 
-  getPracticeRandomFavorite: async () => {
-    const response = await api.get<ServiceResultWithData<PracticeWordResponse>>("/favorites/practice/random");
+  getPracticeRandomFavorite: async (excludeWordId?: number) => {
+    const params = excludeWordId ? `?excludeWordId=${excludeWordId}` : "";
+    const response = await api.get<ServiceResultWithData<PracticeWordResponse>>(`/favorites/practice/random${params}`);
     return response.data;
   },
 
@@ -143,8 +145,9 @@ export const wordService = {
     return response.data;
   },
 
-  getPracticeRandomUnknown: async () => {
-    const response = await api.get<ServiceResultWithData<PracticeWordResponse>>("/unknows/practice/random");
+  getPracticeRandomUnknown: async (excludeWordId?: number) => {
+    const params = excludeWordId ? `?excludeWordId=${excludeWordId}` : "";
+    const response = await api.get<ServiceResultWithData<PracticeWordResponse>>(`/unknows/practice/random${params}`);
     return response.data;
   },
 

@@ -54,10 +54,10 @@ public class FavoriteController(IFavoriteService favoriteService) : BaseControll
     /// <returns>Kelime detayları (WordResponse).</returns>
     [HttpGet("practice/random")]
     [RequirePermission("Public", "Favorites", "GetRandomWord", "GET", "Rastgele favori kelime getir")]
-    public async Task<IActionResult> GetRandomWord()
+    public async Task<IActionResult> GetRandomWord([FromQuery] int? excludeWordId)
     {
         Guid userId = User.GetUserId();
-        ServiceResult<PracticeWordResponse> result = await favoriteService.GetRandomWordFromFavoritesAsync(userId);
+        ServiceResult<PracticeWordResponse> result = await favoriteService.GetRandomWordFromFavoritesAsync(userId, excludeWordId);
         return CreateResult(result);
     }
 

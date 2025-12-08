@@ -13,7 +13,7 @@ public interface IWordService
     Task<ServiceResult<WordResponse>> UpdateWordAsync(long wordId, UpdateWordRequest request, Guid userId);
     Task<ServiceResult> DeleteWordAsync(long wordId, Guid userId);
     Task<ServiceResult<bool>> IsWordDuplicateAsync(string englishWord, Guid userId);
-    Task<ServiceResult<PracticeWordResponse>> GetRandomWordAsync(Guid userId);
+    Task<ServiceResult<PracticeWordResponse>> GetRandomWordAsync(Guid userId, long? excludeWordId = null);
     Task<ServiceResult<bool>> CheckTranslationAndUpdateAsync(Guid userId, CheckTranslationRequest request);
     Task<ServiceResult<bool>> BulkUpdateStatsAsync(Guid userId, BulkUpdateStatsRequest request);
     Task<ServiceResult<PagedResult<WordResponse>>> GetPagedWordsAsync(Guid userId, string? search, int page, int pageSize);

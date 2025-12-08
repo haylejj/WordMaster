@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Check, HelpCircle, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -27,11 +27,17 @@ export function PracticeCard({
     const [answer, setAnswer] = useState("");
     const [status, setStatus] = useState<"idle" | "correct" | "wrong" | "unknown">("idle");
     const [isLoading, setIsLoading] = useState(false);
+    const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Reset state when word changes
     useEffect(() => {
+        if (timerRef.current) clearTimeout(timerRef.current);
         setAnswer("");
         setStatus("idle");
+
+        return () => {
+            if (timerRef.current) clearTimeout(timerRef.current);
+        };
     }, [englishWord]);
 
     const handleCheck = async () => {
@@ -41,6 +47,9 @@ export function PracticeCard({
             const isCorrect = await onCheck(answer);
             if (isCorrect) {
                 setStatus("correct");
+                timerRef.current = setTimeout(() => {
+                    onNext();
+                }, 2000);
             } else {
                 setStatus("wrong");
             }
@@ -139,7 +148,10 @@ export function PracticeCard({
                     </>
                 ) : (
                     <button
-                        onClick={onNext}
+                        onClick={() => {
+                            if (timerRef.current) clearTimeout(timerRef.current);
+                            onNext();
+                        }}
                         className="flex items-center px-8 py-3 bg-gray-900 text-white rounded-lg font-bold hover:bg-gray-800 transition-colors"
                     >
                         <ArrowRight size={20} className="mr-2" />

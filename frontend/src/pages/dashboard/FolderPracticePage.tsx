@@ -49,8 +49,8 @@ export default function FolderPracticePage() {
         const currentWord = words[currentIndex];
 
         // Local check
-        const normalizedAnswer = answer.trim().toLocaleLowerCase("tr-TR");
-        const normalizedCorrect = (currentWord.turkishWord || "").trim().toLocaleLowerCase("tr-TR");
+        const normalizedAnswer = answer.replace(/\s+/g, ' ').trim().toLocaleLowerCase("tr-TR");
+        const normalizedCorrect = (currentWord.turkishWord || "").replace(/\s+/g, ' ').trim().toLocaleLowerCase("tr-TR");
         const isCorrect = normalizedAnswer === normalizedCorrect;
 
         // If 'answer' is empty string, it means "I don't know" button was clicked

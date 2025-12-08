@@ -284,4 +284,17 @@ Uygulama genelinde ve özellikle pratik modüllerinde (rastgele kelime seçimi v
 
 ---
 
+### 10. Memory-Efficient (Allocation-Free) Rastgele Kelime Seçimi
+Pratik modüllerinde "Sıradaki Kelime" özelliği için kullanılan rastgele kelime seçim algoritması optimize edilmiştir.
+*   **Sorun**:
+    1.  **Ardışık Tekrar**: Özellikle az sayıda kelime içeren listelerde (örneğin 5 bilinmeyen kelime) pratik yaparken, rastgele seçim sonucunda aynı kelimenin arka arkaya (consecutive) gelmesi kullanıcı deneyimini olumsuz etkiliyordu.
+    2.  **Bellek Yönetimi**: Bu durumu engellemek için yapılan geleneksel `Where(x => x.Id != excludeId).ToList()` filtrelemesi, her istekte bellekte yeni bir liste (kopya) oluşturarak Memory Allocation'a neden oluyordu.
+*   **Çözüm**: "Allocation-Free" yaklaşımı ile hem tekrar engellendi hem de performans artırıldı:
+    1.  Parametre olarak bir önceki kelimenin ID'si (`excludeWordId`) alınır.
+    2.  Orijinal listeden rastgele bir indeks seçilir.
+    3.  Eğer seçilen kelime, hariç tutulması gereken kelime ise, **filtreleme yapıp yeni liste oluşturmak yerine**, mevcut listedeki **bir sonraki eleman** (`(index + 1) % Count`) seçilir.
+*   **Sonuç**: Bellekte gereksiz liste kopyaları oluşturulmadan O(1) bellek karmaşıklığı ile çalışır ve aynı kelimenin arka arkaya gelmesi %100 engellenir (listede 1'den fazla kelime varsa).
+
+---
+
 *WordMaster Backend Team*
