@@ -65,7 +65,7 @@ public class WordRepository(AppDbContext context) : GenericRepository<Word>(cont
 
         int totalCount = await query.CountAsync();
         List<Word> words = await query
-            .OrderBy(x => x.CreatedTime)
+            .OrderByDescending(x => x.CreatedTime)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .AsNoTracking()

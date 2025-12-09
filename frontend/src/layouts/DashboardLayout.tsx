@@ -154,7 +154,6 @@ export default function DashboardLayout() {
               className="flex items-center space-x-2 text-sm font-medium text-gray-300 hover:text-white transition-colors focus:outline-none"
             >
               <User size={20} />
-              <span>HAYLEJJ</span> {/* Mock user name */}
               <ChevronDown size={16} />
             </button>
 
