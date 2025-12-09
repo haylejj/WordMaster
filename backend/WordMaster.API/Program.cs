@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 using WordMaster.API.Extensions;
 using WordMaster.API.Filters;
 using WordMaster.API.Middlewares;
+using WordMaster.Infrastructure.BackgroundServices;
 using WordMaster.Infrastructure.EfCore;
 using WordMaster.Infrastructure.Extensions;
 
@@ -66,6 +67,9 @@ builder.Services.AddSwaggerConfigurations();
 
 // Rate Limiting
 builder.Services.AddRateLimitingConfigurations();
+
+// Background Jobs
+builder.Services.AddHostedService<UserCleanupService>();
 
 // CORS Politikası
 builder.Services.AddCors(options =>

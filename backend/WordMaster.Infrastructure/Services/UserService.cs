@@ -209,12 +209,14 @@ public class UserService(
     {
         if (string.IsNullOrEmpty(request.Id))
         {
+            logger.LogWarning("User update failed. User ID is missing.");
             return ServiceResult.Failure("Kullanıcı ID'si zorunludur.", HttpStatusCode.BadRequest);
         }
 
         AppUser? user = await userManager.FindByIdAsync(request.Id);
         if (user == null)
         {
+            logger.LogWarning("User update failed. User not found: {UserId}", request.Id);
             return ServiceResult.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound);
         }
 
@@ -244,13 +246,19 @@ public class UserService(
         AppUser? user = await userManager.FindByIdAsync(id);
         if (user == null)
         {
+            logger.LogWarning("User deletion failed. User not found: {UserId}", id);
             return ServiceResult.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound);
         }
 
         IdentityResult result = await userManager.DeleteAsync(user);
-        return !result.Succeeded
-            ? ServiceResult.Failure("Kullanıcı silinirken bir hata oluştu.", HttpStatusCode.InternalServerError)
-            : ServiceResult.Success(HttpStatusCode.NoContent);
+        if (!result.Succeeded)
+        {
+            logger.LogError("User deletion failed for {UserId}. Changes not succeeded.", id);
+            return ServiceResult.Failure("Kullanıcı silinirken bir hata oluştu.", HttpStatusCode.InternalServerError);
+        }
+
+        logger.LogInformation("User deleted successfully: {UserId}", id);
+        return ServiceResult.Success(HttpStatusCode.NoContent);
     }
 
     /// <summary>
@@ -304,7 +312,7 @@ public class UserService(
             await userManager.UpdateSecurityStampAsync(user);
             await cacheService.RemoveAsync($"security_stamp:{user.Id}");
 
-            logger.LogInformation("Admin reset password successfully for user {UserId}", id);
+            logger.LogInformation("Admin reset password successfully for user {UserId}. New password email sent.", id);
             return ServiceResult<string>.Success(newPassword, HttpStatusCode.OK);
         }
         catch (Exception ex)

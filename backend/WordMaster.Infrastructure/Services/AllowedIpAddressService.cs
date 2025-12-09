@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Net;
+using WordMaster.Application.Constants;
 using WordMaster.Application.Persistence;
 using WordMaster.Application.Persistence.Repositories;
 using WordMaster.Application.Requests.AllowedIpAddress;
@@ -10,15 +12,12 @@ using WordMaster.Domain.Results;
 
 namespace WordMaster.Infrastructure.Services;
 
-public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> repository, IUnitOfWork unitOfWork, ICacheService cacheService) : IAllowedIpAddressService
+public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> repository, IUnitOfWork unitOfWork, ICacheService cacheService, ILogger<AllowedIpAddressService> logger) : IAllowedIpAddressService
 {
-    private const string AllowedIpAddressesCacheKey = "allowedipaddresses:list";
-    private const string AllowedIpAddressesActiveCacheKey = "allowedipaddresses:active";
-    private static readonly TimeSpan CacheExpiration = TimeSpan.FromMinutes(10);
 
     public async Task<ServiceResult<List<AllowedIpAddressResponse>>> GetAllAsync()
     {
-        List<AllowedIpAddressResponse>? cached = await cacheService.GetAsync<List<AllowedIpAddressResponse>>(AllowedIpAddressesCacheKey);
+        List<AllowedIpAddressResponse>? cached = await cacheService.GetAsync<List<AllowedIpAddressResponse>>(CacheKeys.AllowedIpAddressesList);
         if (cached != null)
         {
             return ServiceResult<List<AllowedIpAddressResponse>>.Success(cached, HttpStatusCode.OK);
@@ -38,7 +37,7 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
             IsActive = x.IsActive
         }).ToList();
 
-        await cacheService.SetAsync(AllowedIpAddressesCacheKey, viewModels, CacheExpiration);
+        await cacheService.SetAsync(CacheKeys.AllowedIpAddressesList, viewModels, CacheDurations.Normal);
         return ServiceResult<List<AllowedIpAddressResponse>>.Success(viewModels, HttpStatusCode.OK);
     }
     public async Task<ServiceResult<AllowedIpAddressResponse>> GetByIdAsync(int id)
@@ -46,6 +45,7 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
         AllowedIpAddress? entity = await repository.GetByIdAsync(id);
         if (entity == null)
         {
+            logger.LogWarning("Allowed IP address not found with ID: {Id}", id);
             return ServiceResult<AllowedIpAddressResponse>.Failure("IP adresi bulunamadı.", HttpStatusCode.NotFound);
         }
 
@@ -67,6 +67,7 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
 
         if (existing != null)
         {
+            logger.LogWarning("Allowed IP address creation failed. IP already exists: {IpAddress}", request.IpAddress);
             return ServiceResult.Failure("Bu IP adresi zaten kayıtlı.", HttpStatusCode.Conflict);
         }
 
@@ -81,9 +82,10 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
         await repository.AddAsync(entity);
         await unitOfWork.CommitAsync();
 
-        await cacheService.RemoveAsync(AllowedIpAddressesCacheKey);
-        await cacheService.RemoveAsync(AllowedIpAddressesActiveCacheKey);
+        await cacheService.RemoveAsync(CacheKeys.AllowedIpAddressesList);
+        await cacheService.RemoveAsync(CacheKeys.AllowedIpAddressesActive);
 
+        logger.LogInformation("Allowed IP address created successfully: {IpAddress}", request.IpAddress);
         return ServiceResult.SuccessAsCreated();
     }
     public async Task<ServiceResult> UpdateAsync(AllowedIpAddressUpdateRequest request)
@@ -91,6 +93,7 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
         AllowedIpAddress? entity = await repository.GetByIdAsTrackingAsync(request.Id);
         if (entity == null)
         {
+            logger.LogWarning("Allowed IP address update failed. ID not found: {Id}", request.Id);
             return ServiceResult.Failure("IP adresi bulunamadı.", HttpStatusCode.NotFound);
         }
 
@@ -102,6 +105,7 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
 
             if (existing != null)
             {
+                logger.LogWarning("Allowed IP address update failed. New IP already exists elsewhere: {IpAddress}", request.IpAddress);
                 return ServiceResult.Failure("Bu IP adresi başka bir kayıtta zaten mevcut.", HttpStatusCode.Conflict);
             }
         }
@@ -113,9 +117,10 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
         repository.Update(entity);
         await unitOfWork.CommitAsync();
 
-        await cacheService.RemoveAsync(AllowedIpAddressesCacheKey);
-        await cacheService.RemoveAsync(AllowedIpAddressesActiveCacheKey);
+        await cacheService.RemoveAsync(CacheKeys.AllowedIpAddressesList);
+        await cacheService.RemoveAsync(CacheKeys.AllowedIpAddressesActive);
 
+        logger.LogInformation("Allowed IP address updated successfully. ID: {Id}", request.Id);
         return ServiceResult.Success(HttpStatusCode.NoContent);
     }
     public async Task<ServiceResult> DeleteAsync(int id)
@@ -123,15 +128,17 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
         AllowedIpAddress? entity = await repository.GetByIdAsTrackingAsync(id);
         if (entity == null)
         {
+            logger.LogWarning("Allowed IP address deletion failed. ID not found: {Id}", id);
             return ServiceResult.Failure("IP adresi bulunamadı.", HttpStatusCode.NotFound);
         }
 
         repository.Remove(entity);
         await unitOfWork.CommitAsync();
 
-        await cacheService.RemoveAsync(AllowedIpAddressesCacheKey);
-        await cacheService.RemoveAsync(AllowedIpAddressesActiveCacheKey);
+        await cacheService.RemoveAsync(CacheKeys.AllowedIpAddressesList);
+        await cacheService.RemoveAsync(CacheKeys.AllowedIpAddressesActive);
 
+        logger.LogInformation("Allowed IP address deleted successfully. ID: {Id}", id);
         return ServiceResult.Success(HttpStatusCode.NoContent);
     }
     public async Task<ServiceResult<bool>> IsIpAllowedAsync(string ipAddress)
@@ -142,7 +149,7 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
         }
 
         // Cache'den aktif IP'leri kontrol et
-        List<string>? cachedActiveIps = await cacheService.GetAsync<List<string>>(AllowedIpAddressesActiveCacheKey);
+        List<string>? cachedActiveIps = await cacheService.GetAsync<List<string>>(CacheKeys.AllowedIpAddressesActive);
         if (cachedActiveIps != null)
         {
             return ServiceResult<bool>.Success(cachedActiveIps.Contains(ipAddress), HttpStatusCode.OK);
@@ -155,7 +162,7 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
             .ToListAsync();
 
         // Cache'e kaydet
-        await cacheService.SetAsync(AllowedIpAddressesActiveCacheKey, activeIps, CacheExpiration);
+        await cacheService.SetAsync(CacheKeys.AllowedIpAddressesActive, activeIps, CacheDurations.Normal);
 
         return ServiceResult<bool>.Success(activeIps.Contains(ipAddress), HttpStatusCode.OK);
     }

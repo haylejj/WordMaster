@@ -414,6 +414,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
         Word? existingWord = await wordRepository.GetByIdAsync((int)wordId);
         if (existingWord == null)
         {
+            logger.LogWarning("Admin update failed. Word not found: {WordId}", wordId);
             return ServiceResult<AdminWordResponse>.Failure("Kelime bulunamadı.", HttpStatusCode.NotFound);
         }
 
@@ -438,6 +439,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
 
             if (isDuplicate)
             {
+                logger.LogWarning("Admin update failed. Duplicate word for user {UserId}: {EnglishWord}", existingWord.UserId, request.EnglishWord);
                 return ServiceResult<AdminWordResponse>.Failure("Bu kullanıcıda bu kelime zaten mevcut.", HttpStatusCode.Conflict);
             }
         }
@@ -471,6 +473,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
             CreatedTime = existingWord.CreatedTime
         };
 
+        logger.LogInformation("Admin update successful. Word ID: {WordId}", wordId);
         return ServiceResult<AdminWordResponse>.Success(response, HttpStatusCode.OK);
     }
     public async Task<ServiceResult> AdminDeleteWordAsync(long wordId)
@@ -478,6 +481,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
         Word? word = await wordRepository.GetByIdAsync((int)wordId);
         if (word == null)
         {
+            logger.LogWarning("Admin delete failed. Word not found: {WordId}", wordId);
             return ServiceResult.Failure("Kelime bulunamadı.", HttpStatusCode.NotFound);
         }
 
@@ -495,6 +499,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
             await cacheService.RemoveAsync(CacheKeys.Unknows(userId));
         }
 
+        logger.LogInformation("Admin delete successful. Word ID: {WordId}", wordId);
         return ServiceResult.Success(HttpStatusCode.NoContent);
     }
 }

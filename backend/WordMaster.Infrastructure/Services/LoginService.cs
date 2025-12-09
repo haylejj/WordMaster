@@ -236,9 +236,16 @@ public class LoginService(
         string passwordResetLink = $"{baseUrl}/ResetPassword?userId={encodedEncryptedUserId}&token={WebUtility.UrlEncode(token)}";
 
         ServiceResult emailResult = await emailService.SendResetPasswordLinkToEmailAsync(passwordResetLink, user.Email!);
-        return !emailResult.IsSuccess
-            ? ServiceResult.Failure("Şifre sıfırlama e-postası gönderilemedi.", HttpStatusCode.InternalServerError)
-            : ServiceResult.Success(HttpStatusCode.OK);
+
+        if (emailResult.IsSuccess)
+        {
+            logger.LogInformation("Password reset link sent successfully to {Email}", user.Email);
+            return ServiceResult.Success(HttpStatusCode.OK);
+        }
+        else
+        {
+            return ServiceResult.Failure("Şifre sıfırlama e-postası gönderilemedi.", HttpStatusCode.InternalServerError);
+        }
     }
 
     /// <summary>
