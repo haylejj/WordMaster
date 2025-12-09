@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Net;
 using WordMaster.Application.Persistence;
 using WordMaster.Application.Persistence.Repositories;
@@ -12,7 +13,7 @@ using WordMaster.Domain.Results;
 
 namespace WordMaster.Application.Services.Concrete;
 
-public class LogHistoryService(ILogHistoryRepository logHistoryRepository, IUnitOfWork unitOfWork) : ILogHistoryService
+public class LogHistoryService(ILogHistoryRepository logHistoryRepository, IUnitOfWork unitOfWork, ILogger<LogHistoryService> logger) : ILogHistoryService
 {
     public async Task RecordAsync(string? appUserId, string? email, string? ipAddress, bool isSuccessful, string source)
     {

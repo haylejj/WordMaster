@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
+using WordMaster.Application.Constants;
 using WordMaster.Application.Requests.Role;
 using WordMaster.Application.Responses.Role;
 using WordMaster.Application.Services.Abstract;
@@ -9,14 +11,12 @@ using WordMaster.Domain.Results;
 
 namespace WordMaster.Infrastructure.Services;
 
-public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> userManager, ICacheService cacheService) : IRoleService
+public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> userManager, ICacheService cacheService, ILogger<RoleService> logger) : IRoleService
 {
-    private const string RolesCacheKey = "roles:list";
-    private static readonly TimeSpan RolesCacheExpiration = TimeSpan.FromMinutes(10);
 
     public async Task<ServiceResult<List<RoleResponse>>> GetRoleListAsync()
     {
-        List<RoleResponse>? cachedRoles = await cacheService.GetAsync<List<RoleResponse>>(RolesCacheKey);
+        List<RoleResponse>? cachedRoles = await cacheService.GetAsync<List<RoleResponse>>(CacheKeys.RolesList);
         if (cachedRoles != null)
         {
             return ServiceResult<List<RoleResponse>>.Success(cachedRoles, HttpStatusCode.OK);
@@ -25,7 +25,7 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
         List<AppRole> roles = await roleManager.Roles.AsNoTracking().ToListAsync();
         List<RoleResponse> roleViewModel = roles.Select(x => new RoleResponse() { Id = x.Id.ToString(), Name = x.Name! }).ToList();
 
-        await cacheService.SetAsync(RolesCacheKey, roleViewModel, RolesCacheExpiration);
+        await cacheService.SetAsync(CacheKeys.RolesList, roleViewModel, CacheDurations.Normal);
         return ServiceResult<List<RoleResponse>>.Success(roleViewModel, HttpStatusCode.OK);
     }
     public async Task<ServiceResult> CreateRoleAsync(RoleCreateRequest request)
@@ -34,11 +34,13 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
 
         if (result.Succeeded)
         {
-            await cacheService.RemoveAsync(RolesCacheKey);
+            await cacheService.RemoveAsync(CacheKeys.RolesList);
+            logger.LogInformation("Role created successfully: {RoleName}", request.Name);
             return ServiceResult.SuccessAsCreated();
         }
 
         List<string> errors = result.Errors.Select(e => e.Description).ToList();
+        logger.LogWarning("Role creation failed for {RoleName}. Errors: {Errors}", request.Name, string.Join(", ", errors));
         return ServiceResult.Failure(errors, HttpStatusCode.BadRequest);
     }
     public async Task<ServiceResult<RoleUpdateResponse>> FindByIdReturnRoleUpdateViewModelAsync(string id)
@@ -56,6 +58,7 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
         AppRole? role = await roleManager.FindByIdAsync(request.Id);
         if (role == null)
         {
+            logger.LogWarning("Role update failed. Role not found: {Id}", request.Id);
             return ServiceResult.Failure("Rol bulunamadı.", HttpStatusCode.NotFound);
         }
         role.Name = request.Name;
@@ -63,11 +66,13 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
 
         if (result.Succeeded)
         {
-            await cacheService.RemoveAsync(RolesCacheKey);
+            await cacheService.RemoveAsync(CacheKeys.RolesList);
+            logger.LogInformation("Role updated successfully: {Id}", request.Id);
             return ServiceResult.Success(HttpStatusCode.NoContent);
         }
 
         List<string> errors = result.Errors.Select(e => e.Description).ToList();
+        logger.LogWarning("Role update failed for {Id}. Errors: {Errors}", request.Id, string.Join(", ", errors));
         return ServiceResult.Failure(errors, HttpStatusCode.BadRequest);
     }
     public async Task<ServiceResult> DeleteRoleAsync(string id)
@@ -75,6 +80,7 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
         AppRole? role = await roleManager.FindByIdAsync(id);
         if (role == null)
         {
+            logger.LogWarning("Role deletion failed. Role not found: {Id}", id);
             return ServiceResult.Failure("Rol bulunamadı.", HttpStatusCode.NotFound);
         }
 
@@ -82,11 +88,13 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
 
         if (result.Succeeded)
         {
-            await cacheService.RemoveAsync(RolesCacheKey);
+            await cacheService.RemoveAsync(CacheKeys.RolesList);
+            logger.LogInformation("Role deleted successfully: {Id}", id);
             return ServiceResult.Success(HttpStatusCode.NoContent);
         }
 
         List<string> errors = result.Errors.Select(e => e.Description).ToList();
+        logger.LogWarning("Role deletion failed for {Id}. Errors: {Errors}", id, string.Join(", ", errors));
         return ServiceResult.Failure(errors, HttpStatusCode.BadRequest);
     }
     public async Task<ServiceResult<List<AssignToRoleResponse>>> GetRoleByIdReturnAssignToRoleAsync(string id)
@@ -120,6 +128,7 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
         AppUser? user = await userManager.FindByIdAsync(request.UserId);
         if (user == null)
         {
+            logger.LogWarning("Role assignment failed. User not found: {UserId}", request.UserId);
             return ServiceResult.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound);
         }
 
@@ -132,10 +141,12 @@ public class RoleService(RoleManager<AppRole> roleManager, UserManager<AppUser> 
             if (role.Exist && !isInRole)
             {
                 await userManager.AddToRoleAsync(user, role.Name);
+                logger.LogInformation("Added role {RoleName} to user {UserId}", role.Name, request.UserId);
             }
             else if (!role.Exist && isInRole)
             {
                 await userManager.RemoveFromRoleAsync(user, role.Name);
+                logger.LogInformation("Removed role {RoleName} from user {UserId}", role.Name, request.UserId);
             }
         }
         return ServiceResult.Success(HttpStatusCode.NoContent);

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System.Reflection;
 using WordMaster.Domain.Entities;
 
@@ -35,6 +36,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             .WithMany(p => p.RolePermissions)
             .HasForeignKey(rp => rp.PermissionId);
 
+
+        modelBuilder.Entity<AppUser>()
+            .Property(x => x.CreatedDate)
+            .HasDefaultValueSql("SYSUTCDATETIME()");
+
+
         // Seed Roles
         modelBuilder.Entity<AppRole>().HasData(
             new AppRole { Id = Guid.Parse("995B39DB-6677-4542-8F7B-B584F514D88E"), Name = "admin", NormalizedName = "ADMIN", ConcurrencyStamp = "CDE3129C-856B-4E48-A35C-20E43CA37A6A" },
@@ -61,5 +68,19 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             }
         );
 
+    }
+
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        IEnumerable<EntityEntry<AppUser>> entries = ChangeTracker
+            .Entries<AppUser>()
+            .Where(e => e.State == EntityState.Modified);
+
+        foreach (EntityEntry<AppUser>? entry in entries)
+        {
+            entry.Entity.UpdatedDate = DateTime.UtcNow;
+        }
+
+        return base.SaveChangesAsync(cancellationToken);
     }
 }

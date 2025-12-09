@@ -46,4 +46,7 @@ public static class CacheKeys
     {
         return $"folder:{folderId}:user:{userId}:words";
     }
+    public static string AllowedIpAddressesList => "allowedipaddresses:list";
+    public static string AllowedIpAddressesActive => "allowedipaddresses:active";
+    public static string RolesList => "roles:list";
 }

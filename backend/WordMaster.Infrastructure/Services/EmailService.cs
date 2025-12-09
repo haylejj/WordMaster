@@ -37,7 +37,7 @@ public class EmailService(IOptions<EmailSettings> settings, ILogger<EmailService
             mailMessage.IsBodyHtml = true;
             await smtpClient.SendMailAsync(mailMessage);
 
-            logger.LogInformation("Password reset link sent successfully to {Email}", toEmail);
+            //logger.LogInformation("Password reset link sent successfully to {Email}", toEmail);
             return ServiceResult.Success(HttpStatusCode.OK);
         }
         catch (Exception ex)
@@ -76,7 +76,7 @@ public class EmailService(IOptions<EmailSettings> settings, ILogger<EmailService
             mailMessage.IsBodyHtml = true;
             await smtpClient.SendMailAsync(mailMessage);
 
-            logger.LogInformation("New password sent successfully to {Email}", toEmail);
+            //logger.LogInformation("New password sent successfully to {Email}", toEmail);
             return ServiceResult.Success(HttpStatusCode.OK);
         }
         catch (Exception ex)
@@ -112,7 +112,7 @@ public class EmailService(IOptions<EmailSettings> settings, ILogger<EmailService
             mailMessage.IsBodyHtml = true;
             await smtpClient.SendMailAsync(mailMessage);
 
-            logger.LogInformation("Email confirmation link sent successfully to {Email}", toEmail);
+            //logger.LogInformation("Email confirmation link sent successfully to {Email}", toEmail);
             return ServiceResult.Success(HttpStatusCode.OK);
         }
         catch (Exception ex)
