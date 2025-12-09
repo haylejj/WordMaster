@@ -5,7 +5,7 @@ namespace WordMaster.Domain.Results;
 
 public class ServiceResult
 {
-    public bool IsSuccess { get; private set; }
+    public bool IsSuccess { get; protected set; }
     public List<string>? ErrorList { get; set; }
     [JsonIgnore]
     public HttpStatusCode StatusCode { get; set; }
@@ -52,11 +52,6 @@ public class ServiceResult
 public class ServiceResult<T> : ServiceResult
 {
     public T? Data { get; set; }
-    public bool IsSuccess { get; set; }
-    public List<string>? ErrorList { get; set; }
-    [JsonIgnore]
-    public HttpStatusCode StatusCode { get; set; }
-    public string? UrlAsCreated { get; set; }
 
     public static ServiceResult<T> Success(T data, HttpStatusCode statusCode)
     {

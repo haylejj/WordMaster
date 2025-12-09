@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using System.Net;
 using WordMaster.Application.Persistence.Repositories;
 using WordMaster.Application.Responses.Admin;
@@ -18,8 +17,7 @@ public class AdminDashboardService(
     IWordFolderRepository wordFolderRepository,
     ILogHistoryRepository logHistoryRepository,
     ILogHistoryService logHistoryService,
-    UserManager<AppUser> userManager,
-    ILogger<AdminDashboardService> logger) : IAdminDashboardService
+    UserManager<AppUser> userManager) : IAdminDashboardService
 {
     public async Task<ServiceResult<AdminDashboardResponse>> GetDashboardAsync()
     {

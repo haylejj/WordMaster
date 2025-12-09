@@ -314,4 +314,15 @@ Sistemi aşırı yük ve kaba kuvvet (brute-force) saldırılarından korumak i�
 
 ---
 
+### 12. Arka Plan İşlemleri (Background Jobs)
+Sistemin belirli periyotlarla otomatik yapması gereken bakım işlemleri için **Hosted Service (BackgroundService)** yapısı kullanılmıştır.
+
+*   **UserCleanupService**:
+    *   **Görevi**: Kayıt olduktan sonra e-posta adresini doğrulamayan pasif ("hayalet") kullanıcıları temizlemek.
+    *   **Çalışma Sıklığı**: Her 2 saatte bir tetiklenir.
+    *   **Kural**: Oluşturulma tarihi 65 dakikadan daha eski olan ve `EmailConfirmed = false` olan kullanıcılar veritabanından kalıcı olarak silinir.
+    *   **Amaç**: Doğrulanmamış gereksiz kullanıcı verilerinin veritabanını şişirmesini engellemek.
+
+---
+
 *WordMaster Backend Team*
