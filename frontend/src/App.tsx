@@ -15,6 +15,7 @@ import ProfilePage from "@/pages/dashboard/ProfilePage";
 import ChangePasswordPage from "@/pages/dashboard/ChangePasswordPage";
 import GeneralPracticePage from "@/pages/dashboard/GeneralPracticePage";
 import FolderPracticePage from "@/pages/dashboard/FolderPracticePage";
+import StatisticsPage from "@/pages/dashboard/StatisticsPage";
 
 import AdminLayout from "@/layouts/AdminLayout";
 import AdminDashboardPage from "@/pages/admin/AdminDashboardPage";
@@ -70,6 +71,7 @@ function App() {
           <Route path="change-password" element={<ChangePasswordPage />} />
           <Route path="practice/:type" element={<GeneralPracticePage />} />
           <Route path="folders/:id/practice" element={<FolderPracticePage />} />
+          <Route path="statistics" element={<StatisticsPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

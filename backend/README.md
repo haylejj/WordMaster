@@ -152,6 +152,14 @@ Bilinmeyen kelime yönetimi `/api/unknows` altında toplanmıştır.
 | `GET` | `/api/unknows/practice/random` 🛡️ | Bilinmeyenlerden pratik için rastgele kelime getirir. |
 | `POST` | `/api/unknows/practice/check` 🛡️ | Bilinmeyen pratik çeviri kontrolü yapar. |
 
+### Statistics Endpoint'leri
+
+Kullanıcı istatistikleri `/api/statistics` altında toplanmıştır.
+
+| Metot | Endpoint | Açıklama |
+| :--- | :--- | :--- |
+| `GET` | `/api/statistics/dashboard` 🛡️ | Kullanıcının dashboard istatistiklerini (kelime sayısı, başarı oranı, grafik verisi, seri vb.) getirir. |
+
 ### Admin Endpoint'leri
 
 Admin paneli işlemleri `/api/admin` altında toplanmıştır. Sadece yöneticilerin erişebilmesi gereken servislere ev sahipliği yapar.
