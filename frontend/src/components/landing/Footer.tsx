@@ -12,23 +12,35 @@ export default function Footer() {
                 <div className="container mx-auto px-4">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
                         <div className="col-span-1 md:col-span-1">
-                            <Link to="/" className="flex items-center space-x-2 text-2xl font-bold mb-6">
-                                <BookOpen className="text-primary-yellow" size={32} />
-                                <span>WordMaster</span>
-                            </Link>
-                            <p className="text-gray-400 text-sm leading-relaxed mb-6">
-                                Dil öğrenme yolculuğunuzda size eşlik eden en iyi kelime ezberleme asistanı.
-                            </p>
-                            <div className="flex space-x-4">
-                                <a href="#" className="bg-gray-800 p-2 rounded-full hover:bg-primary-yellow hover:text-black transition-colors">
-                                    <Github size={18} />
-                                </a>
-                                <a href="#" className="bg-gray-800 p-2 rounded-full hover:bg-primary-yellow hover:text-black transition-colors">
-                                    <Twitter size={18} />
-                                </a>
-                                <a href="#" className="bg-gray-800 p-2 rounded-full hover:bg-primary-yellow hover:text-black transition-colors">
-                                    <Linkedin size={18} />
-                                </a>
+                            <div className="space-y-6">
+                                <div className="flex items-center space-x-2">
+                                    <div className="bg-primary-yellow p-1 rounded-lg">
+                                        <img src="/logo2.png" alt="WordMaster Logo" className="w-8 h-8 object-contain" />
+                                    </div>
+                                    <span className="text-2xl font-bold text-primary-dark dark:text-white tracking-tight">wordmaster</span>
+                                </div>
+                                <p className="text-gray-500 dark:text-gray-400 leading-relaxed">
+                                    Kelime hazinenizi geliştirmek için geliştirilmiş, topluluk destekli ve tamamen açık kaynaklı modern bir platform. Dil öğrenimini herkes için erişilebilir kılıyoruz.
+                                </p>
+                                <div className="flex items-center gap-2">
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        🟢 Open Source
+                                    </span>
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        MIT License
+                                    </span>
+                                </div>
+                                <div className="flex space-x-4">
+                                    <a href="https://github.com/your-repo" target="_blank" rel="noopener noreferrer" className="bg-gray-800 p-2 rounded-full hover:bg-primary-yellow hover:text-black transition-colors">
+                                        <Github size={18} />
+                                    </a>
+                                    <a href="#" className="bg-gray-800 p-2 rounded-full hover:bg-primary-yellow hover:text-black transition-colors">
+                                        <Twitter size={18} />
+                                    </a>
+                                    <a href="#" className="bg-gray-800 p-2 rounded-full hover:bg-primary-yellow hover:text-black transition-colors">
+                                        <Linkedin size={18} />
+                                    </a>
+                                </div>
                             </div>
                         </div>
 
@@ -62,8 +74,8 @@ export default function Footer() {
                         </div>
                     </div>
 
-                    <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-gray-500">
-                        <p>&copy; {new Date().getFullYear()} WordMaster. Tüm hakları saklıdır.</p>
+                    <div className="pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500 dark:text-gray-400">
+                        <p>&copy; {new Date().getFullYear()} WordMaster. Tüm hakları saklıdır (MIT Lisansı altında açık kaynak).</p>
                         <div className="flex space-x-6 mt-4 md:mt-0">
                             <button onClick={() => setShowTerms(true)} className="hover:text-gray-300">Gizlilik Politikası</button>
                             <button onClick={() => setShowTerms(true)} className="hover:text-gray-300">Kullanım Şartları</button>

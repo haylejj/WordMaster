@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 const faqs = [
     {
         question: "WordMaster tamamen ücretsiz mi?",
-        answer: "WordMaster'ın temel özellikleri tamamen ücretsizdir. Kelime ekleyebilir, klasörler oluşturabilir ve sınırsız pratik yapabilirsiniz."
+        answer: "Evet, WordMaster açık kaynaklı bir projedir ve tamamen ücretsizdir. Topluluk odaklı geliştirilen bu projede tüm özelliklere sınırsız erişebilirsiniz."
     },
     {
         question: "Hesabıma farklı cihazlardan erişebilir miyim?",
@@ -14,11 +14,23 @@ const faqs = [
     },
     {
         question: "Kaç tane kelime ekleyebilirim?",
-        answer: "Şu an için bir sınır bulunmamaktadır. İstediğiniz kadar kelime ve klasör oluşturarak kütüphanenizi zenginleştirebilirsiniz."
+        answer: "Sınırsız! İstediğiniz kadar kelime ve klasör oluşturarak kütüphanenizi dilediğiniz gibi genişletebilirsiniz. Öğrenme sınırınızı kendiniz belirlersiniz."
+    },
+    {
+        question: "WordMaster'ın diğer uygulamalardan farkı nedir?",
+        answer: "WordMaster, sadece kelime ezberletmeye değil, kelimeleri bağlam içinde öğrenmenize ve kalıcı hafızaya atmanıza odaklanır. Kişiselleştirilebilir klasör yapısı ve akıllı tekrar sistemleri ile öğrenme sürecinizi sizin için optimize eder."
     },
     {
         question: "Bilinmeyenler listesi nasıl çalışır?",
         answer: "Pratik yaparken hatırlayamadığınız veya yanlış bildiğiniz kelimeler otomatik olarak veya sizin seçiminizle 'Bilinmeyenler' listesine eklenir. Bu liste, zayıf olduğunuz noktaları güçlendirmeniz için özel olarak tasarlanmıştır."
+    },
+    {
+        question: "İnternet bağlantısı gerekli mi?",
+        answer: "Evet, WordMaster web tabanlı bir uygulamadır ve verilerinizin senkronize olması için internet bağlantısına ihtiyaç duyar. Ancak mobil uyumluluğu sayesinde her yerden erişebilirsiniz."
+    },
+    {
+        question: "Excel veya CSV dosyasından kelime aktarabilir miyim?",
+        answer: "Kesinlikle! Hazır kelime listelerinizi CSV formatında toplu olarak yükleyebilir, tek tek ekleme zahmetinden kurtulabilirsiniz."
     }
 ];
 

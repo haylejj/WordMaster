@@ -43,8 +43,8 @@ export default function Navbar() {
             <div className="container mx-auto px-4 flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                     <Link to="/" className="flex items-center space-x-2">
-                        <div className="bg-primary-yellow p-1.5 rounded-lg">
-                            <BookOpen className="text-primary-dark" size={24} />
+                        <div className="bg-primary-yellow p-1 rounded-lg">
+                            <img src="/logo2.png" alt="WordMaster Logo" className="w-8 h-8 object-contain" />
                         </div>
                         <span className="text-2xl font-bold text-primary-dark dark:text-white tracking-tight">
                             WordMaster

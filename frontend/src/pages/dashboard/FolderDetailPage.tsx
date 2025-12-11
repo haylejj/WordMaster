@@ -173,7 +173,7 @@ export default function FolderDetailPage() {
 
                             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                                 <button
-                                    onClick={() => navigate(`/folders/${folderId}/practice`)}
+                                    onClick={() => navigate(`/dashboard/folders/${folderId}/practice`)}
                                     className="rounded-full bg-green-500 px-5 py-2 text-sm font-semibold text-white shadow hover:bg-green-600"
                                 >
                                     Pratik Yap

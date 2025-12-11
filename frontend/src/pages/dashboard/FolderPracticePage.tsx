@@ -97,13 +97,13 @@ export default function FolderPracticePage() {
                 </p>
                 <div className="flex gap-4">
                     <button
-                        onClick={() => navigate("/folders")}
+                        onClick={() => navigate("/dashboard/folders")}
                         className="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-colors"
                     >
                         Klasörlere Dön
                     </button>
                     <button
-                        onClick={() => navigate(`/folders/${id}`)}
+                        onClick={() => navigate(`/dashboard/folders/${id}`)}
                         className="px-6 py-3 bg-primary-yellow text-primary-dark rounded-xl font-bold hover:bg-[#FFC107] transition-colors"
                     >
                         Kelime Ekle
@@ -122,7 +122,7 @@ export default function FolderPracticePage() {
                 <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden">
                     <div className="bg-[#1a1f24] text-white px-6 py-4 flex justify-between items-center">
                         <h2 className="text-lg font-bold uppercase">{folderName} - PRATİK SONUCU</h2>
-                        <button onClick={() => navigate("/folders")} className="text-gray-400 hover:text-white">
+                        <button onClick={() => navigate("/dashboard/folders")} className="text-gray-400 hover:text-white">
                             <X size={24} />
                         </button>
                     </div>
@@ -179,13 +179,13 @@ export default function FolderPracticePage() {
 
                     <div className="bg-gray-50 px-6 py-4 flex justify-end space-x-3 border-t">
                         <button
-                            onClick={() => navigate("/folders")}
+                            onClick={() => navigate("/dashboard/folders")}
                             className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
                         >
                             Kapat
                         </button>
                         <button
-                            onClick={() => navigate(`/folders/${id}`)}
+                            onClick={() => navigate(`/dashboard/folders/${id}`)}
                             className="px-4 py-2 border border-blue-500 text-blue-500 rounded hover:bg-blue-50 transition-colors"
                         >
                             Klasöre Dön

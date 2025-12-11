@@ -1,5 +1,5 @@
 
-import { Folder, Zap, PlayCircle, Star, Shield, Smartphone } from "lucide-react";
+import { Folder, Zap, PlayCircle, Star, TrendingUp, Smartphone } from "lucide-react";
 
 const features = [
     {
@@ -31,9 +31,9 @@ const features = [
         bg: "bg-purple-50"
     },
     {
-        icon: Shield,
-        title: "Güvenli Yedekleme",
-        description: "Tüm verileriniz bulutta güvenle saklanır. WordMaster hesabınızla her yerden erişim sağlayın.",
+        icon: TrendingUp,
+        title: "Gelişmiş İstatistikler",
+        description: "Öğrenme sürecinizi takip edin. Hangi kelimelerde zorlandığınızı görerek çalışmalarınızı ona göre şekillendirin.",
         color: "text-red-500",
         bg: "bg-red-50"
     },
