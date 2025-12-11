@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { BookOpen, Github, Twitter, Linkedin, X } from "lucide-react";
+import { Github, Twitter, Linkedin, X } from "lucide-react";
 
 export default function Footer() {
     const [showTerms, setShowTerms] = useState(false);

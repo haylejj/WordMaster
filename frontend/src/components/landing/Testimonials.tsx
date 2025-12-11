@@ -1,4 +1,4 @@
-import { Star, MessageCircle, Quote } from "lucide-react";
+import { Star, Quote } from "lucide-react";
 
 const testimonials = [
     {

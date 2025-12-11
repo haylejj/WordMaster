@@ -1,7 +1,5 @@
-
-import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, BookOpen, Sparkles, Github } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { ArrowRight, Sparkles, Github, BookOpen } from "lucide-react";
 
 export default function Hero() {
     const navigate = useNavigate();
