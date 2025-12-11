@@ -38,7 +38,7 @@ export default function LoginPage() {
       if (response.isSuccess) {
         localStorage.setItem("accessToken", response.data.accessToken);
         localStorage.setItem("refreshToken", response.data.refreshToken);
-        navigate("/");
+        navigate("/dashboard");
       } else {
         // Show errorList content if available
         if (response.errorList && response.errorList.length > 0) {

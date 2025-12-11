@@ -76,10 +76,10 @@ export default function DashboardLayout() {
   };
 
   const navItems = [
-    { name: "Kelimelerim", icon: Book, path: "/" },
-    { name: "Klasörlerim", icon: Folder, path: "/folders" },
-    { name: "Favoriler", icon: Star, path: "/favorites" },
-    { name: "Bilinmeyenler", icon: HelpCircle, path: "/unknowns" },
+    { name: "Kelimelerim", icon: Book, path: "/dashboard" },
+    { name: "Klasörlerim", icon: Folder, path: "/dashboard/folders" },
+    { name: "Favoriler", icon: Star, path: "/dashboard/favorites" },
+    { name: "Bilinmeyenler", icon: HelpCircle, path: "/dashboard/unknowns" },
   ];
 
   return (
@@ -108,10 +108,10 @@ export default function DashboardLayout() {
             })}
 
             <Link
-              to="/add-word"
+              to="/dashboard/add-word"
               className={cn(
                 "flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                location.pathname === "/add-word"
+                location.pathname === "/dashboard/add-word"
                   ? "text-white bg-[#2c333a]"
                   : "text-gray-400 hover:text-white hover:bg-[#2c333a]"
               )}
@@ -133,13 +133,13 @@ export default function DashboardLayout() {
 
             {isPracticeMenuOpen && (
               <div className="absolute left-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
-                <Link to="/practice/all" onClick={() => setIsPracticeMenuOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                <Link to="/dashboard/practice/all" onClick={() => setIsPracticeMenuOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
                   <Book size={16} className="mr-2" /> Tüm Kelimelerle
                 </Link>
-                <Link to="/practice/favorites" onClick={() => setIsPracticeMenuOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                <Link to="/dashboard/practice/favorites" onClick={() => setIsPracticeMenuOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
                   <Star size={16} className="mr-2" /> Favorilerle
                 </Link>
-                <Link to="/practice/unknowns" onClick={() => setIsPracticeMenuOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                <Link to="/dashboard/practice/unknowns" onClick={() => setIsPracticeMenuOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
                   <HelpCircle size={16} className="mr-2" /> Bilinmeyenlerle
                 </Link>
               </div>
@@ -159,10 +159,10 @@ export default function DashboardLayout() {
 
             {isUserMenuOpen && (
               <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
-                <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                <Link to="/dashboard/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
                   <Settings size={16} className="mr-2" /> Profil Güncelle
                 </Link>
-                <Link to="/change-password" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                <Link to="/dashboard/change-password" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
                   <Key size={16} className="mr-2" /> Şifre Değiştir
                 </Link>
                 <div className="border-t border-gray-100 my-1"></div>
