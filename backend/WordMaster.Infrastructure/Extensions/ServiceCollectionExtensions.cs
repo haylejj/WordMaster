@@ -57,6 +57,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IPermissionService, PermissionService>();
         services.AddScoped<IDatabaseService, DatabaseService>();
+        services.AddScoped<IStatisticsService, StatisticsService>();
 
         // Helpers
         services.AddScoped<IDataProtectionHelper, DataProtectionHelper>();
