@@ -143,7 +143,7 @@ export default function FoldersPage() {
                         <FolderCard
                             key={folder.id}
                             folder={folder}
-                            onOpen={() => navigate(`/folders/${folder.id}`)}
+                            onOpen={() => navigate(`/dashboard/folders/${folder.id}`)}
                             onEdit={setEditTarget}
                             onDelete={setDeleteTarget}
                         />

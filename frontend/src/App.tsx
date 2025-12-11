@@ -26,6 +26,8 @@ import AdminIpAddressesPage from "@/pages/admin/AdminIpAddressesPage";
 import DatabaseResetPage from "@/pages/admin/DatabaseResetPage";
 import AdminLogHistoryPage from "@/pages/admin/AdminLogHistoryPage";
 
+import LandingPage from "@/pages/LandingPage";
+
 import PermissionDeniedModal from "@/components/common/PermissionDeniedModal";
 
 function App() {
@@ -53,8 +55,11 @@ function App() {
           <Route path="database" element={<DatabaseResetPage />} />
         </Route>
 
+        {/* Public Landing Page */}
+        <Route path="/" element={<LandingPage />} />
+
         {/* Protected Dashboard Routes */}
-        <Route path="/" element={<DashboardLayout />}>
+        <Route path="/dashboard" element={<DashboardLayout />}>
           <Route index element={<WordsPage key="words" />} />
           <Route path="add-word" element={<CreateWordPage />} />
           <Route path="folders" element={<FoldersPage />} />
