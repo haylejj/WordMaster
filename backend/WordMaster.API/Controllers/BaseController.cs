@@ -7,6 +7,7 @@ namespace WordMaster.API.Controllers;
 /// Base controller that provides common functionality for all API controllers.
 /// </summary>
 [ApiController]
+[Produces("application/json")]
 public class BaseController : ControllerBase
 {
     /// <summary>

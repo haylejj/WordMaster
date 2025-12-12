@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System.Reflection;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using WordMaster.API.Extensions;
 using WordMaster.API.Filters;
@@ -22,6 +23,7 @@ builder.Services.AddControllers(configure =>
     configure.Filters.Add<ValidationFilter>();
 }).AddJsonOptions(options =>
 {
+    options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 // Serilog yapılandırması

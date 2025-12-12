@@ -30,6 +30,15 @@ public class GlobalExceptionHandlerMiddleware(RequestDelegate next, ILogger<Glob
         {
             // Hatanın nereden geldiğini, mesajını ve stack trace'ini detaylıca logluyoruz.
             logger.LogError(ex, "Beklenmeyen bir hata oluştu! Mesaj: {Message}, Kaynak: {Source}, StackTrace: {StackTrace}", ex.Message, ex.Source, ex.StackTrace);
+
+            // Eğer yanıt zaten istemciye gönderilmeye başlandıysa (headers sent), 
+            // durum kodunu değiştiremeyiz ve JSON yazamayız.
+            if (context.Response.HasStarted)
+            {
+                logger.LogWarning("Yanıt zaten başladığı için özel hata mesajı döndürülemiyor.");
+                throw;
+            }
+
             await HandleExceptionAsync(context, ex);
         }
     }
