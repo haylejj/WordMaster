@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using WordMaster.Domain.Results;
 
@@ -7,6 +8,7 @@ namespace WordMaster.API.Controllers;
 /// Base controller that provides common functionality for all API controllers.
 /// </summary>
 [ApiController]
+[ApiVersion("1.0")]
 [Produces("application/json")]
 public class BaseController : ControllerBase
 {

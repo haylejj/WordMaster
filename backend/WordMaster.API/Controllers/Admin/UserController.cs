@@ -10,7 +10,7 @@ namespace WordMaster.API.Controllers.Admin;
 /// <summary>
 /// Kullanıcı yönetim işlemlerini gerçekleştiren controller.
 /// </summary>
-[Route("api/admin/users")]
+[Route("api/v{version:apiVersion}/admin/users")]
 public class UserController(IUserService userService) : BaseController
 {
     /// <summary>

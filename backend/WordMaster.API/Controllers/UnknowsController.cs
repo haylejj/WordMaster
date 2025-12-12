@@ -14,7 +14,7 @@ namespace WordMaster.API.Controllers;
 /// <summary>
 /// Bilinmeyen kelime işlemlerini (Listeleme, Ekleme/Çıkarma) yöneten controller.
 /// </summary>
-[Route("api/unknows")]
+[Route("api/v{version:apiVersion}/unknows")]
 [EnableRateLimiting("GeneralPolicy")]
 public class UnknowsController(IUnknowsService unknowsService) : BaseController
 {

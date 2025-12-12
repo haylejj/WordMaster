@@ -1,10 +1,13 @@
+using Asp.Versioning;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Net;
 using System.Reflection;
 using System.Security.Claims;
@@ -25,6 +28,46 @@ namespace WordMaster.API.Extensions;
 /// </summary>
 public static class ServiceCollectionExtensions
 {
+    /// <summary>
+    /// API Versioning yapılandırmasını ekler.
+    /// URL path versioning kullanılır (örn: /api/v1/words)
+    /// </summary>
+    /// <param name="services">Servis koleksiyonu</param>
+    /// <returns>Güncellenmiş servis koleksiyonu</returns>
+    public static IServiceCollection AddApiVersioningConfigurations(this IServiceCollection services)
+    {
+        services.AddApiVersioning(options =>
+        {
+            // Varsayılan API versiyonu (versiyon belirtilmezse bu kullanılır)
+            options.DefaultApiVersion = new ApiVersion(1, 0);
+
+            // Versiyon belirtilmezse varsayılan versiyonu kullan
+            options.AssumeDefaultVersionWhenUnspecified = true;
+
+            // Response header'larında desteklenen ve deprecated versiyonları göster
+            // api-supported-versions: 1.0, 2.0
+            // api-deprecated-versions: 1.0
+            options.ReportApiVersions = true;
+
+            // Versiyon okuma stratejileri (URL path birincil)
+            options.ApiVersionReader = ApiVersionReader.Combine(
+                new UrlSegmentApiVersionReader(),           // /api/v1/words (birincil)
+                new HeaderApiVersionReader("x-api-version") // Header ile de destekle (opsiyonel)
+            );
+        })
+        .AddApiExplorer(options =>
+        {
+            // Swagger'da versiyon grupları için format: 'v'major[.minor][-status]
+            // Örn: v1, v1.0, v2.0-beta
+            options.GroupNameFormat = "'v'VVV";
+
+            // Route'lardaki {version:apiVersion} placeholder'ını değiştir
+            options.SubstituteApiVersionInUrl = true;
+        });
+
+        return services;
+    }
+
     /// <summary>
     /// Fluent Validation ve custom ValidationFilter yapılandırmasını ekler.
     /// </summary>
@@ -261,21 +304,25 @@ public static class ServiceCollectionExtensions
     /// <summary>
     /// Swagger/OpenAPI dokümantasyon yapılandırmasını ekler.
     /// API endpoint'lerini test etmek ve dokümante etmek için Swagger UI kullanılır.
-    /// JWT Bearer token authentication desteği ile birlikte yapılandırılır.
+    /// JWT Bearer token authentication desteği ve API versiyonlama ile birlikte yapılandırılır.
     /// </summary>
     /// <param name="services">Servis koleksiyonu</param>
     /// <returns>Güncellenmiş servis koleksiyonu</returns>
     public static IServiceCollection AddSwaggerConfigurations(this IServiceCollection services)
     {
         services.AddEndpointsApiExplorer();
+
+        // Swagger versiyon konfigürasyonunu DI'a ekle
+        services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
+
         services.AddSwaggerGen(c =>
         {
+            // XML yorumlarını ekle
             string xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
             string xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
             c.IncludeXmlComments(xmlPath);
 
-            c.SwaggerDoc("v1", new() { Title = "API", Version = "v1" });
-
+            // JWT Bearer authentication tanımı
             c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
                 Name = "Authorization",
@@ -285,9 +332,8 @@ public static class ServiceCollectionExtensions
                 In = ParameterLocation.Header,
                 Description = "JWT Authorization header. Örnek: 'Bearer {token}'"
             });
+
             // Bu ayar, Swagger'ın tanımlanan "Bearer" güvenlik şemasını tüm endpoint'lere otomatik olarak uygulamasını sağlar.
-            // Yani kullanıcı Swagger UI'da Authorize butonuna token girdikten sonra, tüm API isteklerine "Authorization: Bearer {token}" header'ı otomatik eklenir.
-            // Eğer bu ayarı koymazsak Swagger token'ı tanır ama çoğu endpoint'e göndermez.
             c.AddSecurityRequirement(new OpenApiSecurityRequirement
             {
                 {
@@ -302,7 +348,6 @@ public static class ServiceCollectionExtensions
                     Array.Empty<string>()
                 }
             });
-
         });
 
         return services;

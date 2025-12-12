@@ -10,7 +10,7 @@ namespace WordMaster.API.Controllers.Admin;
 /// <summary>
 /// İzin verilen IP adreslerini yöneten admin controller.
 /// </summary>
-[Route("api/admin/allowed-ips")]
+[Route("api/v{version:apiVersion}/admin/allowed-ips")]
 public class AllowedIpAddressController(IAllowedIpAddressService allowedIpAddressService) : BaseController
 {
     /// <summary>

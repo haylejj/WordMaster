@@ -15,7 +15,7 @@ namespace WordMaster.API.Controllers;
 /// Kimlik doğrulama ve Jwt token işlemlerini yöneten controller.
 /// Login, Register, Token yenileme gibi işlemleri içerir.
 /// </summary>
-[Route("api/auth")]
+[Route("api/v{version:apiVersion}/auth")]
 [EnableRateLimiting("StrictPolicy")]
 public class AuthController(ILoginService loginService, IRegisterService registerService, IUserService userService, IJwtService jwtService) : BaseController
 {

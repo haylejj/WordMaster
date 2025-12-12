@@ -15,7 +15,7 @@ namespace WordMaster.API.Controllers;
 /// <summary>
 /// Kelime işlemlerini (Listeleme, Ekleme, Güncelleme, Silme, İçe Aktarma) yöneten controller.
 /// </summary>
-[Route("api/words")]
+[Route("api/v{version:apiVersion}/words")]
 [EnableRateLimiting("GeneralPolicy")]
 public class WordController(IWordService wordService, IExcelService excelService) : BaseController
 {

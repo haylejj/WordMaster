@@ -13,7 +13,7 @@ namespace WordMaster.API.Controllers;
 /// <summary>
 /// Klasör işlemlerini (Listeleme, Ekleme, Güncelleme, Silme, Kelime Ekleme/Çıkarma) yöneten controller.
 /// </summary>
-[Route("api/folders")]
+[Route("api/v{version:apiVersion}/folders")]
 [EnableRateLimiting("GeneralPolicy")]
 public class FolderController(IFolderService folderService) : BaseController
 {

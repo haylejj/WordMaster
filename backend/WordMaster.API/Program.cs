@@ -1,3 +1,4 @@
+using Asp.Versioning.ApiExplorer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -64,6 +65,8 @@ builder.Services.AddDbContext<AppDbContext>(x =>
 });
 // Identity yapılandırması
 builder.Services.AddIdentityConfigurations();
+// API Versioning yapılandırması
+builder.Services.AddApiVersioningConfigurations();
 // Swagger yapılandırması
 builder.Services.AddSwaggerConfigurations();
 
@@ -93,10 +96,29 @@ app.UseForwardedHeaders();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+
+    // Her API versiyonu için Swagger UI endpoint'i oluştur
+    IApiVersionDescriptionProvider apiVersionProvider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+    app.UseSwaggerUI(options =>
+    {
+        foreach (ApiVersionDescription description in apiVersionProvider.ApiVersionDescriptions)
+        {
+            string url = $"/swagger/{description.GroupName}/swagger.json";
+            string name = description.GroupName.ToUpperInvariant();
+
+            // Deprecated versiyonlar için etiket ekle
+            if (description.IsDeprecated)
+            {
+                name += " (Deprecated)";
+            }
+
+            options.SwaggerEndpoint(url, name);
+        }
+    });
 }
 
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
+app.UseMiddleware<AppVersionHeaderMiddleware>();
 
 app.UseHttpsRedirection();
 
