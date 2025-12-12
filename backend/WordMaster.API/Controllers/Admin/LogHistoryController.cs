@@ -11,7 +11,7 @@ namespace WordMaster.API.Controllers.Admin;
 /// Sistem log geçmişi işlemlerini yöneten API kontrolcüsü.
 /// </summary>
 /// <param name="logHistoryService">Log geçmişi işlemlerini yürüten servis.</param>
-[Route("api/admin/logHistory")]
+[Route("api/v{version:apiVersion}/admin/logHistory")]
 public class LogHistoryController(ILogHistoryService logHistoryService) : BaseController
 {
     /// <summary>

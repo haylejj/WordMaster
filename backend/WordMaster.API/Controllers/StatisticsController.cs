@@ -11,7 +11,7 @@ namespace WordMaster.API.Controllers;
 /// <summary>
 /// Kullanıcı istatistikleri ve analizleri ile ilgili işlemleri yöneten kontrolcü.
 /// </summary>
-[Route("api/statistics")]
+[Route("api/v{version:apiVersion}/statistics")]
 [EnableRateLimiting("GeneralPolicy")]
 public class StatisticsController(IStatisticsService statisticsService) : BaseController
 {

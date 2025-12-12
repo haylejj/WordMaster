@@ -10,7 +10,7 @@ namespace WordMaster.API.Controllers.Admin;
 /// <summary>
 /// Controller for managing permissions and role assignments.
 /// </summary>
-[Route("api/admin/permissions")]
+[Route("api/v{version:apiVersion}/admin/permissions")]
 public class PermissionsController(IPermissionService permissionService) : BaseController
 {
     /// <summary>

@@ -10,7 +10,7 @@ namespace WordMaster.API.Controllers.Admin;
 /// <summary>
 /// Rol yönetim işlemlerini gerçekleştiren controller.
 /// </summary>
-[Route("api/admin/roles")]
+[Route("api/v{version:apiVersion}/admin/roles")]
 public class RoleController(IRoleService roleService) : BaseController
 {
     /// <summary>

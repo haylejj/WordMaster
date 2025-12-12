@@ -10,7 +10,7 @@ namespace WordMaster.API.Controllers.Admin;
 /// <summary>
 /// Controller for managing words by administrators.
 /// </summary>
-[Route("api/admin/words")]
+[Route("api/v{version:apiVersion}/admin/words")]
 public class AdminWordController(IWordService wordService) : BaseController
 {
     /// <summary>

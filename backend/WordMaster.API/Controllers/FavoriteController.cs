@@ -14,7 +14,7 @@ namespace WordMaster.API.Controllers;
 /// <summary>
 /// Favori kelime işlemlerini (Listeleme, Ekleme/Çıkarma) yöneten controller.
 /// </summary>
-[Route("api/favorites")]
+[Route("api/v{version:apiVersion}/favorites")]
 [EnableRateLimiting("GeneralPolicy")]
 public class FavoriteController(IFavoriteService favoriteService) : BaseController
 {

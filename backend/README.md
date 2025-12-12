@@ -160,6 +160,14 @@ Kullanıcı istatistikleri `/api/statistics` altında toplanmıştır.
 | :--- | :--- | :--- |
 | `GET` | `/api/statistics/dashboard` 🛡️ | Kullanıcının dashboard istatistiklerini (kelime sayısı, başarı oranı, grafik verisi, seri vb.) getirir. |
 
+### System Endpoint'leri
+
+Genel sistem bilgileri `/api/version` altında toplanmıştır.
+
+| Metot | Endpoint | Açıklama |
+| :--- | :--- | :--- |
+| `GET` | `/api/version` | Uygulamanın anlık çalışan versiyonu, ortam bilgisi (Development/Production) ve API sürümünü döner. Login gerektirmez. |
+
 ### Admin Endpoint'leri
 
 Admin paneli işlemleri `/api/admin` altında toplanmıştır. Sadece yöneticilerin erişebilmesi gereken servislere ev sahipliği yapar.
@@ -330,6 +338,18 @@ Sistemin belirli periyotlarla otomatik yapması gereken bakım işlemleri için 
     *   **Çalışma Sıklığı**: Her 2 saatte bir tetiklenir.
     *   **Kural**: Oluşturulma tarihi 65 dakikadan daha eski olan ve `EmailConfirmed = false` olan kullanıcılar veritabanından kalıcı olarak silinir.
     *   **Amaç**: Doğrulanmamış gereksiz kullanıcı verilerinin veritabanını şişirmesini engellemek.
+
+---
+
+### 13. API Versioning (Versiyonlama)
+Projenin sürdürülebilirliği ve ölçeklenebilirliği için **URL Path Versioning** stratejisi benimsenmiştir. Bu sayede mevcut istemcileri etkilemeden (Breaking Change) yeni özellikler geliştirilebilir.
+
+*   **Format**: `/api/v1/words`, `/api/v2/words` şeklinde versiyon numarası URL'de açıkça belirtilir.
+*   **Varsayılan**: Versiyon belirtilmeyen istekler otomatik olarak `v1.0` kabul edilir.
+*   **Swagger Desteği**: Swagger arayüzünde sağ üst köşeden versiyonlar arası geçiş yapılabilir ve her versiyonun dokümantasyonu ayrı ayrı incelenebilir.
+*   **Proje Sürümü**: Yazılımın derleme sürümü (`1.0.0-dev` vb.) `.csproj` üzerinden ayrıca takip edilir; bu, API versiyonundan (v1) bağımsızdır.
+
+*Detaylı bilgi ve kullanım rehberi için [docs/Api_Versioning.md](docs/Api_Versioning.md) dosyasına bakabilirsiniz.*
 
 ---
 

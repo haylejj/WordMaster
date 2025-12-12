@@ -12,7 +12,7 @@ namespace WordMaster.API.Controllers;
 /// <summary>
 /// Kullanıcı profil işlemlerini yöneten controller.
 /// </summary>
-[Route("api/user")]
+[Route("api/v{version:apiVersion}/user")]
 [EnableRateLimiting("GeneralPolicy")]
 public class UserController(IUserService userService) : BaseController
 {

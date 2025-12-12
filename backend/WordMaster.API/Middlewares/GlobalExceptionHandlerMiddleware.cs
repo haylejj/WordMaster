@@ -33,10 +33,17 @@ public class GlobalExceptionHandlerMiddleware(RequestDelegate next, ILogger<Glob
 
             // Eğer yanıt zaten istemciye gönderilmeye başlandıysa (headers sent), 
             // durum kodunu değiştiremeyiz ve JSON yazamayız.
+            // Not: Exception zaten yukarıda LogError ile loglandı.
+            // throw yapmak bağlantıyı koparır, bu yüzden sadece ek bilgi loglayıp graceful return yapıyoruz.
             if (context.Response.HasStarted)
             {
-                logger.LogWarning("Yanıt zaten başladığı için özel hata mesajı döndürülemiyor.");
-                throw;
+                logger.LogError(
+                    ex,
+                    "Response zaten başladığı için özel hata yanıtı döndürülemiyor. " +
+                    "Request: {Method} {Path}",
+                    context.Request.Method,
+                    context.Request.Path);
+                return;
             }
 
             await HandleExceptionAsync(context, ex);

@@ -11,7 +11,7 @@ namespace WordMaster.API.Controllers.Admin;
 /// Controller for administrative database operations such as resetting tables.
 /// Requires 'admin' role.
 /// </summary>
-[Route("api/admin/database")]
+[Route("api/v{version:apiVersion}/admin/database")]
 public class DatabaseController(IDatabaseService databaseService) : BaseController
 {
     /// <summary>
