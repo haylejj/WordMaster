@@ -1,4 +1,5 @@
 using StackExchange.Redis;
+using WordMaster.Application.Constants;
 using WordMaster.Infrastructure.EfCore;
 
 namespace WordMaster.API.Extensions;
@@ -23,7 +24,7 @@ public static class WebApplicationExtensions
             try
             {
                 logger.LogInformation("API Project is starting...");
-
+                logger.LogInformation("API version: {Version}", AppInfo.Version);
                 AppDbContext dbContext = services.GetRequiredService<AppDbContext>();
                 if (await dbContext.Database.CanConnectAsync())
                 {
