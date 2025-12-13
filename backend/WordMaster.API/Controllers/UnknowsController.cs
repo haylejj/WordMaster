@@ -61,6 +61,19 @@ public class UnknowsController(IUnknowsService unknowsService) : BaseController
     }
 
     /// <summary>
+    /// Bilinmeyenlerden test (quiz) sorusu getirir.
+    /// </summary>
+    /// <returns>Soru ve şıklar.</returns>
+    [HttpGet("quiz")]
+    [RequirePermission("Public", "Unknowns", "GetQuiz", "GET", "Bilinmeyen test sorusu getir")]
+    public async Task<IActionResult> GetQuiz([FromQuery] int? excludeWordId)
+    {
+        Guid userId = User.GetUserId();
+        ServiceResult<QuizResponse> result = await unknowsService.GetQuizAsync(userId, excludeWordId);
+        return CreateResult(result);
+    }
+
+    /// <summary>
     /// Bilinmeyen kelimeler pratiği sırasında girilen çeviriyi kontrol eder ve istatistikleri günceller.
     /// </summary>
     /// <param name="request">Kontrol edilecek kelime bilgileri.</param>

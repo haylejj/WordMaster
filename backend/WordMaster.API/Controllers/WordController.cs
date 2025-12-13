@@ -145,6 +145,34 @@ public class WordController(IWordService wordService, IExcelService excelService
     }
 
     /// <summary>
+    /// Pratik sınavlarında eksik şıkları tamamlamak için rastgele yanlış cevaplar (distractors) getirir.
+    /// </summary>
+    /// <param name="count">İstenen yanlış cevap sayısı.</param>
+    /// <param name="excludeWordId">Doğru cevabın ID'si (Bu kelime şıklarda olmamalı).</param>
+    /// <returns>Rastgele Türkçe kelime listesi.</returns>
+    [HttpGet("practice/distractors")]
+    [RequirePermission("Public", "Words", "GetDistractors", "GET", "Yanlış şıkları getir")]
+    public async Task<IActionResult> GetDistractors([FromQuery] int count, [FromQuery] long excludeWordId)
+    {
+        Guid userId = User.GetUserId();
+        ServiceResult<List<string>> result = await wordService.GetDistractorsAsync(userId, count, excludeWordId);
+        return CreateResult(result);
+    }
+
+    /// <summary>
+    /// Test (Quiz) için rastgele bir soru (kelime + şıklar) getirir.
+    /// </summary>
+    /// <returns>Soru ve şıklar.</returns>
+    [HttpGet("quiz")]
+    [RequirePermission("Public", "Words", "GetQuiz", "GET", "Test sorusu getir")]
+    public async Task<IActionResult> GetQuiz([FromQuery] int? excludeWordId)
+    {
+        Guid userId = User.GetUserId();
+        ServiceResult<QuizResponse> result = await wordService.GetQuizAsync(userId, excludeWordId);
+        return CreateResult(result);
+    }
+
+    /// <summary>
     /// Pratik sırasında girilen çeviriyi kontrol eder ve istatistikleri günceller.
     /// </summary>
     /// <param name="request">Kontrol edilecek kelime bilgileri.</param>

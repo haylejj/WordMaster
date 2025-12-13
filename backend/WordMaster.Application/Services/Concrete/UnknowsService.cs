@@ -77,6 +77,33 @@ public class UnknowsService(IUnknowsRepository unknowsRepository, IUnitOfWork un
 
         return ServiceResult<PracticeWordResponse>.Success(response, HttpStatusCode.OK);
     }
+    public async Task<ServiceResult<QuizResponse>> GetQuizAsync(Guid userId, long? excludeWordId = null)
+    {
+        // 1. Get random unknown word
+        ServiceResult<PracticeWordResponse> randomWordResult = await GetRandomWordFromUnknowsAsync(userId, excludeWordId);
+        if (!randomWordResult.IsSuccess || randomWordResult.Data == null)
+        {
+            return ServiceResult<QuizResponse>.Failure(randomWordResult.ErrorList ?? ["Bilinmeyen kelime bulunamadı."], randomWordResult.StatusCode);
+        }
+
+        PracticeWordResponse question = randomWordResult.Data;
+
+        // 2. Get distractors from GENERAL words (via WordService)
+        List<string> distractors = await wordService.GetRandomDistractorsAsync(userId, 3, question.Id);
+
+        List<string> options = [.. distractors];
+        options.Add(question.TurkishWord);
+
+        options = [.. options.OrderBy(x => Random.Shared.Next())];
+
+        QuizResponse response = new()
+        {
+            Question = question,
+            Options = options
+        };
+
+        return ServiceResult<QuizResponse>.Success(response, HttpStatusCode.OK);
+    }
     public Task<ServiceResult<bool>> CheckTranslationAndUpdateAsync(Guid userId, CheckTranslationRequest request)
     {
         return wordService.CheckTranslationAndUpdateAsync(userId, request);

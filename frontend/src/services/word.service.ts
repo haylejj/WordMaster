@@ -7,6 +7,7 @@ import type {
   FavoriteWithWordResponse,
   UnknowsWithWordResponse,
   PracticeWordResponse,
+  QuizResponse,
   WordImportSummaryResponse,
 } from "@/types/word";
 
@@ -153,6 +154,29 @@ export const wordService = {
 
   checkPracticeUnknown: async (wordId: number, answer: string) => {
     const response = await api.post<ServiceResultWithData<boolean>>("/unknows/practice/check", { wordId, answer });
+    return response.data;
+  },
+
+  getQuiz: async (excludeWordId?: number) => {
+    const params = excludeWordId ? `?excludeWordId=${excludeWordId}` : "";
+    const response = await api.get<ServiceResultWithData<QuizResponse>>(`/words/quiz${params}`);
+    return response.data;
+  },
+
+  getFavoriteQuiz: async (excludeWordId?: number) => {
+    const params = excludeWordId ? `?excludeWordId=${excludeWordId}` : "";
+    const response = await api.get<ServiceResultWithData<QuizResponse>>(`/favorites/quiz${params}`);
+    return response.data;
+  },
+
+  getUnknownQuiz: async (excludeWordId?: number) => {
+    const params = excludeWordId ? `?excludeWordId=${excludeWordId}` : "";
+    const response = await api.get<ServiceResultWithData<QuizResponse>>(`/unknows/quiz${params}`);
+    return response.data;
+  },
+
+  getDistractors: async (count: number, excludeWordId: number) => {
+    const response = await api.get<ServiceResultWithData<string[]>>(`/words/practice/distractors?count=${count}&excludeWordId=${excludeWordId}`);
     return response.data;
   },
 

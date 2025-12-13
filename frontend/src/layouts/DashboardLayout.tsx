@@ -11,6 +11,8 @@ export default function DashboardLayout() {
   const userMenuRef = useRef<HTMLDivElement>(null);
   const [isPracticeMenuOpen, setIsPracticeMenuOpen] = useState(false);
   const practiceMenuRef = useRef<HTMLDivElement>(null);
+  const [isTestMenuOpen, setIsTestMenuOpen] = useState(false);
+  const testMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -64,6 +66,23 @@ export default function DashboardLayout() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isPracticeMenuOpen]);
+
+  // Close test menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (testMenuRef.current && !testMenuRef.current.contains(event.target as Node)) {
+        setIsTestMenuOpen(false);
+      }
+    };
+
+    if (isTestMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isTestMenuOpen]);
 
   const handleLogout = async () => {
     try {
@@ -141,6 +160,31 @@ export default function DashboardLayout() {
                   <Star size={16} className="mr-2" /> Favorilerle
                 </Link>
                 <Link to="/dashboard/practice/unknowns" onClick={() => setIsPracticeMenuOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                  <HelpCircle size={16} className="mr-2" /> Bilinmeyenlerle
+                </Link>
+              </div>
+            )}
+          </div>
+
+          <div className="relative" ref={testMenuRef}>
+            <button
+              onClick={() => setIsTestMenuOpen(!isTestMenuOpen)}
+              className="flex items-center px-4 py-2 bg-indigo-500 text-white rounded-full text-sm font-bold hover:bg-indigo-600 transition-colors ml-4"
+            >
+              <HelpCircle size={18} className="mr-2" />
+              Test Yap
+              <ChevronDown size={16} className="ml-2" />
+            </button>
+
+            {isTestMenuOpen && (
+              <div className="absolute left-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
+                <Link to="/dashboard/test/all" onClick={() => setIsTestMenuOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                  <Book size={16} className="mr-2" /> Tüm Kelimelerle
+                </Link>
+                <Link to="/dashboard/test/favorites" onClick={() => setIsTestMenuOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                  <Star size={16} className="mr-2" /> Favorilerle
+                </Link>
+                <Link to="/dashboard/test/unknowns" onClick={() => setIsTestMenuOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
                   <HelpCircle size={16} className="mr-2" /> Bilinmeyenlerle
                 </Link>
               </div>
