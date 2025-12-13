@@ -14,6 +14,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<Favorite> Favorites { get; set; }
     public DbSet<Unknows> Unknows { get; set; }
     public DbSet<LogHistory> LogHistories { get; set; }
+    public DbSet<PracticeHistory> PracticeHistories { get; set; }
     public DbSet<AllowedIpAddress> AllowedIpAddresses { get; set; }
     public DbSet<Permission> Permissions { get; set; }
     public DbSet<RolePermission> RolePermissions { get; set; }
@@ -41,6 +42,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             .Property(x => x.CreatedDate)
             .HasDefaultValueSql("SYSUTCDATETIME()");
 
+        modelBuilder.Entity<PracticeHistory>()
+            .HasOne(x => x.AppUser)
+            .WithMany(u => u.PracticeHistories)
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Seed Roles
         modelBuilder.Entity<AppRole>().HasData(

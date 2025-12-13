@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WordMaster.Infrastructure.EfCore;
 
@@ -11,9 +12,11 @@ using WordMaster.Infrastructure.EfCore;
 namespace WordMaster.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251213120451_AddStreakToUser")]
+    partial class AddStreakToUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -443,8 +446,11 @@ namespace WordMaster.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
-                    b.Property<int>("CorrectCount")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("AppUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsCorrect")
+                        .HasColumnType("bit");
 
                     b.Property<DateTime>("PracticeDate")
                         .HasColumnType("datetime2");
@@ -452,15 +458,14 @@ namespace WordMaster.Infrastructure.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("WordCount")
-                        .HasColumnType("int");
-
-                    b.Property<int>("WrongCount")
-                        .HasColumnType("int");
+                    b.Property<long>("WordId")
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("AppUserId");
+
+                    b.HasIndex("WordId");
 
                     b.ToTable("PracticeHistories");
                 });
@@ -677,12 +682,18 @@ namespace WordMaster.Infrastructure.Migrations
             modelBuilder.Entity("WordMaster.Domain.Entities.PracticeHistory", b =>
                 {
                     b.HasOne("WordMaster.Domain.Entities.AppUser", "AppUser")
-                        .WithMany("PracticeHistories")
-                        .HasForeignKey("UserId")
+                        .WithMany()
+                        .HasForeignKey("AppUserId");
+
+                    b.HasOne("WordMaster.Domain.Entities.Word", "Word")
+                        .WithMany()
+                        .HasForeignKey("WordId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("AppUser");
+
+                    b.Navigation("Word");
                 });
 
             modelBuilder.Entity("WordMaster.Domain.Entities.RolePermission", b =>
@@ -749,11 +760,6 @@ namespace WordMaster.Infrastructure.Migrations
                     b.Navigation("Folder");
 
                     b.Navigation("Word");
-                });
-
-            modelBuilder.Entity("WordMaster.Domain.Entities.AppUser", b =>
-                {
-                    b.Navigation("PracticeHistories");
                 });
 
             modelBuilder.Entity("WordMaster.Domain.Entities.Folder", b =>

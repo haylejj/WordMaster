@@ -36,6 +36,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IFavoriteRepository, FavoriteRepository>();
         services.AddScoped<IUnknowsRepository, UnknowsRepository>();
         services.AddScoped<ILogHistoryRepository, LogHistoryRepository>();
+        services.AddScoped<IPracticeHistoryRepository, PracticeHistoryRepository>();
         services.AddScoped<IPermissionRepository, PermissionRepository>();
 
         // Services

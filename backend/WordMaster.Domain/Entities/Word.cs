@@ -18,6 +18,5 @@ public class Word
     public int ConsecutiveWrongCount { get; set; } // Ard arda kaç kere yanlış bildi
     public int TotalCorrectCount { get; set; } // Toplam doğru sayısı
     public int TotalWrongCount { get; set; } // Toplam yanlış sayısı
-    public bool? IsLastAnswerCorrectInFolderPractice { get; set; } // Klasör pratiklerinde son cevap doğru mu?
     public DateTime? LastPracticeDate { get; set; } // Son pratik yapılan tarih
 }

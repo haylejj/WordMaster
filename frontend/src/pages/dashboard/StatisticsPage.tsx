@@ -144,6 +144,7 @@ export default function StatisticsPage() {
                                 fontSize={12}
                                 tickLine={false}
                                 axisLine={false}
+                                allowDecimals={false}
                             />
                             <Tooltip
                                 cursor={{ fill: 'transparent' }}
