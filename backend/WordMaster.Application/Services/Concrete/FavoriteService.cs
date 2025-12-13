@@ -105,6 +105,34 @@ public class FavoriteService(IFavoriteRepository favoriteRepository, IUnitOfWork
 
         return ServiceResult<PracticeWordResponse>.Success(response, HttpStatusCode.OK);
     }
+    public async Task<ServiceResult<QuizResponse>> GetQuizAsync(Guid userId, long? excludeWordId = null)
+    {
+        // 1. Get random favorite word
+        ServiceResult<PracticeWordResponse> randomWordResult = await GetRandomWordFromFavoritesAsync(userId, excludeWordId);
+        if (!randomWordResult.IsSuccess || randomWordResult.Data == null)
+        {
+            return ServiceResult<QuizResponse>.Failure(randomWordResult.ErrorList ?? ["Favori kelime bulunamadı."], randomWordResult.StatusCode);
+        }
+
+        PracticeWordResponse question = randomWordResult.Data;
+
+        // 2. Get distractors from GENERAL words (via WordService) 
+        // Logic: distractors don't have to be favorites, they just need to be words.
+        List<string> distractors = await wordService.GetRandomDistractorsAsync(userId, 3, question.Id);
+
+        List<string> options = [.. distractors];
+        options.Add(question.TurkishWord);
+
+        options = [.. options.OrderBy(x => Random.Shared.Next())];
+
+        QuizResponse response = new()
+        {
+            Question = question,
+            Options = options
+        };
+
+        return ServiceResult<QuizResponse>.Success(response, HttpStatusCode.OK);
+    }
 
     public Task<ServiceResult<bool>> CheckTranslationAndUpdateAsync(Guid userId, CheckTranslationRequest request)
     {

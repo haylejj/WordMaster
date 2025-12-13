@@ -17,6 +17,9 @@ public interface IWordService
     Task<ServiceResult<bool>> CheckTranslationAndUpdateAsync(Guid userId, CheckTranslationRequest request);
     Task<ServiceResult<bool>> BulkUpdateStatsAsync(Guid userId, BulkUpdateStatsRequest request);
     Task<ServiceResult<PagedResult<WordResponse>>> GetPagedWordsAsync(Guid userId, string? search, int page, int pageSize);
+    Task<ServiceResult<QuizResponse>> GetQuizAsync(Guid userId, long? excludeWordId = null);
+    Task<List<string>> GetRandomDistractorsAsync(Guid userId, int count, long excludeWordId);
+    Task<ServiceResult<List<string>>> GetDistractorsAsync(Guid userId, int count, long excludeWordId);
     Task<ServiceResult<List<WordLookupResponse>>> GetUserWordsAsync(Guid userId);
 
     // Admin Methods

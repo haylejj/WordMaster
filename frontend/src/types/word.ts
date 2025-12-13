@@ -14,6 +14,11 @@ export interface PracticeWordResponse {
   turkishWord: string;
 }
 
+export interface QuizResponse {
+  question: PracticeWordResponse;
+  options: string[];
+}
+
 
 
 export interface FavoriteWordResponse {

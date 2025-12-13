@@ -239,6 +239,106 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
 
         return ServiceResult<PracticeWordResponse>.Success(response, HttpStatusCode.OK);
     }
+    public async Task<List<string>> GetRandomDistractorsAsync(Guid userId, int count, long excludeWordId)
+    {
+        // Fetch all user words (from cache if possible)
+        string cacheKey = CacheKeys.Words(userId);
+        List<PracticeWordKey>? cachedWords = await cacheService.GetAsync<List<PracticeWordKey>>(cacheKey);
+
+        List<PracticeWordKey> allWords;
+        if (cachedWords != null && cachedWords.Count > 0)
+        {
+            allWords = cachedWords;
+        }
+        else
+        {
+            List<Word> words = await wordRepository.GetWordsByUserAsync(userId);
+            allWords = words.Select(w => new PracticeWordKey
+            {
+                Id = w.Id,
+                EnglishWord = w.EnglishWord,
+                TurkishWord = w.TurkishWord
+            }).ToList();
+
+            if (allWords.Count > 0)
+            {
+                await cacheService.SetAsync(cacheKey, allWords, CacheDurations.Practice);
+            }
+        }
+
+        // Filter valid distractors:
+        // 1. Cannot be the target word (excludeWordId)
+        // 2. Must have a valid Turkish word
+        // In-memory filter is fast for typical vocabulary sizes (e.g. < 5000 words).
+        List<string> candidates = allWords
+            .Where(w => w.Id != excludeWordId && !string.IsNullOrWhiteSpace(w.TurkishWord))
+            .Select(w => w.TurkishWord!)
+            .Distinct() // Ensure unique options
+            .ToList();
+
+        if (candidates.Count == 0)
+        {
+            return [];
+        }
+
+        // Pick randoms efficiently
+        List<string> distractors = [];
+        int needed = count;
+
+        // If we have fewer candidates than needed, return all of them
+        if (candidates.Count <= needed)
+        {
+            return candidates;
+        }
+
+        // Shuffle picking
+        while (distractors.Count < needed && candidates.Count > 0)
+        {
+            int index = Random.Shared.Next(candidates.Count);
+            distractors.Add(candidates[index]);
+            candidates.RemoveAt(index); // Remove to avoid duplicates
+        }
+
+        return distractors;
+    }
+    public async Task<ServiceResult<List<string>>> GetDistractorsAsync(Guid userId, int count, long excludeWordId)
+    {
+        // Limit count to prevent abuse
+        if (count > 10) count = 10;
+        if (count < 1) count = 1;
+        List<string> distractors = await GetRandomDistractorsAsync(userId, count, excludeWordId);
+        return ServiceResult<List<string>>.Success(distractors, HttpStatusCode.OK);
+    }
+    public async Task<ServiceResult<QuizResponse>> GetQuizAsync(Guid userId, long? excludeWordId = null)
+    {
+        ServiceResult<PracticeWordResponse> randomWordResult = await GetRandomWordAsync(userId, excludeWordId);
+        if (!randomWordResult.IsSuccess || randomWordResult.Data == null)
+        {
+            return ServiceResult<QuizResponse>.Failure(randomWordResult.ErrorList ?? ["Kelime bulunamadı."], randomWordResult.StatusCode);
+        }
+
+        PracticeWordResponse question = randomWordResult.Data;
+
+        // Get 3 distractors
+        List<string> distractors = await GetRandomDistractorsAsync(userId, 3, question.Id);
+
+        // It is possible we requested 3 but got fewer if the user has very few words.
+        // The frontend should handle < 4 options or we can add filler "fake" answers if we really wanted to (but better not to fake it).
+
+        List<string> options = [.. distractors];
+        options.Add(question.TurkishWord);
+
+        // Shuffle final options
+        options = [.. options.OrderBy(x => Random.Shared.Next())];
+
+        QuizResponse response = new()
+        {
+            Question = question,
+            Options = options
+        };
+
+        return ServiceResult<QuizResponse>.Success(response, HttpStatusCode.OK);
+    }
     public async Task<ServiceResult<bool>> CheckTranslationAndUpdateAsync(Guid userId, CheckTranslationRequest request)
     {
         Word? word = await wordRepository.GetWordForUserTrackedAsync(request.WordId, userId);

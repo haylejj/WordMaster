@@ -113,6 +113,8 @@ Kelime işlemleri `/api/words` altında toplanmıştır.
 | `GET` | `/api/words/practice/random` 🛡️ | Pratik için rastgele kelime getirir. |
 | `POST` | `/api/words/practice/check` 🛡️ | Pratik çeviri kontrolü yapar. |
 | `POST` | `/api/words/practice/batch-update` 🛡️ | Pratik istatistiklerini toplu olarak günceller. |
+| `GET` | `/api/words/quiz` 🛡️ | Test (Quiz) için soru ve şıklar getirir. |
+| `GET` | `/api/words/practice/distractors` 🛡️ | Pratik için yanlış şık (çeldirici) kelimeler getirir. |
 
 ### Folder Endpoint'leri
 
@@ -140,6 +142,7 @@ Favori kelime yönetimi `/api/favorites` altında toplanmıştır.
 | `POST` | `/api/favorites/toggle` 🛡️ | Kelimeyi favorilere ekler/çıkarır. |
 | `GET` | `/api/favorites/practice/random` 🛡️ | Favorilerden pratik için rastgele kelime getirir. |
 | `POST` | `/api/favorites/practice/check` 🛡️ | Favori pratik çeviri kontrolü yapar. |
+| `GET` | `/api/favorites/quiz` 🛡️ | Favorilerden test (Quiz) sorusu getirir. |
 
 ### Unknowns Endpoint'leri
 
@@ -151,6 +154,7 @@ Bilinmeyen kelime yönetimi `/api/unknows` altında toplanmıştır.
 | `POST` | `/api/unknows/toggle` 🛡️ | Kelimeyi bilinmeyenlere ekler/çıkarır. |
 | `GET` | `/api/unknows/practice/random` 🛡️ | Bilinmeyenlerden pratik için rastgele kelime getirir. |
 | `POST` | `/api/unknows/practice/check` 🛡️ | Bilinmeyen pratik çeviri kontrolü yapar. |
+| `GET` | `/api/unknows/quiz` 🛡️ | Bilinmeyenlerden test (Quiz) sorusu getirir. |
 
 ### Statistics Endpoint'leri
 
@@ -350,6 +354,19 @@ Projenin sürdürülebilirliği ve ölçeklenebilirliği için **URL Path Versio
 *   **Proje Sürümü**: Yazılımın derleme sürümü (`1.0.0-dev` vb.) `.csproj` üzerinden ayrıca takip edilir; bu, API versiyonundan (v1) bağımsızdır.
 
 *Detaylı bilgi ve kullanım rehberi için [docs/Api_Versioning.md](docs/Api_Versioning.md) dosyasına bakabilirsiniz.*
+
+---
+
+### 14. Çoktan Seçmeli Test Modu (Quiz Mode)
+Kullanıcıların kelime dağarcığını test etmeleri için geliştirilen "Test Modu", performans odaklı bir mimari ile sunulmuştur.
+
+*   **Tek İstek (Single Request) Mimarisi**:
+    *   Frontend'in her bir şık için ayrı ayrı istek atması yerine (N+1 problemi), `/quiz` endpoint'i üzerinden **Tek Seferde** soru ve 4 şık (1 doğru, 3 yanlış) döner.
+    *   Bu yöntem, mobil cihazlarda veri kullanımını ve ağ gecikmesini (latency) minimize eder.
+*   **Akıllı Şık Üretimi (Distractor Generation)**:
+    *   Doğru cevap dışında kalan 3 yanlış şık, genel kelime havuzundan rastgele seçilir.
+    *   Sistemin "Favoriler" veya "Bilinmeyenler" modunda çalışması fark etmeksizin, şıkların her zaman dolu gelmesi sağlanır.
+*   **Güvenli Test**: Şıklar backend tarafında karıştırılır (shuffle), böylece doğru cevabın yeri tahmin edilemez.
 
 ---
 

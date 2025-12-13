@@ -178,6 +178,12 @@ export default function FolderDetailPage() {
                                 >
                                     Pratik Yap
                                 </button>
+                                <button
+                                    onClick={() => navigate(`/dashboard/folders/${folderId}/test`)}
+                                    className="rounded-full bg-indigo-500 px-5 py-2 text-sm font-semibold text-white shadow hover:bg-indigo-600"
+                                >
+                                    Test Yap
+                                </button>
                                 <div className="relative w-full max-w-xs z-20">
                                     <div
                                         ref={dropdownRef}

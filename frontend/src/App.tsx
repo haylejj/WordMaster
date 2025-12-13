@@ -16,6 +16,8 @@ import ChangePasswordPage from "@/pages/dashboard/ChangePasswordPage";
 import GeneralPracticePage from "@/pages/dashboard/GeneralPracticePage";
 import FolderPracticePage from "@/pages/dashboard/FolderPracticePage";
 import StatisticsPage from "@/pages/dashboard/StatisticsPage";
+import GeneralTestPage from "@/pages/dashboard/GeneralTestPage";
+import FolderTestPage from "@/pages/dashboard/FolderTestPage";
 
 import AdminLayout from "@/layouts/AdminLayout";
 import AdminDashboardPage from "@/pages/admin/AdminDashboardPage";
@@ -70,7 +72,9 @@ function App() {
           <Route path="profile" element={<ProfilePage />} />
           <Route path="change-password" element={<ChangePasswordPage />} />
           <Route path="practice/:type" element={<GeneralPracticePage />} />
+          <Route path="test/:type" element={<GeneralTestPage />} />
           <Route path="folders/:id/practice" element={<FolderPracticePage />} />
+          <Route path="folders/:id/test" element={<FolderTestPage />} />
           <Route path="statistics" element={<StatisticsPage />} />
         </Route>
 

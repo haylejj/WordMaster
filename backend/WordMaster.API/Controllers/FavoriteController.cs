@@ -64,6 +64,19 @@ public class FavoriteController(IFavoriteService favoriteService) : BaseControll
     }
 
     /// <summary>
+    /// Favorilerden test (quiz) sorusu getirir.
+    /// </summary>
+    /// <returns>Soru ve şıklar.</returns>
+    [HttpGet("quiz")]
+    [RequirePermission("Public", "Favorites", "GetQuiz", "GET", "Favori test sorusu getir")]
+    public async Task<IActionResult> GetQuiz([FromQuery] int? excludeWordId)
+    {
+        Guid userId = User.GetUserId();
+        ServiceResult<QuizResponse> result = await favoriteService.GetQuizAsync(userId, excludeWordId);
+        return CreateResult(result);
+    }
+
+    /// <summary>
     /// Favoriler pratiği sırasında girilen çeviriyi kontrol eder ve istatistikleri günceller.
     /// </summary>
     /// <param name="request">Kontrol edilecek kelime bilgileri.</param>
