@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WordMaster.Infrastructure.EfCore;
 
@@ -11,9 +12,11 @@ using WordMaster.Infrastructure.EfCore;
 namespace WordMaster.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251213130024_OptimizePracticeHistory")]
+    partial class OptimizePracticeHistory
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -443,6 +446,9 @@ namespace WordMaster.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
+                    b.Property<Guid?>("AppUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int>("CorrectCount")
                         .HasColumnType("int");
 
@@ -460,7 +466,7 @@ namespace WordMaster.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("AppUserId");
 
                     b.ToTable("PracticeHistories");
                 });
@@ -677,10 +683,8 @@ namespace WordMaster.Infrastructure.Migrations
             modelBuilder.Entity("WordMaster.Domain.Entities.PracticeHistory", b =>
                 {
                     b.HasOne("WordMaster.Domain.Entities.AppUser", "AppUser")
-                        .WithMany("PracticeHistories")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .WithMany()
+                        .HasForeignKey("AppUserId");
 
                     b.Navigation("AppUser");
                 });
@@ -749,11 +753,6 @@ namespace WordMaster.Infrastructure.Migrations
                     b.Navigation("Folder");
 
                     b.Navigation("Word");
-                });
-
-            modelBuilder.Entity("WordMaster.Domain.Entities.AppUser", b =>
-                {
-                    b.Navigation("PracticeHistories");
                 });
 
             modelBuilder.Entity("WordMaster.Domain.Entities.Folder", b =>

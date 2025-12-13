@@ -107,6 +107,48 @@ public class WordRepository(AppDbContext context) : GenericRepository<Word>(cont
     }
 
 
+    public async Task<(int TotalWords, int LearnedWords, int TotalCorrect, int TotalWrong)> GetUserGeneralStatsAsync(Guid userId)
+    {
+        var stats = await _context.Words
+            .Where(x => x.UserId == userId)
+            .GroupBy(x => 1) // Fake group key to aggregate all
+            .Select(g => new
+            {
+                TotalWords = g.Count(),
+                LearnedWords = g.Count(w => w.ConsecutiveCorrectCount >= 5),
+                TotalCorrect = g.Sum(w => w.TotalCorrectCount),
+                TotalWrong = g.Sum(w => w.TotalWrongCount)
+            })
+            .FirstOrDefaultAsync();
+
+        if (stats == null)
+            return (0, 0, 0, 0);
+
+        return (stats.TotalWords, stats.LearnedWords, stats.TotalCorrect, stats.TotalWrong);
+    }
+
+    public async Task<List<Word>> GetUserBestWordsAsync(Guid userId, int count)
+    {
+        return await _context.Words
+            .Where(w => w.UserId == userId && w.TotalCorrectCount > 0)
+            .OrderByDescending(w => w.TotalCorrectCount)
+            .ThenBy(w => w.TotalWrongCount)
+            .Take(count)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    public async Task<List<Word>> GetUserWorstWordsAsync(Guid userId, int count)
+    {
+        return await _context.Words
+            .Where(w => w.UserId == userId && w.TotalWrongCount > 0)
+            .OrderByDescending(w => w.TotalWrongCount)
+            .ThenBy(w => w.TotalCorrectCount)
+            .Take(count)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
     public void DeleteWordWithRelations(Word word)
     {
         if (word.WordFolders != null && word.WordFolders.Count != 0)
