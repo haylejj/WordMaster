@@ -7,7 +7,7 @@ import {
     getGlobalClearAuth
 } from "@/hooks/useAuth";
 
-const BASE_URL = import.meta.env.VITE_API_URL || "https://localhost:3001/api/v1";
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3002/api/v1";
 
 /**
  * Axios instance - HttpOnly cookie desteği için withCredentials: true

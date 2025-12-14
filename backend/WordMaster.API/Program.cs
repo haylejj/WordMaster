@@ -120,7 +120,11 @@ if (app.Environment.IsDevelopment())
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 app.UseMiddleware<AppVersionHeaderMiddleware>();
 
-app.UseHttpsRedirection();
+// Production'da HTTPS'e yönlendir, development'ta HTTP kullan
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseCors("AllowSpecificOrigins");
 

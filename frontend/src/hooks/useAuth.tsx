@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useCallback, useEffect, useRef, us
 import axios from "axios";
 import type { RefreshTokenResponse, ServiceResultWithData } from "@/types/api";
 
-const BASE_URL = import.meta.env.VITE_API_URL || "https://localhost:3001/api/v1";
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3002/api/v1";
 
 interface AuthContextType {
     /** Mevcut access token */

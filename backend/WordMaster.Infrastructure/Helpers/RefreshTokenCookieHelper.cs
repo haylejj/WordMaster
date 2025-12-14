@@ -52,7 +52,7 @@ public class RefreshTokenCookieHelper(
         CookieOptions cookieOptions = new()
         {
             HttpOnly = true,                                    // JavaScript erişemez (XSS koruması)
-            Secure = true,
+            Secure = !_isDevelopment,
             SameSite = _isDevelopment
                 ? SameSiteMode.Lax                              // Development: http/https cross-scheme için
                 : SameSiteMode.Strict,                          // Production: Maksimum CSRF koruması
