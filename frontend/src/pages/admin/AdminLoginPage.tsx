@@ -1,18 +1,27 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { loginSchema } from "@/types/auth";
 import type { LoginRequest } from "@/types/auth";
 import { authService } from "@/services/auth.service";
+import { useAuth } from "@/hooks/useAuth";
 import { cn, getErrorMessage } from "@/lib/utils";
 import { Eye, EyeOff, ShieldAlert } from "lucide-react";
 
 export default function AdminLoginPage() {
     const navigate = useNavigate();
+    const { isAuthenticated, isLoading, setAuth } = useAuth();
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+
+    // Zaten login olmuşsa admin dashboard'a yönlendir
+    useEffect(() => {
+        if (!isLoading && isAuthenticated) {
+            navigate("/admin/dashboard");
+        }
+    }, [isLoading, isAuthenticated, navigate]);
 
     const {
         register,
@@ -33,8 +42,7 @@ export default function AdminLoginPage() {
         try {
             const response = await authService.adminLogin(data);
             if (response.isSuccess) {
-                localStorage.setItem("accessToken", response.data.accessToken);
-                localStorage.setItem("refreshToken", response.data.refreshToken);
+                setAuth(response.data.accessToken, response.data.expiresAt);
                 navigate("/admin/dashboard");
             } else {
                 if (response.errorList && response.errorList.length > 0) {
@@ -43,7 +51,7 @@ export default function AdminLoginPage() {
                     setError("Giriş başarısız.");
                 }
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             setError(getErrorMessage(err));
         } finally {
             setLoading(false);

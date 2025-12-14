@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
@@ -11,26 +12,47 @@ import {
     BookOpen,
     Lock,
     Database,
-    Activity
+    Activity,
+    Loader2
 } from "lucide-react";
 import { authService } from "@/services/auth.service";
-import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function AdminLayout() {
     const location = useLocation();
     const navigate = useNavigate();
+    const { isAuthenticated, isLoading, clearAuth } = useAuth();
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+    // Auth durumu yüklendiğinde ve kullanıcı login değilse admin login'e yönlendir
+    useEffect(() => {
+        if (!isLoading && !isAuthenticated) {
+            navigate("/admin/login");
+        }
+    }, [isLoading, isAuthenticated, navigate]);
 
     const handleLogout = async () => {
         try {
             await authService.logout();
-            localStorage.removeItem("accessToken");
-            localStorage.removeItem("refreshToken");
+        } finally {
+            clearAuth();
             navigate("/admin/login");
-        } catch (error) {
-            console.error("Logout failed", error);
         }
     };
+
+    // Auth durumu yüklenirken loading göster
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-black flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-red-600" />
+            </div>
+        );
+    }
+
+    // Authenticated değilse hiçbir şey gösterme
+    if (!isAuthenticated) {
+        return null;
+    }
 
     const navItems = [
         { icon: LayoutDashboard, label: "Kontrol Paneli", path: "/admin/dashboard" },

@@ -1,5 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
+import { AuthProvider } from "@/hooks/useAuth";
+import AuthSync from "@/components/common/AuthSync";
+
 import LoginPage from "@/pages/auth/LoginPage";
 import RegisterPage from "@/pages/auth/RegisterPage";
 import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage";
@@ -35,52 +38,55 @@ import PermissionDeniedModal from "@/components/common/PermissionDeniedModal";
 
 function App() {
   return (
-    <Router>
-      <Toaster position="top-right" theme="dark" />
-      <PermissionDeniedModal />
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/confirm-email" element={<ConfirmEmailPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/ResetPassword" element={<ResetPasswordPage />} />
+    <AuthProvider>
+      <Router>
+        <AuthSync />
+        <Toaster position="top-right" theme="dark" />
+        <PermissionDeniedModal />
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/confirm-email" element={<ConfirmEmailPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/ResetPassword" element={<ResetPasswordPage />} />
 
-        {/* Admin Routes */}
-        <Route path="/admin/login" element={<AdminLoginPage />} />
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route path="dashboard" element={<AdminDashboardPage />} />
-          <Route path="users" element={<AdminUsersPage />} />
-          <Route path="words" element={<AdminWordsPage />} />
-          <Route path="roles" element={<AdminRolesPage />} />
-          <Route path="permissions" element={<AdminPermissionsPage />} />
-          <Route path="ip-addresses" element={<AdminIpAddressesPage />} />
-          <Route path="logs" element={<AdminLogHistoryPage />} />
-          <Route path="database" element={<DatabaseResetPage />} />
-        </Route>
+          {/* Admin Routes */}
+          <Route path="/admin/login" element={<AdminLoginPage />} />
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route path="dashboard" element={<AdminDashboardPage />} />
+            <Route path="users" element={<AdminUsersPage />} />
+            <Route path="words" element={<AdminWordsPage />} />
+            <Route path="roles" element={<AdminRolesPage />} />
+            <Route path="permissions" element={<AdminPermissionsPage />} />
+            <Route path="ip-addresses" element={<AdminIpAddressesPage />} />
+            <Route path="logs" element={<AdminLogHistoryPage />} />
+            <Route path="database" element={<DatabaseResetPage />} />
+          </Route>
 
-        {/* Public Landing Page */}
-        <Route path="/" element={<LandingPage />} />
+          {/* Public Landing Page */}
+          <Route path="/" element={<LandingPage />} />
 
-        {/* Protected Dashboard Routes */}
-        <Route path="/dashboard" element={<DashboardLayout />}>
-          <Route index element={<WordsPage key="words" />} />
-          <Route path="add-word" element={<CreateWordPage />} />
-          <Route path="folders" element={<FoldersPage />} />
-          <Route path="folders/:id" element={<FolderDetailPage />} />
-          <Route path="favorites" element={<WordsPage key="favorites" variant="favorites" />} />
-          <Route path="unknowns" element={<WordsPage key="unknowns" variant="unknowns" />} />
-          <Route path="profile" element={<ProfilePage />} />
-          <Route path="change-password" element={<ChangePasswordPage />} />
-          <Route path="practice/:type" element={<GeneralPracticePage />} />
-          <Route path="test/:type" element={<GeneralTestPage />} />
-          <Route path="folders/:id/practice" element={<FolderPracticePage />} />
-          <Route path="folders/:id/test" element={<FolderTestPage />} />
-          <Route path="statistics" element={<StatisticsPage />} />
-        </Route>
+          {/* Protected Dashboard Routes */}
+          <Route path="/dashboard" element={<DashboardLayout />}>
+            <Route index element={<WordsPage key="words" />} />
+            <Route path="add-word" element={<CreateWordPage />} />
+            <Route path="folders" element={<FoldersPage />} />
+            <Route path="folders/:id" element={<FolderDetailPage />} />
+            <Route path="favorites" element={<WordsPage key="favorites" variant="favorites" />} />
+            <Route path="unknowns" element={<WordsPage key="unknowns" variant="unknowns" />} />
+            <Route path="profile" element={<ProfilePage />} />
+            <Route path="change-password" element={<ChangePasswordPage />} />
+            <Route path="practice/:type" element={<GeneralPracticePage />} />
+            <Route path="test/:type" element={<GeneralTestPage />} />
+            <Route path="folders/:id/practice" element={<FolderPracticePage />} />
+            <Route path="folders/:id/test" element={<FolderTestPage />} />
+            <Route path="statistics" element={<StatisticsPage />} />
+          </Route>
 
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Router>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 

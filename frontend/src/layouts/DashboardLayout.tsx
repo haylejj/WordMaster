@@ -1,18 +1,27 @@
 import { useEffect, useState, useRef } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
-import { Book, Plus, Star, HelpCircle, PlayCircle, User, LogOut, Settings, Key, ChevronDown, Folder, TrendingUp } from "lucide-react";
+import { Book, Plus, Star, HelpCircle, PlayCircle, User, LogOut, Settings, Key, ChevronDown, Folder, TrendingUp, Loader2 } from "lucide-react";
 import { authService } from "@/services/auth.service";
+import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 
 export default function DashboardLayout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { isAuthenticated, isLoading, clearAuth } = useAuth();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const [isPracticeMenuOpen, setIsPracticeMenuOpen] = useState(false);
   const practiceMenuRef = useRef<HTMLDivElement>(null);
   const [isTestMenuOpen, setIsTestMenuOpen] = useState(false);
   const testMenuRef = useRef<HTMLDivElement>(null);
+
+  // Auth durumu yüklendiğinde ve kullanıcı login değilse login'e yönlendir
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      navigate("/login");
+    }
+  }, [isLoading, isAuthenticated, navigate]);
 
   useEffect(() => {
     let isMounted = true;
@@ -25,13 +34,21 @@ export default function DashboardLayout() {
         }
       }
     };
-    checkSession();
-    const intervalId = window.setInterval(checkSession, 5 * 60 * 1000);
+
+    // Sadece authenticated ise session check yap
+    if (isAuthenticated) {
+      checkSession();
+      const intervalId = window.setInterval(checkSession, 5 * 60 * 1000);
+      return () => {
+        isMounted = false;
+        window.clearInterval(intervalId);
+      };
+    }
+
     return () => {
       isMounted = false;
-      window.clearInterval(intervalId);
     };
-  }, []);
+  }, [isAuthenticated]);
 
   // Close user menu when clicking outside
   useEffect(() => {
@@ -88,11 +105,24 @@ export default function DashboardLayout() {
     try {
       await authService.logout();
     } finally {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
+      clearAuth();
       navigate("/login");
     }
   };
+
+  // Auth durumu yüklenirken loading göster
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#f4f6f8] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary-yellow" />
+      </div>
+    );
+  }
+
+  // Authenticated değilse hiçbir şey gösterme (useEffect zaten yönlendirecek)
+  if (!isAuthenticated) {
+    return null;
+  }
 
   const navItems = [
     { name: "Kelimelerim", icon: Book, path: "/dashboard" },

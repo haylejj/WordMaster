@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { Key, KeyRound, Lock, ShieldCheck, Save, Loader2, AlertCircle, CheckCircle, Eye, EyeOff, Check, X } from "lucide-react";
 import { changePasswordSchema, type ChangePasswordRequest } from "@/types/auth";
 import { authService } from "@/services/auth.service";
+import { useAuth } from "@/hooks/useAuth";
 import { cn, getErrorMessage } from "@/lib/utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -68,11 +69,12 @@ export default function ChangePasswordPage() {
     window.history.back();
   };
 
-  const handleSuccessModalClose = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
+  const { clearAuth } = useAuth();
+
+  const handleSuccessModalClose = useCallback(() => {
+    clearAuth();
     navigate("/login");
-  };
+  }, [clearAuth, navigate]);
 
   useEffect(() => {
     if (showSuccessModal) {

@@ -62,6 +62,7 @@ public static class ServiceCollectionExtensions
 
         // Helpers
         services.AddScoped<IDataProtectionHelper, DataProtectionHelper>();
+        services.AddScoped<IRefreshTokenCookieHelper, RefreshTokenCookieHelper>();
 
         return services;
     }

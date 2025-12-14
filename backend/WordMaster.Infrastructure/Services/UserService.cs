@@ -421,4 +421,34 @@ public class UserService(
         logger.LogInformation("User roles updated for user {UserId}. Added: {Added}, Removed: {Removed}", request.UserId, string.Join(",", rolesToAdd), string.Join(",", rolesToRemove));
         return ServiceResult.Success(HttpStatusCode.NoContent);
     }
+
+    /// <summary>
+    /// Refresh token ile kullanıcıyı bulur (sayfa yenileme durumu için).
+    /// </summary>
+    public async Task<ServiceResult<UserWithRolesResponse>> FindUserByRefreshTokenAsync(string refreshToken)
+    {
+        // Refresh token'ı hash'le
+        string hashedToken = RefreshTokenHasher.HashRefreshToken(refreshToken);
+
+        // Direkt veritabanında hash ile ara (index kullanabilir)
+        AppUser? user = await userManager.Users
+            .FirstOrDefaultAsync(u => u.RefreshToken == hashedToken && u.RefreshTokenExpires > DateTime.UtcNow);
+
+        if (user == null)
+        {
+            return ServiceResult<UserWithRolesResponse>.Failure("Refresh token ile kullanıcı bulunamadı", HttpStatusCode.Unauthorized);
+        }
+
+        IList<string> roles = await userManager.GetRolesAsync(user);
+
+        return ServiceResult<UserWithRolesResponse>.Success(new UserWithRolesResponse
+        {
+            Id = user.Id.ToString(),
+            UserName = user.UserName!,
+            Email = user.Email!,
+            SecurityStamp = user.SecurityStamp,
+            Gender = user.Gender,
+            Roles = roles.ToList()
+        }, HttpStatusCode.OK);
+    }
 }

@@ -262,11 +262,33 @@ Gelen isteklerin (Request DTOs) doğrulanması için **FluentValidation** kütü
 *   **Otomatik Kontrol**: `ValidationFilter` sayesinde, Controller'a istek ulaştığında validasyon kuralları otomatik olarak çalıştırılır.
 *   Eğer validasyon hatası varsa, Controller action'ı çalışmadan `400 Bad Request` ve hata detayları döner.
 
-### 2. Authentication (Kimlik Doğrulama)
-Kimlik doğrulama işlemleri **ASP.NET Core Identity** ve **JWT (JSON Web Token)** ile sağlanır.
-*   **Identity**: Kullanıcı ve rol yönetimi için kullanılır.
-*   **JWT**: Stateless bir yapı için Access ve Refresh Token mekanizması kurulmuştur.
-*   Giriş yapan kullanıcıya bir JWT verilir ve sonraki isteklerde bu token `Authorization: Bearer <token>` header'ı ile gönderilir.
+### 2. Authentication (Kimlik Doğrulama) - Hibrit Token Stratejisi
+Kimlik doğrulama işlemleri **ASP.NET Core Identity** ve **JWT (JSON Web Token)** ile sağlanır. Güvenlik için **Hibrit Token Stratejisi** uygulanmıştır.
+
+#### Token Yapısı
+
+| Token Türü | Süre | Saklama Yeri | Güvenlik |
+|------------|------|--------------|----------|
+| **Access Token** | 15 dakika | Frontend Memory (RAM) | XSS'e karşı korumalı |
+| **Refresh Token** | 7 gün | HttpOnly Cookie | XSS'e %100 bağışık |
+
+#### Güvenlik Özellikleri
+
+*   **HttpOnly Cookie**: Refresh token JavaScript ile erişilemez. XSS saldırılarına karşı tam koruma.
+*   **Secure Flag**: Cookie sadece HTTPS üzerinden gönderilir.
+*   **SameSite=Strict**: Cross-site isteklerde cookie gönderilmez (CSRF koruması).
+*   **Token Rotation**: Her yenilemede yeni refresh token üretilir.
+*   **Hash'leme**: Refresh token veritabanına SHA256 hash olarak kaydedilir.
+*   **Security Stamp**: Şifre değişikliği veya logout durumunda tüm token'lar anında geçersiz olur.
+
+#### Akış
+
+1.  **Login**: Kullanıcı giriş yapar → Access token JSON body'de, Refresh token HttpOnly cookie olarak döner.
+2.  **API İstekleri**: Frontend, access token'ı `Authorization: Bearer <token>` header'ında gönderir.
+3.  **Token Yenileme**: Access token süresi dolunca `/refresh-token` çağrılır. Refresh token cookie'den otomatik gönderilir.
+4.  **Logout**: Hem sunucu tarafında token silinir, hem cookie temizlenir.
+
+*Detaylı bilgi için [docs/Authentication_System.md](docs/Authentication_System.md) dosyasına bakabilirsiniz.*
 
 ### 3. Authorization (Yetkilendirme) Sistemi
 Projede **Dinamik Attribute Tabanlı** gelişmiş bir yetkilendirme sistemi mevcuttur.
@@ -293,6 +315,7 @@ API endpoint'lerini test etmek ve belgelemek için **Swagger UI** entegre edilmi
 ### 7. CORS Politikası
 Farklı originlerden (örneğin Frontend uygulamasından) gelen isteklere izin vermek için **CORS** yapılandırılmıştır.
 *   Belirlenen frontend URL'lerine (localhost:5173 vb.) `AllowCredentials` ile izin verilir.
+*   **Not**: `AllowCredentials` HttpOnly cookie'lerin gönderilmesi için gereklidir.
 
 ### 8. Logging (Serilog)
 Uygulama genelinde yapılandırılmış (structured) loglama için **Serilog** kullanılmıştır.

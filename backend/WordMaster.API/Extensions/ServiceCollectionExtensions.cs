@@ -243,11 +243,13 @@ public static class ServiceCollectionExtensions
                         if (context.Exception is SecurityTokenExpiredException)
                         {
                             message = "Token süresi dolmuş.";
+                            context.Response.Headers.Append("Token-Expired", "true");
                         }
 
                         if (context.Exception is SecurityTokenInvalidSignatureException)
                         {
                             message = "Token imzası geçersiz.";
+                            context.Response.Headers.Append("Token-Invalid", "true");
                         }
 
                         ServiceResult result = ServiceResult.Failure(message, HttpStatusCode.Unauthorized);
