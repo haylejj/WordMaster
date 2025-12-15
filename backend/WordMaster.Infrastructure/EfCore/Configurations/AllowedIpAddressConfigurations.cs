@@ -4,7 +4,7 @@ using WordMaster.Domain.Entities;
 
 namespace WordMaster.Infrastructure.EfCore.Configurations;
 
-public class AllowedIpAddressConfiguration : IEntityTypeConfiguration<AllowedIpAddress>
+public class AllowedIpAddressConfigurations : IEntityTypeConfiguration<AllowedIpAddress>
 {
     public void Configure(EntityTypeBuilder<AllowedIpAddress> builder)
     {
@@ -30,6 +30,27 @@ public class AllowedIpAddressConfiguration : IEntityTypeConfiguration<AllowedIpA
 
         builder.HasIndex(x => x.IpAddress)
                .IsUnique();
+
+
+        // Seed Allowed IP Addresses for Local Development
+        builder.HasData(
+            new AllowedIpAddress
+            {
+                Id = 1,
+                IpAddress = "127.0.0.1",
+                Description = "Localhost IPv4 - Local Development",
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                IsActive = true
+            },
+            new AllowedIpAddress
+            {
+                Id = 2,
+                IpAddress = "::1",
+                Description = "Localhost IPv6 - Local Development",
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                IsActive = true
+            }
+        );
     }
 }
 

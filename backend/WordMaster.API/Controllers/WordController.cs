@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using System.Net;
 using Microsoft.AspNetCore.RateLimiting;
+using System.Net;
 using WordMaster.API.Extensions;
 using WordMaster.Application.Attributes;
 using WordMaster.Application.Requests.Practice;

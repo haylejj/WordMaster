@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 using System.Net;
 using WordMaster.Application.Services.Abstract;
@@ -19,7 +20,7 @@ public class DatabaseService(
 {
     public async Task<ServiceResult> ResetTableAsync(string tableName, string password, string userId, string? targetUserId = null)
     {
-        using var transaction = await context.Database.BeginTransactionAsync();
+        using IDbContextTransaction transaction = await context.Database.BeginTransactionAsync();
         try
         {
             AppUser? user = await userManager.FindByIdAsync(userId);

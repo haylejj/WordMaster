@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Reflection;
-using Microsoft.Extensions.Logging;
 using WordMaster.Application.Attributes;
 using WordMaster.Application.Persistence;
 using WordMaster.Application.Persistence.Repositories;
@@ -37,7 +37,7 @@ public class PermissionService(IPermissionRepository permissionRepository, IUnit
     {
         List<Permission> permissions = await permissionRepository.GetAll().ToListAsync();
 
-        var response = permissions.Select(p => new PermissionResponse
+        List<PermissionResponse> response = permissions.Select(p => new PermissionResponse
         {
             Id = p.Id,
             Key = p.Key,
@@ -60,7 +60,7 @@ public class PermissionService(IPermissionRepository permissionRepository, IUnit
     {
         List<Permission> permissions = await permissionRepository.GetPermissionsByRoleIdAsync(roleId);
 
-        var response = permissions.Select(p => new PermissionResponse
+        List<PermissionResponse> response = permissions.Select(p => new PermissionResponse
         {
             Id = p.Id,
             Key = p.Key,
@@ -145,7 +145,7 @@ public class PermissionService(IPermissionRepository permissionRepository, IUnit
     {
         logger.LogInformation("Starting permission scan and synchronization...");
 
-        var assembly = Assembly.GetEntryAssembly(); // Get the API assembly
+        Assembly? assembly = Assembly.GetEntryAssembly(); // Get the API assembly
         if (assembly == null)
         {
             logger.LogError("Entry assembly not found during permission scan.");
@@ -155,7 +155,7 @@ public class PermissionService(IPermissionRepository permissionRepository, IUnit
         IEnumerable<Type> controllers = assembly.GetTypes()
             .Where(t => typeof(ControllerBase).IsAssignableFrom(t) && !t.IsAbstract);
 
-        var codePermissions = new List<Permission>();
+        List<Permission> codePermissions = new();
 
         foreach (Type? controller in controllers)
         {
@@ -184,15 +184,15 @@ public class PermissionService(IPermissionRepository permissionRepository, IUnit
             }
         }
 
-        var dbPermissions = await permissionRepository.GetAll().ToListAsync();
+        List<Permission> dbPermissions = await permissionRepository.GetAll().ToListAsync();
 
         // 1. Permissions to ADD (In Code but not in DB)
-        var permissionsToAdd = codePermissions
+        List<Permission> permissionsToAdd = codePermissions
             .Where(cp => !dbPermissions.Any(dp => dp.Key == cp.Key))
             .ToList();
 
         // 2. Permissions to DELETE (In DB but not in Code)
-        var permissionsToDelete = dbPermissions
+        List<Permission> permissionsToDelete = dbPermissions
             .Where(dp => !codePermissions.Any(cp => cp.Key == dp.Key))
             .ToList();
 
@@ -213,7 +213,7 @@ public class PermissionService(IPermissionRepository permissionRepository, IUnit
 
         logger.LogInformation("Permission scan completed. Added: {AddedCount}, Deleted: {DeletedCount}", permissionsToAdd.Count, permissionsToDelete.Count);
 
-        var response = new PermissionScanResponse
+        PermissionScanResponse response = new()
         {
             AddedCount = permissionsToAdd.Count,
             DeletedCount = permissionsToDelete.Count
