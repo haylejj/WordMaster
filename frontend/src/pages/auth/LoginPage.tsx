@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { loginSchema } from "@/types/auth";
 import type { LoginRequest } from "@/types/auth";
 import { authService } from "@/services/auth.service";
+import { useAuth } from "@/hooks/useAuth";
 import { cn, getErrorMessage } from "@/lib/utils";
 import AuthLayout from "@/layouts/AuthLayout";
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
@@ -13,16 +14,17 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { isAuthenticated, isLoading, setAuth } = useAuth();
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    if (token) {
-      navigate("/dashboard");
-    }
-  }, [navigate]);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  // Zaten login olmuşsa dashboard'a yönlendir
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      navigate("/dashboard");
+    }
+  }, [isLoading, isAuthenticated, navigate]);
 
   const {
     register,
@@ -43,24 +45,32 @@ export default function LoginPage() {
     try {
       const response = await authService.login(data);
       if (response.isSuccess) {
-        localStorage.setItem("accessToken", response.data.accessToken);
-        localStorage.setItem("refreshToken", response.data.refreshToken);
+        setAuth(response.data.accessToken, response.data.expiresAt);
         navigate("/dashboard");
       } else {
-        // Show errorList content if available
         if (response.errorList && response.errorList.length > 0) {
           setError(response.errorList.join(" "));
         } else {
           setError("Giriş başarısız.");
         }
       }
-    } catch (err: any) {
-      // Handle network errors or unexpected issues
+    } catch (err: unknown) {
       setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
   };
+
+  // Auth durumu yüklenirken loading göster
+  if (isLoading) {
+    return (
+      <AuthLayout title="Giriş Yap">
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-yellow"></div>
+        </div>
+      </AuthLayout>
+    );
+  }
 
   return (
     <AuthLayout title="Giriş Yap">

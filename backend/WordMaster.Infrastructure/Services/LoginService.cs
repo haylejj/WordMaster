@@ -9,6 +9,7 @@ using WordMaster.Application.Responses.User;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Configuration;
 using WordMaster.Domain.Entities;
+using WordMaster.Domain.Helpers;
 using WordMaster.Domain.Results;
 using WordMaster.Infrastructure.Helpers;
 
@@ -24,9 +25,13 @@ public class LoginService(
     IDataProtectionHelper dataProtectionHelper,
     ICacheService cacheService,
     IAllowedIpAddressService allowedIpAddressService,
+    IRefreshTokenCookieHelper cookieHelper,
     IOptions<UrlsSettings> urlSettings,
+    IOptions<JwtSettings> jwtSettings,
     ILogger<LoginService> logger) : ILoginService
 {
+    private readonly JwtSettings _jwtSettings = jwtSettings.Value;
+
     /// <summary>
     /// Verilen email adresiyle kullanıcıyı bulur.
     /// </summary>
@@ -55,61 +60,9 @@ public class LoginService(
     /// </summary>
     /// <param name="request">Giriş bilgilerini içeren model.</param>
     /// <returns>Başarılı giriş durumunda token bilgilerini döner.</returns>
-    public async Task<ServiceResult<LoginResponse>> LoginAsync(LoginRequest request)
+    public async Task<ServiceResult<LoginInternalResponse>> LoginAsync(LoginRequest request)
     {
-        string? ipAddress = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
-
-        AppUser? user = await userManager.FindByEmailAsync(request.Email);
-        if (user == null)
-        {
-            await logHistoryService.RecordAsync(null, request.Email, ipAddress, false, "PublicLogin");
-            return ServiceResult<LoginResponse>.Failure("Email veya şifre yanlış", HttpStatusCode.NotFound);
-        }
-
-        SignInResult result = await signInManager.CheckPasswordSignInAsync(user, request.Password!, true);
-
-        if (result.IsLockedOut)
-        {
-            await logHistoryService.RecordAsync(user.Id.ToString(), request.Email, ipAddress, false, "PublicLogin");
-            return ServiceResult<LoginResponse>.Failure("Hesabınız kilitlendi. Lütfen daha sonra tekrar deneyiniz.", HttpStatusCode.Forbidden);
-        }
-
-        if (!result.Succeeded)
-        {
-            await logHistoryService.RecordAsync(user.Id.ToString(), request.Email, ipAddress, false, "PublicLogin");
-            return ServiceResult<LoginResponse>.Failure("Email veya şifre yanlış", HttpStatusCode.Unauthorized);
-        }
-
-        ServiceResult<string> refreshTokenResult = jwtService.GenerateRefreshToken();
-
-        user.RefreshToken = refreshTokenResult.Data;
-        user.RefreshTokenExpires = DateTime.UtcNow.AddDays(7);
-        await userManager.UpdateAsync(user);
-
-        // SecurityStamp cache'ini set et
-        await cacheService.SetAsync($"security_stamp:{user.Id}", user.SecurityStamp, TimeSpan.FromHours(1));
-
-        IList<string> roles = await userManager.GetRolesAsync(user);
-
-        // Token'ı en son kullanıcı durumuyla oluştur (UpdateAsync sonrası)
-        ServiceResult<string> accessTokenResult = jwtService.GenerateAccessToken(user.Id.ToString(), user.UserName!, user.Email!, roles, user.SecurityStamp!);
-
-        if (!accessTokenResult.IsSuccess)
-        {
-            await logHistoryService.RecordAsync(user.Id.ToString(), request.Email, ipAddress, false, "PublicLogin");
-            return ServiceResult<LoginResponse>.Failure("Email veya şifre yanlış.Beklenmeyen bir hata oluştu.", HttpStatusCode.InternalServerError);
-        }
-
-        // Başarılı login kaydı
-        await logHistoryService.RecordAsync(user.Id.ToString(), request.Email, ipAddress, true, "PublicLogin");
-
-        logger.LogInformation("User {UserId} logged in successfully from IP {IpAddress}", user.Id, ipAddress);
-
-        return ServiceResult<LoginResponse>.Success(new LoginResponse
-        {
-            AccessToken = accessTokenResult.Data!,
-            RefreshToken = refreshTokenResult.Data!
-        }, HttpStatusCode.OK);
+        return await ProcessLoginAsync(request, isAdminLogin: false);
     }
 
     /// <summary>
@@ -117,54 +70,85 @@ public class LoginService(
     /// </summary>
     /// <param name="request">Giriş bilgilerini içeren model.</param>
     /// <returns>Başarılı giriş durumunda token bilgilerini döner.</returns>
-    public async Task<ServiceResult<LoginResponse>> AdminLoginAsync(LoginRequest request)
+    public async Task<ServiceResult<LoginInternalResponse>> AdminLoginAsync(LoginRequest request)
     {
+        return await ProcessLoginAsync(request, isAdminLogin: true);
+    }
+
+    /// <summary>
+    /// Ortak login işlemlerini gerçekleştirir.
+    /// </summary>
+    /// <param name="request">Giriş bilgilerini içeren model.</param>
+    /// <param name="isAdminLogin">Admin girişi mi?</param>
+    /// <returns>Başarılı giriş durumunda token bilgilerini döner.</returns>
+    private async Task<ServiceResult<LoginInternalResponse>> ProcessLoginAsync(LoginRequest request, bool isAdminLogin)
+    {
+        string loginType = isAdminLogin ? "AdminLogin" : "PublicLogin";
         string? ipAddress = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
 
-        // IP adresi kontrolü
-        if (!string.IsNullOrWhiteSpace(ipAddress))
+        // Admin girişi için IP kontrolü
+        if (isAdminLogin && !string.IsNullOrWhiteSpace(ipAddress))
         {
             ServiceResult<bool> ipCheckResult = await allowedIpAddressService.IsIpAllowedAsync(ipAddress);
             if (!ipCheckResult.IsSuccess || !ipCheckResult.Data)
             {
-                await logHistoryService.RecordAsync(null, request.Email, ipAddress, false, "AdminLogin");
-                return ServiceResult<LoginResponse>.Failure("Bu IP adresinden admin paneline giriş yapma yetkiniz yok.", HttpStatusCode.Forbidden);
+                await logHistoryService.RecordAsync(null, request.Email, ipAddress, false, loginType);
+                return ServiceResult<LoginInternalResponse>.Failure("Bu IP adresinden admin paneline giriş yapma yetkiniz yok.", HttpStatusCode.Forbidden);
             }
         }
 
+        // Kullanıcıyı bul
         AppUser? user = await userManager.FindByEmailAsync(request.Email);
         if (user == null)
         {
-            await logHistoryService.RecordAsync(null, request.Email, ipAddress, false, "AdminLogin");
-            return ServiceResult<LoginResponse>.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound);
+            await logHistoryService.RecordAsync(null, request.Email, ipAddress, false, loginType);
+            return ServiceResult<LoginInternalResponse>.Failure(
+                isAdminLogin ? "Kullanıcı bulunamadı." : "Email veya şifre yanlış",
+                isAdminLogin ? HttpStatusCode.NotFound : HttpStatusCode.NotFound);
         }
 
-        // Admin rol kontrolü
-        bool isAdmin = await userManager.IsInRoleAsync(user, "admin");
-        if (!isAdmin)
+        // Admin girişi için rol kontrolü
+        if (isAdminLogin)
         {
-            await logHistoryService.RecordAsync(user.Id.ToString(), request.Email, ipAddress, false, "AdminLogin");
-            return ServiceResult<LoginResponse>.Failure("Bu panele erişim yetkiniz yok.", HttpStatusCode.Forbidden);
+            bool isAdmin = await userManager.IsInRoleAsync(user, "admin");
+            if (!isAdmin)
+            {
+                await logHistoryService.RecordAsync(user.Id.ToString(), request.Email, ipAddress, false, loginType);
+                return ServiceResult<LoginInternalResponse>.Failure("Bu panele erişim yetkiniz yok.", HttpStatusCode.Forbidden);
+            }
         }
 
+        // Şifre kontrolü
         SignInResult result = await signInManager.CheckPasswordSignInAsync(user, request.Password!, true);
 
         if (result.IsLockedOut)
         {
-            await logHistoryService.RecordAsync(user.Id.ToString(), request.Email, ipAddress, false, "AdminLogin");
-            return ServiceResult<LoginResponse>.Failure("Hesabınız kilitlendi. Lütfen daha sonra tekrar deneyiniz.", HttpStatusCode.Forbidden);
+            await logHistoryService.RecordAsync(user.Id.ToString(), request.Email, ipAddress, false, loginType);
+            return ServiceResult<LoginInternalResponse>.Failure("Hesabınız kilitlendi. Lütfen daha sonra tekrar deneyiniz.", HttpStatusCode.Forbidden);
         }
 
         if (!result.Succeeded)
         {
-            await logHistoryService.RecordAsync(user.Id.ToString(), request.Email, ipAddress, false, "AdminLogin");
-            return ServiceResult<LoginResponse>.Failure("Email veya şifre yanlış", HttpStatusCode.Unauthorized);
+            await logHistoryService.RecordAsync(user.Id.ToString(), request.Email, ipAddress, false, loginType);
+            return ServiceResult<LoginInternalResponse>.Failure("Email veya şifre yanlış", HttpStatusCode.Unauthorized);
         }
 
+        // Token'ları oluştur ve döndür
+        return await GenerateTokensAndCompleteLoginAsync(user, request.Email, ipAddress, loginType);
+    }
+
+    /// <summary>
+    /// Token'ları oluşturur ve login işlemini tamamlar.
+    /// </summary>
+    private async Task<ServiceResult<LoginInternalResponse>> GenerateTokensAndCompleteLoginAsync(
+        AppUser user, string email, string? ipAddress, string loginType)
+    {
+        // Refresh token oluştur
         ServiceResult<string> refreshTokenResult = jwtService.GenerateRefreshToken();
 
-        user.RefreshToken = refreshTokenResult.Data;
-        user.RefreshTokenExpires = DateTime.UtcNow.AddDays(7);
+        // Refresh token'ı HASH'leyerek veritabanına kaydet
+        user.RefreshToken = RefreshTokenHasher.HashRefreshToken(refreshTokenResult.Data!);
+        user.RefreshTokenExpires = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpiresInDays);
         await userManager.UpdateAsync(user);
 
         // SecurityStamp cache'ini set et
@@ -172,24 +156,27 @@ public class LoginService(
 
         IList<string> roles = await userManager.GetRolesAsync(user);
 
-        // Token'ı en son kullanıcı durumuyla oluştur (UpdateAsync sonrası)
-        ServiceResult<string> accessTokenResult = jwtService.GenerateAccessToken(user.Id.ToString(), user.UserName!, user.Email!, roles, user.SecurityStamp!);
+        // Access token oluştur
+        ServiceResult<string> accessTokenResult = jwtService.GenerateAccessToken(
+            user.Id.ToString(), user.UserName!, user.Email!, roles, user.SecurityStamp!);
 
         if (!accessTokenResult.IsSuccess)
         {
-            await logHistoryService.RecordAsync(user.Id.ToString(), request.Email, ipAddress, false, "AdminLogin");
-            return ServiceResult<LoginResponse>.Failure("Token oluşturulamadı.", HttpStatusCode.InternalServerError);
+            await logHistoryService.RecordAsync(user.Id.ToString(), email, ipAddress, false, loginType);
+            return ServiceResult<LoginInternalResponse>.Failure("Token oluşturulamadı.", HttpStatusCode.InternalServerError);
         }
 
         // Başarılı login kaydı
-        await logHistoryService.RecordAsync(user.Id.ToString(), request.Email, ipAddress, true, "AdminLogin");
+        await logHistoryService.RecordAsync(user.Id.ToString(), email, ipAddress, true, loginType);
 
-        logger.LogInformation("Admin user {UserId} logged in successfully from IP {IpAddress}", user.Id, ipAddress);
+        logger.LogInformation("{LoginType}: User {UserId} logged in successfully from IP {IpAddress}",
+            loginType, user.Id, ipAddress);
 
-        return ServiceResult<LoginResponse>.Success(new LoginResponse
+        // Plain refresh token'ı döndür (Controller cookie olarak set edecek)
+        return ServiceResult<LoginInternalResponse>.Success(new LoginInternalResponse
         {
             AccessToken = accessTokenResult.Data!,
-            RefreshToken = refreshTokenResult.Data!
+            RefreshToken = refreshTokenResult.Data!  // Plain text, cookie için
         }, HttpStatusCode.OK);
     }
 
@@ -319,5 +306,57 @@ public class LoginService(
         logger.LogInformation("User {UserId} logged out successfully", user.Id);
 
         return ServiceResult.Success(HttpStatusCode.OK);
+    }
+
+    /// <summary>
+    /// Kullanıcı girişi yapar ve refresh token'ı cookie'ye yazar.
+    /// </summary>
+    public async Task<ServiceResult<LoginResponse>> LoginWithCookieAsync(LoginRequest request)
+    {
+        ServiceResult<LoginInternalResponse> result = await LoginAsync(request);
+
+        if (!result.IsSuccess || result.Data == null)
+        {
+            return ServiceResult<LoginResponse>.Failure(result.ErrorList ?? [], result.StatusCode);
+        }
+
+        // Cookie'ye refresh token yaz
+        HttpContext? httpContext = httpContextAccessor.HttpContext;
+        if (httpContext != null)
+        {
+            cookieHelper.SetRefreshTokenCookie(httpContext, result.Data.RefreshToken);
+        }
+
+        return ServiceResult<LoginResponse>.Success(new LoginResponse
+        {
+            AccessToken = result.Data.AccessToken,
+            ExpiresAt = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpiresInMinutes)
+        }, result.StatusCode);
+    }
+
+    /// <summary>
+    /// Admin girişi yapar ve refresh token'ı cookie'ye yazar.
+    /// </summary>
+    public async Task<ServiceResult<LoginResponse>> AdminLoginWithCookieAsync(LoginRequest request)
+    {
+        ServiceResult<LoginInternalResponse> result = await AdminLoginAsync(request);
+
+        if (!result.IsSuccess || result.Data == null)
+        {
+            return ServiceResult<LoginResponse>.Failure(result.ErrorList ?? [], result.StatusCode);
+        }
+
+        // Cookie'ye refresh token yaz
+        HttpContext? httpContext = httpContextAccessor.HttpContext;
+        if (httpContext != null)
+        {
+            cookieHelper.SetRefreshTokenCookie(httpContext, result.Data.RefreshToken);
+        }
+
+        return ServiceResult<LoginResponse>.Success(new LoginResponse
+        {
+            AccessToken = result.Data.AccessToken,
+            ExpiresAt = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpiresInMinutes)
+        }, result.StatusCode);
     }
 }

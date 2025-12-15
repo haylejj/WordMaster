@@ -111,7 +111,7 @@ public class WordRepository(AppDbContext context) : GenericRepository<Word>(cont
     {
         var stats = await _context.Words
             .Where(x => x.UserId == userId)
-            .GroupBy(x => 1) // Fake group key to aggregate all
+            .GroupBy(x => 1)
             .Select(g => new
             {
                 TotalWords = g.Count(),
@@ -119,6 +119,7 @@ public class WordRepository(AppDbContext context) : GenericRepository<Word>(cont
                 TotalCorrect = g.Sum(w => w.TotalCorrectCount),
                 TotalWrong = g.Sum(w => w.TotalWrongCount)
             })
+            .OrderBy(x => 1)
             .FirstOrDefaultAsync();
 
         if (stats == null)

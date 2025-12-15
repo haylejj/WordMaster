@@ -11,11 +11,14 @@ using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Helpers;
 using WordMaster.Domain.Results;
+using WordMaster.Infrastructure.EfCore;
 
 namespace WordMaster.Infrastructure.Services;
 
 public class UserService(
     UserManager<AppUser> userManager,
+    RoleManager<AppRole> roleManager,
+    AppDbContext dbContext,
     ILogHistoryService logHistoryService,
     IWordRepository wordRepository,
     IFavoriteRepository favoriteRepository,
@@ -103,21 +106,35 @@ public class UserService(
             .Take(pageSize)
             .ToListAsync();
 
-        List<UserWithRolesResponse> userViewModels = new();
-        foreach (AppUser user in users)
+        // N+1 Query Çözümü: Tüm kullanıcıların ID'lerini al ve tek sorguda rolleri getir
+        List<Guid> userIds = users.Select(u => u.Id).ToList();
+
+        // UserRoles ve Roles tablolarını join ederek tek sorguda tüm rolleri al
+        Dictionary<Guid, List<string>> userRolesDict = await dbContext.UserRoles
+            .Where(ur => userIds.Contains(ur.UserId))
+            .Join(
+                roleManager.Roles,
+                ur => ur.RoleId,
+                r => r.Id,
+                (ur, r) => new { ur.UserId, RoleName = r.Name! })
+            .GroupBy(x => x.UserId)
+            .ToDictionaryAsync(
+                g => g.Key,
+                g => g.Select(x => x.RoleName).ToList());
+
+        // Lockout durumlarını kontrol et (bu da batch'lenebilir ama basit tutalım)
+        DateTime now = DateTime.UtcNow;
+
+        List<UserWithRolesResponse> userViewModels = users.Select(user => new UserWithRolesResponse
         {
-            IList<string> userRoles = await userManager.GetRolesAsync(user);
-            userViewModels.Add(new UserWithRolesResponse
-            {
-                Id = user.Id.ToString(),
-                UserName = user.UserName!,
-                Email = user.Email!,
-                SecurityStamp = user.SecurityStamp,
-                IsLockedOut = await userManager.IsLockedOutAsync(user),
-                Gender = user.Gender,
-                Roles = userRoles.ToList()
-            });
-        }
+            Id = user.Id.ToString(),
+            UserName = user.UserName!,
+            Email = user.Email!,
+            SecurityStamp = user.SecurityStamp,
+            IsLockedOut = user.LockoutEnd.HasValue && user.LockoutEnd > now,
+            Gender = user.Gender,
+            Roles = userRolesDict.TryGetValue(user.Id, out List<string>? roles) ? roles : []
+        }).ToList();
 
         PagedResult<UserWithRolesResponse> pagedResult = new()
         {
@@ -420,5 +437,35 @@ public class UserService(
 
         logger.LogInformation("User roles updated for user {UserId}. Added: {Added}, Removed: {Removed}", request.UserId, string.Join(",", rolesToAdd), string.Join(",", rolesToRemove));
         return ServiceResult.Success(HttpStatusCode.NoContent);
+    }
+
+    /// <summary>
+    /// Refresh token ile kullanıcıyı bulur (sayfa yenileme durumu için).
+    /// </summary>
+    public async Task<ServiceResult<UserWithRolesResponse>> FindUserByRefreshTokenAsync(string refreshToken)
+    {
+        // Refresh token'ı hash'le
+        string hashedToken = RefreshTokenHasher.HashRefreshToken(refreshToken);
+
+        // Direkt veritabanında hash ile ara (index kullanabilir)
+        AppUser? user = await userManager.Users
+            .FirstOrDefaultAsync(u => u.RefreshToken == hashedToken && u.RefreshTokenExpires > DateTime.UtcNow);
+
+        if (user == null)
+        {
+            return ServiceResult<UserWithRolesResponse>.Failure("Refresh token ile kullanıcı bulunamadı", HttpStatusCode.Unauthorized);
+        }
+
+        IList<string> roles = await userManager.GetRolesAsync(user);
+
+        return ServiceResult<UserWithRolesResponse>.Success(new UserWithRolesResponse
+        {
+            Id = user.Id.ToString(),
+            UserName = user.UserName!,
+            Email = user.Email!,
+            SecurityStamp = user.SecurityStamp,
+            Gender = user.Gender,
+            Roles = roles.ToList()
+        }, HttpStatusCode.OK);
     }
 }

@@ -61,4 +61,9 @@ public interface IUserService
     /// Kullanıcının rollerini değiştirir.
     /// </summary>
     Task<ServiceResult> ChangeUserRoleAsync(ChangeUserRoleRequest request);
+
+    /// <summary>
+    /// Refresh token ile kullanıcıyı bulur (sayfa yenileme durumu için).
+    /// </summary>
+    Task<ServiceResult<UserWithRolesResponse>> FindUserByRefreshTokenAsync(string refreshToken);
 }

@@ -17,13 +17,20 @@ export interface PagedResult<T> {
   totalPages: number;
 }
 
+/**
+ * Login işlemi sonucu dönen response.
+ * NOT: RefreshToken artık HttpOnly cookie ile gönderiliyor, body'de yer almaz.
+ */
 export interface LoginResponse {
   accessToken: string;
-  refreshToken: string;
-  expiration: string;
+  expiresAt: string;
 }
 
+/**
+ * Token yenileme işlemi sonucu dönen response.
+ * NOT: Yeni RefreshToken HttpOnly cookie ile gönderiliyor, body'de yer almaz.
+ */
 export interface RefreshTokenResponse {
   accessToken: string;
-  refreshToken: string;
+  expiresAt: string;
 }

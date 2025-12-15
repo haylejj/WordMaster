@@ -13,6 +13,7 @@ public interface IJwtService
     /// Kullanıcı için JWT access token oluşturur.
     /// </summary>
     /// <param name="userId">Kullanıcı ID'si</param>
+    /// <param name="userName">Kullanıcı adı</param>
     /// <param name="email">Kullanıcı email adresi</param>
     /// <param name="roles">Kullanıcının rolleri</param>
     /// <param name="securityStamp">Kullanıcının security stamp'i (şifre değişince token geçersiz olur)</param>
@@ -38,7 +39,21 @@ public interface IJwtService
     /// Veritabanındaki refresh token'ı doğrular ve yeni token çifti döndürür.
     /// </summary>
     /// <param name="expiredAccessToken">Süresi dolmuş access token</param>
-    /// <param name="refreshToken">Geçerli refresh token</param>
-    /// <returns>Yeni access token ve refresh token içeren ServiceResult</returns>
-    Task<ServiceResult<RefreshTokenResponse>> RefreshAccessTokenAsync(string expiredAccessToken, string refreshToken);
+    /// <param name="refreshToken">Cookie'den okunan plain text refresh token</param>
+    /// <returns>
+    /// Yeni access token ve plain refresh token içeren RefreshTokenInternalResponse.
+    /// Controller bu bilgiyi kullanarak access token'ı body'de, refresh token'ı cookie'de gönderir.
+    /// </returns>
+    Task<ServiceResult<RefreshTokenInternalResponse>> RefreshAccessTokenAsync(string expiredAccessToken, string refreshToken);
+
+    /// <summary>
+    /// Cookie'den refresh token okuyarak yeni bir access token oluşturur.
+    /// Cookie okuma ve yazma işlemlerini servis içinde yapar.
+    /// </summary>
+    /// <param name="expiredAccessToken">Süresi dolmuş veya boş access token</param>
+    /// <returns>
+    /// Başarılı durumda yeni access token ve expiry bilgisi döner.
+    /// Yeni refresh token otomatik olarak cookie'ye yazılır.
+    /// </returns>
+    Task<ServiceResult<RefreshTokenResponse>> RefreshAccessTokenWithCookieAsync(string expiredAccessToken);
 }

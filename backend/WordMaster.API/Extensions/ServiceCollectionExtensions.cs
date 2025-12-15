@@ -172,7 +172,7 @@ public static class ServiceCollectionExtensions
                                 if (user != null)
                                 {
                                     dbSecurityStamp = user.SecurityStamp;
-                                    // Cache'e kaydet (30 dakika geçerli)
+                                    // Cache'e kaydet (1 saat geçerli)
                                     await cacheService.SetAsync(cacheKey, dbSecurityStamp, TimeSpan.FromHours(1));
                                 }
                                 else
@@ -243,11 +243,13 @@ public static class ServiceCollectionExtensions
                         if (context.Exception is SecurityTokenExpiredException)
                         {
                             message = "Token süresi dolmuş.";
+                            context.Response.Headers.Append("Token-Expired", "true");
                         }
 
                         if (context.Exception is SecurityTokenInvalidSignatureException)
                         {
                             message = "Token imzası geçersiz.";
+                            context.Response.Headers.Append("Token-Invalid", "true");
                         }
 
                         ServiceResult result = ServiceResult.Failure(message, HttpStatusCode.Unauthorized);

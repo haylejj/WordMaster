@@ -52,13 +52,10 @@ export default function AdminLogHistoryPage() {
         }
     };
 
-    useEffect(() => {
-        fetchLogs(1, "", pageSize);
-    }, []); // Initial load only
-
+    // İlk yükleme ve pageSize değiştiğinde tetiklenir
     useEffect(() => {
         fetchLogs(1, searchQuery, pageSize);
-    }, [pageSize]); // Only when page size changes (resets to page 1)
+    }, [pageSize]);
 
     const handleSearchClick = () => {
         setPage(1);

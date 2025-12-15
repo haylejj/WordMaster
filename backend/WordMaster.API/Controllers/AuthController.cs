@@ -8,17 +8,28 @@ using WordMaster.Application.Requests.Auth;
 using WordMaster.Application.Responses.Auth;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Results;
+using WordMaster.Infrastructure.Helpers;
 
 namespace WordMaster.API.Controllers;
 
 /// <summary>
 /// Kimlik doğrulama ve Jwt token işlemlerini yöneten controller.
 /// Login, Register, Token yenileme gibi işlemleri içerir.
+/// 
+/// GÜVENLİK MODELİ:
+/// - Access Token: Kısa ömürlü (15 dakika), response body'de döner, frontend memory'de saklar
+/// - Refresh Token: Uzun ömürlü (7 gün), HttpOnly Secure cookie ile gönderilir, XSS'e karşı korumalı
 /// </summary>
 [Route("api/v{version:apiVersion}/auth")]
 [EnableRateLimiting("StrictPolicy")]
-public class AuthController(ILoginService loginService, IRegisterService registerService, IUserService userService, IJwtService jwtService) : BaseController
+public class AuthController(
+    ILoginService loginService,
+    IRegisterService registerService,
+    IUserService userService,
+    IJwtService jwtService,
+    IRefreshTokenCookieHelper cookieHelper) : BaseController
 {
+
     /// <summary>
     /// API'nin ayakta olup olmadığını kontrol etmek için basit bir endpoint.
     /// </summary>
@@ -30,20 +41,22 @@ public class AuthController(ILoginService loginService, IRegisterService registe
     }
 
     /// <summary>
-    /// Access Token süresi dolduğunda, Refresh Token kullanarak yeni bir Access Token alır.
+    /// Access Token süresi dolduğunda, Refresh Token cookie'si kullanarak yeni bir Access Token alır.
+    /// Refresh token HttpOnly cookie'den otomatik olarak okunur.
     /// </summary>
-    /// <param name="request">Süresi dolmuş Access Token ve geçerli Refresh Token içeren istek.</param>
-    /// <returns>Yeni Access Token ve Refresh Token bilgilerini döner.</returns>
+    /// <param name="request">Süresi dolmuş Access Token içeren istek.</param>
+    /// <returns>Yeni Access Token bilgilerini döner. Yeni Refresh Token HttpOnly cookie olarak set edilir.</returns>
     /// <remarks>
     /// Bu endpoint, süresi dolmuş bir Access Token'ı yenilemek için kullanılır.
-    /// İstemci, 401 Unauthorized hatası aldığında (veya token süresinin dolduğunu fark ettiğinde) bu endpoint'e başvurmalıdır.
+    /// İstemci, 401 Unauthorized hatası aldığında bu endpoint'e başvurmalıdır.
+    /// Frontend sadece accessToken gönderir, refreshToken browser tarafından cookie olarak otomatik eklenir.
     /// </remarks>
     /// <response code="200">Token yenileme başarılı.</response>
     /// <response code="401">Refresh Token geçersiz veya süresi dolmuş.</response>
     [HttpPost("refresh-token")]
     public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
     {
-        ServiceResult<RefreshTokenResponse> result = await jwtService.RefreshAccessTokenAsync(request.AccessToken, request.RefreshToken);
+        ServiceResult<RefreshTokenResponse> result = await jwtService.RefreshAccessTokenWithCookieAsync(request.AccessToken);
         return CreateResult(result);
     }
 
@@ -66,13 +79,14 @@ public class AuthController(ILoginService loginService, IRegisterService registe
     /// </summary>
     /// <param name="request">Email, şifre ve beni hatırla bilgilerini içeren login request</param>
     /// <returns>
-    /// Başarılı durumda AccessToken ve RefreshToken içeren LoginResponse döner.
+    /// Başarılı durumda AccessToken içeren LoginResponse döner.
+    /// RefreshToken HttpOnly cookie olarak set edilir (response body'de yer almaz).
     /// Başarısız durumda hata mesajı ve uygun HTTP status code döner.
     /// </returns>
     /// <remarks>
     /// Bu endpoint kullanıcı kimlik doğrulaması yapar ve başarılı olursa:
-    /// - JWT Access Token (kısa süreli, API isteklerinde kullanılır)
-    /// - Refresh Token (uzun süreli, access token yenilemek için kullanılır)
+    /// - JWT Access Token (kısa süreli, API isteklerinde kullanılır) - Response body'de
+    /// - Refresh Token (uzun süreli, access token yenilemek için kullanılır) - HttpOnly Cookie'de
     /// döndürür.
     /// 
     /// Ayrıca her giriş denemesi LogHistory tablosuna kaydedilir.
@@ -84,7 +98,7 @@ public class AuthController(ILoginService loginService, IRegisterService registe
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        ServiceResult<LoginResponse> result = await loginService.LoginAsync(request);
+        ServiceResult<LoginResponse> result = await loginService.LoginWithCookieAsync(request);
         return CreateResult(result);
     }
 
@@ -93,7 +107,8 @@ public class AuthController(ILoginService loginService, IRegisterService registe
     /// </summary>
     /// <param name="request">Email, şifre ve beni hatırla bilgilerini içeren login request</param>
     /// <returns>
-    /// Başarılı durumda AccessToken ve RefreshToken içeren LoginResponse döner.
+    /// Başarılı durumda AccessToken içeren LoginResponse döner.
+    /// RefreshToken HttpOnly cookie olarak set edilir.
     /// Başarısız durumda hata mesajı ve uygun HTTP status code döner.
     /// </returns>
     /// <remarks>
@@ -106,9 +121,10 @@ public class AuthController(ILoginService loginService, IRegisterService registe
     [HttpPost("admin-login")]
     public async Task<IActionResult> AdminLogin([FromBody] LoginRequest request)
     {
-        ServiceResult<LoginResponse> result = await loginService.AdminLoginAsync(request);
+        ServiceResult<LoginResponse> result = await loginService.AdminLoginWithCookieAsync(request);
         return CreateResult(result);
     }
+
     /// <summary>
     /// Şifremi unuttum işlemi için şifre sıfırlama linki gönderir.
     /// </summary>
@@ -125,6 +141,7 @@ public class AuthController(ILoginService loginService, IRegisterService registe
         ServiceResult result = await loginService.ForgetPasswordAsync(request);
         return CreateResult(result);
     }
+
     /// <summary>
     /// Şifre sıfırlama işlemini gerçekleştirir.
     /// </summary>
@@ -155,6 +172,7 @@ public class AuthController(ILoginService loginService, IRegisterService registe
         ServiceResult result = await registerService.RegisterAsync(request);
         return CreateResult(result);
     }
+
     /// <summary>
     /// Email doğrulama işlemini gerçekleştirir.
     /// </summary>
@@ -167,6 +185,7 @@ public class AuthController(ILoginService loginService, IRegisterService registe
         ServiceResult result = await registerService.ConfirmEmailAsync(userId, token);
         return CreateResult(result);
     }
+
     /// <summary>
     /// Giriş yapmış kullanıcının şifresini değiştirir.
     /// </summary>
@@ -188,6 +207,13 @@ public class AuthController(ILoginService loginService, IRegisterService registe
     {
         string userId = User.GetUserId().ToString();
         ServiceResult result = await userService.ChangePasswordAsync(request, userId);
+
+        if (result.IsSuccess)
+        {
+            // Şifre değişti, refresh token cookie'sini sil
+            cookieHelper.DeleteRefreshTokenCookie(HttpContext);
+        }
+
         return CreateResult(result);
     }
 
@@ -197,8 +223,8 @@ public class AuthController(ILoginService loginService, IRegisterService registe
     /// <returns>İşlem sonucunu döner.</returns>
     /// <remarks>
     /// Bu endpoint, kullanıcının sunucu tarafındaki Refresh Token'ını siler.
-    /// Böylece Access Token süresi dolduğunda kullanıcı yeni bir token alamaz ve tekrar giriş yapması gerekir.
-    /// Client tarafında da Access Token ve Refresh Token silinmelidir.
+    /// Ayrıca client tarafındaki Refresh Token cookie'si de silinir.
+    /// Access Token süresi dolduğunda kullanıcı yeni bir token alamaz ve tekrar giriş yapması gerekir.
     /// </remarks>
     /// <response code="200">Çıkış işlemi başarılı.</response>
     /// <response code="401">Yetkisiz erişim (Token geçersiz veya yok).</response>
@@ -213,7 +239,12 @@ public class AuthController(ILoginService loginService, IRegisterService registe
             return CreateResult(ServiceResult.Failure("Kullanıcı adı bulunamadı.", HttpStatusCode.Unauthorized));
         }
 
+        // Sunucu tarafında refresh token'ı sil
         ServiceResult result = await loginService.LogoutAsync(userName);
+
+        // Client tarafındaki cookie'yi sil
+        cookieHelper.DeleteRefreshTokenCookie(HttpContext);
+
         return CreateResult(result);
     }
 }
