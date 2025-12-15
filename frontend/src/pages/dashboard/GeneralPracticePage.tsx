@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { PracticeCard } from "@/components/PracticeCard";
 import { wordService } from "@/services/word.service";
@@ -20,6 +20,11 @@ export default function GeneralPracticePage() {
     const [isLoading, setIsLoading] = useState(true);
     const [showResults, setShowResults] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const resultsRef = useRef(results);
+
+    useEffect(() => {
+        resultsRef.current = results;
+    }, [results]);
 
     const fetchNextWord = async () => {
         setIsLoading(true);
@@ -79,9 +84,9 @@ export default function GeneralPracticePage() {
     };
 
     const submitResults = async () => {
-        if (results.length === 0) return;
+        if (resultsRef.current.length === 0) return;
 
-        const payload = results.map(r => ({
+        const payload = resultsRef.current.map(r => ({
             wordId: r.word.id,
             isCorrect: r.isCorrect
         }));

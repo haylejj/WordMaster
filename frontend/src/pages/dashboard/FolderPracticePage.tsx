@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { PracticeCard } from "@/components/PracticeCard";
 import { folderService } from "@/services/folder.service";
@@ -21,6 +21,11 @@ export default function FolderPracticePage() {
     const [isLoading, setIsLoading] = useState(true);
     const [showResults, setShowResults] = useState(false);
     const [folderName, setFolderName] = useState("");
+    const resultsRef = useRef(results);
+
+    useEffect(() => {
+        resultsRef.current = results;
+    }, [results]);
 
     useEffect(() => {
         const fetchFolderData = async () => {
@@ -69,7 +74,7 @@ export default function FolderPracticePage() {
     };
 
     const submitResults = async () => {
-        const payload = results.map(r => ({
+        const payload = resultsRef.current.map(r => ({
             wordId: r.word.id,
             isCorrect: r.isCorrect
         }));

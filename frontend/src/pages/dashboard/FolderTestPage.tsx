@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import TestCard from "@/components/TestCard";
 import { folderService } from "@/services/folder.service";
@@ -27,6 +27,11 @@ export default function FolderTestPage() {
     const [results, setResults] = useState<TestResult[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [showResults, setShowResults] = useState(false);
+    const resultsRef = useRef(results);
+
+    useEffect(() => {
+        resultsRef.current = results;
+    }, [results]);
 
     // Fetch Folder Data
     useEffect(() => {
@@ -122,7 +127,7 @@ export default function FolderTestPage() {
     };
 
     const submitResults = async () => {
-        const payload = results.map(r => ({
+        const payload = resultsRef.current.map(r => ({
             wordId: r.word.id,
             isCorrect: r.isCorrect
         }));
