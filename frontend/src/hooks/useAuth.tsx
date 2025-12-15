@@ -54,22 +54,105 @@ export function getGlobalClearAuth() {
     return globalClearAuth;
 }
 
-// Protected route'lar - sadece bu sayfalarda refresh token kontrolü yapılır
-const isProtectedRoute = (): boolean => {
+// Public route'lar - bu sayfalarda refresh token kontrolü YAPILMAZ
+const PUBLIC_ROUTES = [
+    "/",
+    "/login",
+    "/register",
+    "/forgot-password",
+    "/ResetPassword",
+    "/admin/login",
+    "/confirm-email",
+] as const;
+
+/**
+ * Mevcut sayfanın public olup olmadığını kontrol eder.
+ * Public sayfalar listesinde değilse → Protected kabul edilir → Refresh token kontrolü yapılır.
+ */
+const isPublicRoute = (): boolean => {
     const path = window.location.pathname;
-    return path.startsWith("/dashboard") || path.startsWith("/admin/");
+    return PUBLIC_ROUTES.some(route => path === route || path.startsWith(route + "/"));
 };
+
+// Token süresinin dolmasına kaç ms kala refresh yapılacak (2 dakika)
+const PROACTIVE_REFRESH_BUFFER_MS = 2 * 60 * 1000;
 
 /**
  * Authentication Context Provider
  * - Access Token: Memory'de saklanır
  * - Refresh Token: HttpOnly cookie'de
+ * - Proaktif Refresh: Token süresinin 2 dk öncesinde otomatik yenileme
  */
 export function AuthProvider({ children }: AuthProviderProps) {
     const [accessToken, setAccessToken] = useState<string | null>(null);
     const [expiresAt, setExpiresAt] = useState<Date | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const initializationRef = useRef(false);
+    const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // Token yenileme fonksiyonu
+    const refreshToken = useCallback(async (): Promise<boolean> => {
+        try {
+            const response = await axios.post<ServiceResultWithData<RefreshTokenResponse>>(
+                `${BASE_URL}/auth/refresh-token`,
+                { accessToken: globalAccessToken ?? "" },
+                {
+                    withCredentials: true,
+                    timeout: 10000
+                }
+            );
+
+            if (response.data.isSuccess && response.data.data) {
+                const { accessToken: newToken, expiresAt: newExpiresAt } = response.data.data;
+                setAccessToken(newToken);
+                setExpiresAt(new Date(newExpiresAt));
+                globalAccessToken = newToken;
+                return true;
+            }
+        } catch {
+            // Token yenileme başarısız - sessizce başarısız ol
+        }
+        return false;
+    }, []);
+
+    // Proaktif token yenileme zamanlayıcısını ayarla
+    useEffect(() => {
+        // Timer'ı temizle
+        if (refreshTimerRef.current) {
+            clearTimeout(refreshTimerRef.current);
+            refreshTimerRef.current = null;
+        }
+
+        // Token yoksa veya expiresAt yoksa zamanlayıcı kurma
+        if (!accessToken || !expiresAt) return;
+
+        // Token'ın ne zaman sona ereceğini hesapla
+        const timeUntilExpiry = expiresAt.getTime() - Date.now();
+        const timeUntilRefresh = timeUntilExpiry - PROACTIVE_REFRESH_BUFFER_MS;
+
+        // Eğer 2 dakikadan az kaldıysa hemen yenile
+        if (timeUntilRefresh <= 0) {
+            refreshToken();
+            return;
+        }
+
+        // Timer kur - 2 dakika kala otomatik yenile
+        refreshTimerRef.current = setTimeout(async () => {
+            const success = await refreshToken();
+            if (!success) {
+                // Yenileme başarısız olursa kullanıcı 401 aldığında yönlendirilecek
+                console.warn("Proactive token refresh failed");
+            }
+        }, timeUntilRefresh);
+
+        // Cleanup
+        return () => {
+            if (refreshTimerRef.current) {
+                clearTimeout(refreshTimerRef.current);
+                refreshTimerRef.current = null;
+            }
+        };
+    }, [accessToken, expiresAt, refreshToken]);
 
     // Sayfa yüklendiğinde refresh token ile yeni access token al
     useEffect(() => {
@@ -78,8 +161,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         initializationRef.current = true;
 
         const initializeAuth = async () => {
-            // Sadece protected route'larda refresh token kontrolü yap
-            if (!isProtectedRoute()) {
+            if (isPublicRoute()) {
                 setIsLoading(false);
                 return;
             }
@@ -121,6 +203,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setAccessToken(null);
         setExpiresAt(null);
         globalAccessToken = null;
+        // Timer'ı da temizle
+        if (refreshTimerRef.current) {
+            clearTimeout(refreshTimerRef.current);
+            refreshTimerRef.current = null;
+        }
     }, []);
 
     const isAuthenticated = accessToken !== null;

@@ -27,49 +27,40 @@ public class JwtService(
 
     /// <summary>
     /// Kullanıcı için JWT access token oluşturur.
-    /// Token içinde kullanıcı ID, email, roller ve security stamp claim olarak eklenir.
+    /// Token içinde kullanıcı ID, kullanıcı adı, roller ve security stamp claim olarak eklenir.
+    /// NOT: Email gibi hassas bilgiler güvenlik nedeniyle token'a eklenmez.
     /// </summary>
     public ServiceResult<string> GenerateAccessToken(string userId, string userName, string email, IList<string> roles, string securityStamp)
     {
-        try
+        List<Claim> claims =
+        [
+            new Claim(ClaimTypes.NameIdentifier, userId),
+            new Claim(ClaimTypes.Name, userName),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()), // Token ID (her token için benzersiz)
+            new Claim("SecurityStamp", securityStamp),     // Security Stamp (şifre değişince token geçersiz olur)
+        ];
+
+        foreach (string role in roles)
         {
-            // Token'a eklenecek claim'leri (kullanıcı bilgileri) oluştur
-            List<Claim> claims = new()
-            {
-                new Claim(ClaimTypes.NameIdentifier, userId),  // Kullanıcı ID
-                new Claim(ClaimTypes.Name, userName),          // Kullanıcı Adı
-                new Claim(ClaimTypes.Email, email),            // Email
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()), // Token ID (her token için benzersiz)
-                new Claim("SecurityStamp", securityStamp),     // Security Stamp (şifre değişince token geçersiz olur)
-            };
-
-            // Kullanıcının her bir rolü için ayrı claim ekle
-            foreach (string role in roles)
-            {
-                claims.Add(new Claim(ClaimTypes.Role, role));
-            }
-
-            // Token imzalama için kullanılacak güvenlik anahtarını oluştur
-            SymmetricSecurityKey key = new(Encoding.UTF8.GetBytes(_jwtSettings.Key));
-            SigningCredentials credentials = new(key, SecurityAlgorithms.HmacSha256);
-
-            // JWT token'ı oluştur
-            JwtSecurityToken token = new(
-                issuer: _jwtSettings.Issuer,                                    // Token'ı oluşturan (örn: "WordMasterAPI")
-                audience: _jwtSettings.Audience,                                // Token'ın hedef kitlesi (örn: "WordMasterClient")
-                claims: claims,                                                 // Kullanıcı bilgileri
-                expires: DateTime.UtcNow.AddMinutes(_jwtSettings.ExpiresInMinutes), // Token geçerlilik süresi
-                signingCredentials: credentials                                 // İmzalama bilgileri
-            );
-
-            // Token'ı string formatına çevir ve döndür
-            string tokenString = new JwtSecurityTokenHandler().WriteToken(token);
-            return ServiceResult<string>.Success(tokenString, HttpStatusCode.OK);
+            claims.Add(new Claim(ClaimTypes.Role, role));
         }
-        catch (Exception ex)
-        {
-            return ServiceResult<string>.Failure($"Access token oluşturulurken hata: {ex.Message}", HttpStatusCode.InternalServerError);
-        }
+
+        // Token imzalama için kullanılacak güvenlik anahtarını oluştur
+        SymmetricSecurityKey key = new(Encoding.UTF8.GetBytes(_jwtSettings.Key));
+        SigningCredentials credentials = new(key, SecurityAlgorithms.HmacSha256);
+
+        // JWT token'ı oluştur
+        JwtSecurityToken token = new(
+            issuer: _jwtSettings.Issuer,                                    // Token'ı oluşturan (örn: "WordMasterAPI")
+            audience: _jwtSettings.Audience,                                // Token'ın hedef kitlesi (örn: "WordMasterClient")
+            claims: claims,                                                 // Kullanıcı bilgileri
+            expires: DateTime.UtcNow.AddMinutes(_jwtSettings.ExpiresInMinutes), // Token geçerlilik süresi
+            signingCredentials: credentials                                 // İmzalama bilgileri
+        );
+
+        // Token'ı string formatına çevir ve döndür
+        string tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+        return ServiceResult<string>.Success(tokenString, HttpStatusCode.OK);
     }
 
     /// <summary>

@@ -172,7 +172,7 @@ public static class ServiceCollectionExtensions
                                 if (user != null)
                                 {
                                     dbSecurityStamp = user.SecurityStamp;
-                                    // Cache'e kaydet (30 dakika geçerli)
+                                    // Cache'e kaydet (1 saat geçerli)
                                     await cacheService.SetAsync(cacheKey, dbSecurityStamp, TimeSpan.FromHours(1));
                                 }
                                 else
