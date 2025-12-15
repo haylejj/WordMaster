@@ -30,12 +30,13 @@ public class GoogleAuthService(
     IRefreshTokenCookieHelper cookieHelper,
     ICacheService cacheService,
     IUsernameHelper usernameHelper,
+    IHttpClientFactory httpClientFactory,
     ILogger<GoogleAuthService> logger) : IGoogleAuthService
 {
     private readonly GoogleAuthSettings _googleSettings = googleAuthSettings.Value;
     private readonly UrlsSettings _urlsSettings = urlsSettings.Value;
     private readonly JwtSettings _jwtSettings = jwtSettings.Value;
-    private static readonly HttpClient _httpClient = new();
+    private readonly HttpClient _httpClient = httpClientFactory.CreateClient("Google");
     private const string GoogleLoginProvider = "Google";
 
     /// <inheritdoc />
@@ -172,7 +173,7 @@ public class GoogleAuthService(
         };
 
         HttpResponseMessage response = await _httpClient.PostAsync(
-            "https://oauth2.googleapis.com/token",
+            "token",
             new FormUrlEncodedContent(parameters));
 
         if (!response.IsSuccessStatusCode)

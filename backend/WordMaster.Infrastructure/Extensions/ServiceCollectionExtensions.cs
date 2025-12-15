@@ -41,6 +41,12 @@ public static class ServiceCollectionExtensions
     /// <returns>Güncellenmiş servis koleksiyonu.</returns>
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
+        // HttpClient - Google OAuth için (IHttpClientFactory best practice)
+        services.AddHttpClient("Google", client =>
+        {
+            client.BaseAddress = new Uri("https://oauth2.googleapis.com/");
+            client.DefaultRequestHeaders.Add("Accept", "application/json");
+        });
         // UnitOfWork
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
