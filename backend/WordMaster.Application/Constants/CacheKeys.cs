@@ -1,5 +1,9 @@
 namespace WordMaster.Application.Constants;
 
+/// <summary>
+/// Merkezi cache key sabitleri.
+/// Tüm cache key'leri burada tanımlanarak tutarlılık sağlanır.
+/// </summary>
 public static class CacheKeys
 {
     public static string Word(long wordId, Guid userId)
@@ -46,6 +50,17 @@ public static class CacheKeys
     {
         return $"folder:{folderId}:user:{userId}:words";
     }
+
+    /// <summary>
+    /// Kullanıcı dashboard istatistikleri cache key'i.
+    /// Practice sonrası invalidate edilmeli.
+    /// </summary>
+    public static string UserStatistics(Guid userId)
+    {
+        return $"statistics:user:{userId}";
+    }
+
+    // Admin ve sistem geneli cache key'leri
     public static string AllowedIpAddressesList => "allowedipaddresses:list";
     public static string AllowedIpAddressesActive => "allowedipaddresses:active";
     public static string RolesList => "roles:list";

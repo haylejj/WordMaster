@@ -25,7 +25,7 @@ public class RequirePermissionAttribute(string areaName, string controllerName, 
         HttpContext httpContext = context.HttpContext;
         ClaimsPrincipal user = httpContext.User;
 
-        if (user == null || !user.Identity.IsAuthenticated)
+        if (user?.Identity?.IsAuthenticated != true)
         {
             ServiceResult result = ServiceResult.Failure("Lütfen giriş yapınız.", HttpStatusCode.Unauthorized);
             context.Result = new ObjectResult(result) { StatusCode = (int)result.StatusCode };

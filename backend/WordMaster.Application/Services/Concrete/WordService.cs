@@ -1,6 +1,7 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging;
 using System.Net;
 using WordMaster.Application.Constants;
 using WordMaster.Application.Key;
@@ -343,7 +344,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
     public async Task<ServiceResult<bool>> CheckTranslationAndUpdateAsync(Guid userId, CheckTranslationRequest request)
     {
         // Use transaction to ensure data integrity
-        using var transaction = await unitOfWork.BeginTransactionAsync();
+        using IDbContextTransaction transaction = await unitOfWork.BeginTransactionAsync();
 
         try
         {
@@ -414,6 +415,9 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
             wordRepository.Update(word);
             await unitOfWork.CommitAsync();
             await unitOfWork.CommitTransactionAsync();
+
+            // Practice sonrası istatistik cache'ini invalidate et
+            await cacheService.RemoveAsync(CacheKeys.UserStatistics(userId));
 
             return ServiceResult<bool>.Success(isCorrect, HttpStatusCode.OK);
         }
@@ -489,7 +493,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
         }
 
         // Use transaction to ensure data integrity across Words, History, and User tables
-        using var transaction = await unitOfWork.BeginTransactionAsync();
+        using IDbContextTransaction transaction = await unitOfWork.BeginTransactionAsync();
 
         try
         {
@@ -582,6 +586,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
 
             // Cache invalidation
             await cacheService.RemoveAsync(CacheKeys.Words(userId));
+            await cacheService.RemoveAsync(CacheKeys.UserStatistics(userId)); // Practice sonrası istatistik cache'ini invalidate et
             foreach (long id in wordIds)
             {
                 await cacheService.RemoveAsync(CacheKeys.Word(id, userId));

@@ -1,5 +1,3 @@
-using System;
-
 namespace WordMaster.Domain.Entities;
 
 public class PracticeHistory

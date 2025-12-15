@@ -1,5 +1,6 @@
-using System.Net;
 using Microsoft.AspNetCore.Identity;
+using System.Net;
+using WordMaster.Application.Constants;
 using WordMaster.Application.Persistence.Repositories;
 using WordMaster.Application.Responses.Statistics;
 using WordMaster.Application.Services.Abstract;
@@ -8,12 +9,32 @@ using WordMaster.Domain.Results;
 
 namespace WordMaster.Application.Services.Concrete;
 
-public class StatisticsService(IWordRepository wordRepository, IPracticeHistoryRepository practiceHistoryRepository, UserManager<AppUser> userManager) : IStatisticsService
+/// <summary>
+/// Kullanıcı dashboard istatistiklerini sağlayan servis.
+/// 1 dakikalık cache ile performans optimizasyonu sağlar.
+/// </summary>
+public class StatisticsService(
+    IWordRepository wordRepository,
+    IPracticeHistoryRepository practiceHistoryRepository,
+    UserManager<AppUser> userManager,
+    ICacheService cacheService) : IStatisticsService
 {
+    /// <summary>
+    /// Kullanıcının dashboard istatistiklerini getirir.
+    /// Cache'te varsa oradan döner (1 dakika TTL), yoksa DB'den çekip cache'ler.
+    /// </summary>
     public async Task<ServiceResult<DashboardStatisticsResponse>> GetDashboardStatisticsAsync(Guid userId)
     {
+        // Cache kontrolü
+        string cacheKey = CacheKeys.UserStatistics(userId);
+        DashboardStatisticsResponse? cached = await cacheService.GetAsync<DashboardStatisticsResponse>(cacheKey);
+        if (cached != null)
+        {
+            return ServiceResult<DashboardStatisticsResponse>.Success(cached, HttpStatusCode.OK);
+        }
+
         // 1. Fetch Aggregated Statistics directly from DB (Optimized)
-        var (totalWords, learnedWords, totalCorrect, totalWrong) = await wordRepository.GetUserGeneralStatsAsync(userId);
+        (int totalWords, int learnedWords, int totalCorrect, int totalWrong) = await wordRepository.GetUserGeneralStatsAsync(userId);
 
         // 2. Fetch Top 5 Best & Worst Words
         List<Word> bestWords = await wordRepository.GetUserBestWordsAsync(userId, 5);
@@ -51,7 +72,7 @@ public class StatisticsService(IWordRepository wordRepository, IPracticeHistoryR
         // Date range is already defined above: twoWeeksAgo
 
         // Filter history for only last 14 days for the graph
-        var graphData = history
+        List<DailyActivityStat> graphData = history
             .Where(h => h.PracticeDate.Date >= twoWeeksAgo)
             .GroupBy(h => h.PracticeDate.Date)
             .Select(g => new DailyActivityStat
@@ -61,7 +82,7 @@ public class StatisticsService(IWordRepository wordRepository, IPracticeHistoryR
             })
             .ToList();
 
-        List<DailyActivityStat> lastActivities = new();
+        List<DailyActivityStat> lastActivities = [];
         for (int i = 0; i < 14; i++)
         {
             DateTime date = twoWeeksAgo.AddDays(i);
@@ -93,6 +114,9 @@ public class StatisticsService(IWordRepository wordRepository, IPracticeHistoryR
             TopWorstWords = topWorst,
             LastActivities = lastActivities
         };
+
+        // Cache'e kaydet (2 dakika)
+        await cacheService.SetAsync(cacheKey, response, CacheDurations.Statistics);
 
         return ServiceResult<DashboardStatisticsResponse>.Success(response, HttpStatusCode.OK);
     }

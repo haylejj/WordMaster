@@ -1,12 +1,7 @@
 using Microsoft.AspNetCore.DataProtection;
+using WordMaster.Application.Helpers;
 
 namespace WordMaster.Infrastructure.Helpers;
-
-public interface IDataProtectionHelper
-{
-    string Encrypt(string plainText);
-    string Decrypt(string cipherText);
-}
 
 public class DataProtectionHelper(IDataProtectionProvider provider) : IDataProtectionHelper
 {
@@ -25,7 +20,6 @@ public class DataProtectionHelper(IDataProtectionProvider provider) : IDataProte
         }
         catch
         {
-            // Decryption failed
             return string.Empty;
         }
     }

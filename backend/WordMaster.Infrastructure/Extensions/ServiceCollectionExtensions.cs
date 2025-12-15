@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using StackExchange.Redis;
+using WordMaster.Application.Helpers;
 using WordMaster.Application.Persistence;
 using WordMaster.Application.Persistence.Repositories;
 using WordMaster.Application.Services.Abstract;
@@ -12,8 +13,19 @@ using WordMaster.Infrastructure.Services;
 
 namespace WordMaster.Infrastructure.Extensions;
 
+/// <summary>
+/// Infrastructure katmanı servis koleksiyonu extension metodlarını içerir.
+/// Redis, Repository, Service ve Helper kayıtlarını yönetir.
+/// </summary>
 public static class ServiceCollectionExtensions
 {
+    /// <summary>
+    /// Redis bağlantı yapılandırmasını ekler.
+    /// Connection string'i appsettings.json'dan okur, bulunamazsa localhost:6379 kullanır.
+    /// </summary>
+    /// <param name="services">Servis koleksiyonu.</param>
+    /// <param name="configuration">Uygulama yapılandırması.</param>
+    /// <returns>Güncellenmiş servis koleksiyonu.</returns>
     public static IServiceCollection AddRedis(this IServiceCollection services, IConfiguration configuration)
     {
         string connectionString = configuration.GetConnectionString("Redis") ?? "localhost:6379";
@@ -21,6 +33,12 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
+    /// <summary>
+    /// Uygulama servislerini DI container'a kaydeder.
+    /// UnitOfWork, Repository, Service ve Helper sınıflarının Scoped yaşam döngüsü ile kaydını yapar.
+    /// </summary>
+    /// <param name="services">Servis koleksiyonu.</param>
+    /// <returns>Güncellenmiş servis koleksiyonu.</returns>
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
         // UnitOfWork

@@ -146,9 +146,9 @@ public class LogHistoryService(ILogHistoryRepository logHistoryRepository, IUnit
         {
             string term = request.SearchTerm.Trim();
             query = query.Where(x =>
-                (request.SearchInUserId && x.AppUserId.ToString().Contains(term)) ||
-                (request.SearchInEmail && x.Email.Contains(term)) ||
-                (request.SearchInIp && x.IpAddress.Contains(term))
+                (request.SearchInUserId && x.AppUserId != null && x.AppUserId.ToString()!.Contains(term)) ||
+                (request.SearchInEmail && x.Email != null && x.Email.Contains(term)) ||
+                (request.SearchInIp && x.IpAddress != null && x.IpAddress.Contains(term))
             );
         }
 

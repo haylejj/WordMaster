@@ -9,6 +9,10 @@ using WordMaster.Domain.Results;
 
 namespace WordMaster.Infrastructure.Services;
 
+/// <summary>
+/// Admin dashboard istatistiklerini sağlayan servis.
+/// Gerçek zamanlı veri için cache kullanılmaz.
+/// </summary>
 public class AdminDashboardService(
     IWordRepository wordRepository,
     IFavoriteRepository favoriteRepository,
@@ -19,6 +23,9 @@ public class AdminDashboardService(
     ILogHistoryService logHistoryService,
     UserManager<AppUser> userManager) : IAdminDashboardService
 {
+    /// <summary>
+    /// Admin dashboard istatistiklerini getirir.
+    /// </summary>
     public async Task<ServiceResult<AdminDashboardResponse>> GetDashboardAsync()
     {
         DateTime yesterday = DateTime.UtcNow.AddHours(-24);
@@ -76,3 +83,4 @@ public class AdminDashboardService(
         return ServiceResult<AdminDashboardResponse>.Success(dashboard, HttpStatusCode.OK);
     }
 }
+

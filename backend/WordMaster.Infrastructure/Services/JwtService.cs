@@ -6,11 +6,12 @@ using System.Net;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using WordMaster.Application.Helpers;
 using WordMaster.Application.Responses.Auth;
+using WordMaster.Application.Responses.User;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Configuration;
 using WordMaster.Domain.Results;
-using WordMaster.Infrastructure.Helpers;
 
 namespace WordMaster.Infrastructure.Services;
 
@@ -159,7 +160,7 @@ public class JwtService(
         // Eğer access token'dan userId alınamadıysa, refresh token ile kullanıcıyı bul
         if (string.IsNullOrEmpty(userId))
         {
-            var userByRefreshTokenResult = await userService.FindUserByRefreshTokenAsync(refreshToken);
+            ServiceResult<UserWithRolesResponse> userByRefreshTokenResult = await userService.FindUserByRefreshTokenAsync(refreshToken);
             if (!userByRefreshTokenResult.IsSuccess || userByRefreshTokenResult.Data == null)
             {
                 return ServiceResult<RefreshTokenInternalResponse>.Failure(
@@ -172,7 +173,7 @@ public class JwtService(
 
         // 2. UserService ile refresh token'ı doğrula ve kullanıcı bilgilerini al
         // Bu metod hash'li karşılaştırma yapıyor
-        var userValidationResult = await userService.ValidateAndGetUserByRefreshTokenAsync(userId, refreshToken);
+        ServiceResult<UserWithRolesResponse> userValidationResult = await userService.ValidateAndGetUserByRefreshTokenAsync(userId, refreshToken);
         if (!userValidationResult.IsSuccess || userValidationResult.Data == null)
         {
             return ServiceResult<RefreshTokenInternalResponse>.Failure(
@@ -181,7 +182,7 @@ public class JwtService(
             );
         }
 
-        var userWithRoles = userValidationResult.Data;
+        UserWithRolesResponse userWithRoles = userValidationResult.Data;
 
         // 3. Yeni access token oluştur (SecurityStamp ile)
         ServiceResult<string> accessTokenResult = GenerateAccessToken(

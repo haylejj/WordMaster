@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using WordMaster.Application.Persistence.Repositories;
 using WordMaster.Domain.Entities;
-using WordMaster.Infrastructure.EfCore;
 
 namespace WordMaster.Infrastructure.EfCore.Repositories;
 
