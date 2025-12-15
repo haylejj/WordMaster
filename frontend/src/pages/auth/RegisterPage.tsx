@@ -24,12 +24,12 @@ export default function RegisterPage() {
   } = useForm<RegisterRequest>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      userName: "",
+      firstName: "",
+      lastName: "",
       email: "",
       phone: "",
       password: "",
       passwordConfirm: "",
-      gender: "1",
     },
   });
 
@@ -117,17 +117,33 @@ export default function RegisterPage() {
           </Alert>
         )}
 
-        <div className="space-y-1">
-          <label className="block text-[0.9rem] font-semibold text-primary-dark mb-1">Kullanıcı Adı</label>
-          <input
-            {...register("userName")}
-            className={cn(
-              "w-full bg-[#f8f9fa] border-2 border-[#e9ecef] px-4 py-3 rounded-lg text-primary-dark text-[0.95rem] transition-all duration-300",
-              "focus:bg-white focus:border-primary-yellow focus:outline-none",
-              errors.userName && "border-destructive focus:border-destructive"
-            )}
-          />
-          {errors.userName && <span className="text-xs text-destructive">{errors.userName.message}</span>}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <label className="block text-[0.9rem] font-semibold text-primary-dark mb-1">Ad</label>
+            <input
+              {...register("firstName")}
+              placeholder="Adınız"
+              className={cn(
+                "w-full bg-[#f8f9fa] border-2 border-[#e9ecef] px-4 py-3 rounded-lg text-primary-dark text-[0.95rem] transition-all duration-300",
+                "focus:bg-white focus:border-primary-yellow focus:outline-none",
+                errors.firstName && "border-destructive focus:border-destructive"
+              )}
+            />
+            {errors.firstName && <span className="text-xs text-destructive">{errors.firstName.message}</span>}
+          </div>
+          <div className="space-y-1">
+            <label className="block text-[0.9rem] font-semibold text-primary-dark mb-1">Soyad</label>
+            <input
+              {...register("lastName")}
+              placeholder="Soyadınız"
+              className={cn(
+                "w-full bg-[#f8f9fa] border-2 border-[#e9ecef] px-4 py-3 rounded-lg text-primary-dark text-[0.95rem] transition-all duration-300",
+                "focus:bg-white focus:border-primary-yellow focus:outline-none",
+                errors.lastName && "border-destructive focus:border-destructive"
+              )}
+            />
+            {errors.lastName && <span className="text-xs text-destructive">{errors.lastName.message}</span>}
+          </div>
         </div>
 
         <div className="space-y-1">
@@ -160,32 +176,7 @@ export default function RegisterPage() {
           {errors.phone && <span className="text-xs text-destructive">{errors.phone.message}</span>}
         </div>
 
-        <div className="space-y-1">
-          <label className="block text-[0.9rem] font-semibold text-primary-dark mb-1">Cinsiyet</label>
-          <div className="flex gap-6 p-2">
-            <div className="flex items-center space-x-2 cursor-pointer">
-              <input
-                type="radio"
-                value="1"
-                id="gender-female"
-                {...register("gender")}
-                className="h-4 w-4 border-gray-300 text-primary-yellow focus:ring-primary-yellow accent-primary-yellow cursor-pointer"
-              />
-              <label htmlFor="gender-female" className="font-normal cursor-pointer">Kadın</label>
-            </div>
-            <div className="flex items-center space-x-2 cursor-pointer">
-              <input
-                type="radio"
-                value="2"
-                id="gender-male"
-                {...register("gender")}
-                className="h-4 w-4 border-gray-300 text-primary-yellow focus:ring-primary-yellow accent-primary-yellow cursor-pointer"
-              />
-              <label htmlFor="gender-male" className="font-normal cursor-pointer">Erkek</label>
-            </div>
-          </div>
-          {errors.gender && <span className="text-xs text-destructive">{errors.gender.message}</span>}
-        </div>
+
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
@@ -241,6 +232,41 @@ export default function RegisterPage() {
         >
           {loading ? "Kayıt Yapılıyor..." : "Kayıt Ol"}
         </button>
+
+        {/* Google ile Kayıt */}
+        <div className="relative my-4">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-[#e9ecef]"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-3 bg-white text-[#888]">veya</span>
+          </div>
+        </div>
+
+        <a
+          href="http://localhost:3002/api/v1/auth/google-login"
+          className="w-full flex items-center justify-center gap-3 bg-white border-2 border-[#e9ecef] text-primary-dark py-3 px-4 rounded-lg font-semibold text-[0.9rem] transition-all duration-300 hover:border-[#4285F4] hover:bg-[#f8f9fa] hover:-translate-y-[1px] hover:shadow-md"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24">
+            <path
+              fill="#4285F4"
+              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+            />
+            <path
+              fill="#34A853"
+              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+            />
+            <path
+              fill="#FBBC05"
+              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+            />
+            <path
+              fill="#EA4335"
+              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+            />
+          </svg>
+          Google ile Kaydol
+        </a>
 
         <div className="text-center mt-6 pt-6 border-t border-[#eee] text-[0.9rem] text-[#666]">
           Zaten hesabınız var mı?{" "}

@@ -63,6 +63,7 @@ const PUBLIC_ROUTES = [
     "/ResetPassword",
     "/admin/login",
     "/confirm-email",
+    "/auth/google-callback",
 ] as const;
 
 /**

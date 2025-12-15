@@ -1,19 +1,17 @@
 import { useEffect, useState } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { User, Mail, Phone, Calendar, Users, Save, Loader2, AlertCircle, CheckCircle } from "lucide-react";
+import { User, Mail, Phone, Save, Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import { userService } from "@/services/user.service";
 import type { UpdateProfileRequest } from "@/types/user";
 import { cn, getErrorMessage } from "@/lib/utils";
-import DatePicker from "@/components/ui/DatePicker";
 
 const profileSchema = z.object({
-  userName: z.string().min(1, "Kullanıcı adı boş bırakılamaz"),
   email: z.string().min(1, "E-posta boş bırakılamaz").email("Geçerli bir e-posta giriniz"),
   phone: z.string().min(1, "Telefon numarası boş bırakılamaz"),
-  birthDate: z.string().nullable(),
-  gender: z.string().nullable(),
+  firstName: z.string().max(100, "Ad en fazla 100 karakter olabilir").nullable(),
+  lastName: z.string().max(50, "Soyad en fazla 50 karakter olabilir").nullable(),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -24,20 +22,19 @@ export default function ProfilePage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+
   const {
     register,
     handleSubmit,
     reset,
-    control,
     formState: { errors, isDirty },
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      userName: "",
       email: "",
       phone: "",
-      birthDate: null,
-      gender: null,
+      firstName: null,
+      lastName: null,
     },
   });
 
@@ -47,11 +44,10 @@ export default function ProfilePage() {
         const response = await userService.getProfile();
         if (response.isSuccess && response.data) {
           reset({
-            userName: response.data.userName || "",
             email: response.data.email || "",
             phone: response.data.phone || "",
-            birthDate: response.data.birthDate ? response.data.birthDate.split("T")[0] : null,
-            gender: response.data.gender?.toString() || null,
+            firstName: response.data.firstName || null,
+            lastName: response.data.lastName || null,
           });
         }
       } catch (error) {
@@ -71,11 +67,10 @@ export default function ProfilePage() {
 
     try {
       const payload: UpdateProfileRequest = {
-        userName: data.userName,
         email: data.email,
         phone: data.phone,
-        birthDate: data.birthDate || null,
-        gender: data.gender ? parseInt(data.gender) : null,
+        firstName: data.firstName || null,
+        lastName: data.lastName || null,
       };
 
       const response = await userService.updateProfile(payload);
@@ -134,26 +129,51 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {/* Username */}
-          <div className="space-y-1">
-            <div
-              className={cn(
-                "flex items-center border-2 rounded-xl px-4 py-3 transition-colors",
-                errors.userName ? "border-red-300 bg-red-50" : "border-gray-200 focus-within:border-primary-yellow"
-              )}
-            >
-              <User className="text-primary-yellow mr-3" size={18} />
-              <div className="flex-1">
-                <label className="block text-xs font-medium text-gray-500">Kullanıcı Adı</label>
-                <input
-                  {...register("userName")}
-                  type="text"
-                  className="w-full bg-transparent border-none outline-none text-gray-800 text-sm py-0.5"
-                  placeholder="Kullanıcı adınızı girin"
-                />
+          {/* First Name & Last Name Row */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* First Name */}
+            <div className="space-y-1">
+              <div
+                className={cn(
+                  "flex items-center border-2 rounded-xl px-4 py-3 transition-colors",
+                  errors.firstName ? "border-red-300 bg-red-50" : "border-gray-200 focus-within:border-primary-yellow"
+                )}
+              >
+                <User className="text-primary-yellow mr-3" size={18} />
+                <div className="flex-1">
+                  <label className="block text-xs font-medium text-gray-500">Ad</label>
+                  <input
+                    {...register("firstName")}
+                    type="text"
+                    className="w-full bg-transparent border-none outline-none text-gray-800 text-sm py-0.5"
+                    placeholder="Adınızı girin"
+                  />
+                </div>
               </div>
+              {errors.firstName && <p className="text-xs text-red-500 ml-4">{errors.firstName.message}</p>}
             </div>
-            {errors.userName && <p className="text-xs text-red-500 ml-4">{errors.userName.message}</p>}
+
+            {/* Last Name */}
+            <div className="space-y-1">
+              <div
+                className={cn(
+                  "flex items-center border-2 rounded-xl px-4 py-3 transition-colors",
+                  errors.lastName ? "border-red-300 bg-red-50" : "border-gray-200 focus-within:border-primary-yellow"
+                )}
+              >
+                <User className="text-primary-yellow mr-3" size={18} />
+                <div className="flex-1">
+                  <label className="block text-xs font-medium text-gray-500">Soyad</label>
+                  <input
+                    {...register("lastName")}
+                    type="text"
+                    className="w-full bg-transparent border-none outline-none text-gray-800 text-sm py-0.5"
+                    placeholder="Soyadınızı girin"
+                  />
+                </div>
+              </div>
+              {errors.lastName && <p className="text-xs text-red-500 ml-4">{errors.lastName.message}</p>}
+            </div>
           </div>
 
           {/* Email */}
@@ -198,45 +218,6 @@ export default function ProfilePage() {
               </div>
             </div>
             {errors.phone && <p className="text-xs text-red-500 ml-4">{errors.phone.message}</p>}
-          </div>
-
-          {/* Birth Date */}
-          <div className="space-y-1">
-            <div className="flex items-center border-2 border-gray-200 rounded-xl px-4 py-3 focus-within:border-primary-yellow transition-colors">
-              <Calendar className="text-primary-yellow mr-3" size={18} />
-              <div className="flex-1">
-                <label className="block text-xs font-medium text-gray-500">Doğum Tarihi</label>
-                <Controller
-                  name="birthDate"
-                  control={control}
-                  render={({ field }) => (
-                    <DatePicker
-                      value={field.value}
-                      onChange={field.onChange}
-                      placeholder="Doğum tarihinizi seçin"
-                    />
-                  )}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Gender */}
-          <div className="space-y-1">
-            <div className="flex items-center border-2 border-gray-200 rounded-xl px-4 py-3 focus-within:border-primary-yellow transition-colors">
-              <Users className="text-primary-yellow mr-3" size={18} />
-              <div className="flex-1">
-                <label className="block text-xs font-medium text-gray-500">Cinsiyet</label>
-                <select
-                  {...register("gender")}
-                  className="w-full bg-transparent border-none outline-none text-gray-800 text-sm py-0.5 cursor-pointer"
-                >
-                  <option value="">Seçiniz...</option>
-                  <option value="1">Kadın</option>
-                  <option value="2">Erkek</option>
-                </select>
-              </div>
-            </div>
           </div>
 
           {/* Buttons */}

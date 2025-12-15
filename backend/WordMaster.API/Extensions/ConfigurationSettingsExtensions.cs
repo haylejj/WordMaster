@@ -19,5 +19,6 @@ public static class ConfigurationSettingsExtensions
         services.Configure<MailHogSettings>(configuration.GetSection("MailHog"));
         services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
         services.Configure<UrlsSettings>(configuration.GetSection("URLs"));
+        services.Configure<GoogleAuthSettings>(configuration.GetSection(GoogleAuthSettings.SectionName));
     }
 }

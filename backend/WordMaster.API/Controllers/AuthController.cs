@@ -27,7 +27,8 @@ public class AuthController(
     IRegisterService registerService,
     IUserService userService,
     IJwtService jwtService,
-    IRefreshTokenCookieHelper cookieHelper) : BaseController
+    IRefreshTokenCookieHelper cookieHelper,
+    IGoogleAuthService googleAuthService) : BaseController
 {
 
     /// <summary>
@@ -246,5 +247,55 @@ public class AuthController(
         cookieHelper.DeleteRefreshTokenCookie(HttpContext);
 
         return CreateResult(result);
+    }
+
+    /// <summary>
+    /// Google OAuth login sayfasına yönlendirir.
+    /// </summary>
+    /// <returns>Google consent sayfasına redirect.</returns>
+    /// <remarks>
+    /// Bu endpoint kullanıcıyı Google hesabıyla giriş yapması için
+    /// Google OAuth consent sayfasına yönlendirir.
+    /// </remarks>
+    /// <response code="302">Google OAuth sayfasına yönlendirme.</response>
+    [HttpGet("google-login")]
+    public IActionResult GoogleLogin()
+    {
+        string authUrl = googleAuthService.GetGoogleAuthUrl();
+        return Redirect(authUrl);
+    }
+
+    /// <summary>
+    /// Google OAuth callback endpoint'i.
+    /// </summary>
+    /// <param name="code">Google'dan dönen authorization code.</param>
+    /// <returns>Frontend'e token ile redirect.</returns>
+    /// <remarks>
+    /// Bu endpoint Google'dan dönen authorization code'u işler,
+    /// kullanıcıyı bulur veya oluşturur ve JWT token üretir.
+    /// Son olarak kullanıcıyı frontend'e token ile yönlendirir.
+    /// </remarks>
+    /// <response code="302">Frontend'e token ile yönlendirme.</response>
+    /// <response code="400">Geçersiz authorization code.</response>
+    [HttpGet("google-callback")]
+    public async Task<IActionResult> GoogleCallback([FromQuery] string code)
+    {
+        if (string.IsNullOrEmpty(code))
+        {
+            return Redirect($"http://localhost:5173/login?error=google_auth_failed");
+        }
+
+        ServiceResult<LoginTokenResult> result = await googleAuthService.HandleGoogleCallbackAsync(code);
+
+        if (!result.IsSuccess || result.Data == null)
+        {
+            string errorMessage = result.ErrorList?.FirstOrDefault() ?? "google_auth_failed";
+            return Redirect($"http://localhost:5173/login?error={Uri.EscapeDataString(errorMessage)}");
+        }
+
+        // Frontend'e token ile redirect
+        // Token'ı URL'de geçmek yerine, cookie zaten set edildiği için sadece success flag gönderelim
+        string redirectUrl = $"http://localhost:5173/auth/google-callback?token={Uri.EscapeDataString(result.Data.AccessToken)}&expiresAt={Uri.EscapeDataString(result.Data.ExpiresAt.ToString("o"))}";
+        return Redirect(redirectUrl);
     }
 }

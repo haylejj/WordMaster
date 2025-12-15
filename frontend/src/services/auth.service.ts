@@ -14,12 +14,7 @@ export const authService = {
     },
 
     register: async (data: RegisterRequest) => {
-        // Convert gender string to number for API
-        const payload = {
-            ...data,
-            gender: parseInt(data.gender),
-        };
-        const response = await api.post<ServiceResult>("/auth/register", payload);
+        const response = await api.post<ServiceResult>("/auth/register", data);
         return response.data;
     },
 

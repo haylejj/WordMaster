@@ -3,7 +3,6 @@ export interface UserWithRolesResponse {
     userName: string;
     email: string;
     isLockedOut: boolean;
-    gender?: string;
     roles: string[];
 }
 
@@ -12,8 +11,8 @@ export interface UserDetailResponse {
     userName: string;
     email: string;
     phone?: string;
-    birthDate?: string;
-    gender?: string; // "Kadın" or "Erkek"
+    firstName?: string;
+    lastName?: string;
 
     // Login Statistics
     totalLoginAttempts: number;
@@ -34,22 +33,21 @@ export interface UserUpdateRequest {
     userName: string;
     email: string;
     phone?: string;
-    birthDate?: string;
-    gender?: string | number; // Can be string ("Kadın") or number (enum value) depending on usage
+    firstName?: string;
+    lastName?: string;
 }
 
 export interface UserProfileResponse {
     userName: string;
     email: string;
     phone?: string;
-    birthDate?: string;
-    gender?: number;
+    firstName?: string;
+    lastName?: string;
 }
 
 export interface UpdateProfileRequest {
-    userName: string;
     email: string;
     phone?: string;
-    birthDate?: string | null;
-    gender?: number | null;
+    firstName?: string | null;
+    lastName?: string | null;
 }

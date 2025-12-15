@@ -132,7 +132,6 @@ public class UserService(
             Email = user.Email!,
             SecurityStamp = user.SecurityStamp,
             IsLockedOut = user.LockoutEnd.HasValue && user.LockoutEnd > now,
-            Gender = user.Gender,
             Roles = userRolesDict.TryGetValue(user.Id, out List<string>? roles) ? roles : []
         }).ToList();
 
@@ -163,8 +162,8 @@ public class UserService(
             UserName = user.UserName,
             Email = user.Email,
             Phone = user.PhoneNumber,
-            BirthDate = user.BirthDate,
-            Gender = (int?)user.Gender,
+            FirstName = user.FirstName,
+            LastName = user.LastName
         }, HttpStatusCode.OK);
     }
 
@@ -203,8 +202,8 @@ public class UserService(
             UserName = user.UserName!,
             Email = user.Email!,
             Phone = user.PhoneNumber,
-            BirthDate = user.BirthDate,
-            Gender = user.Gender,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
             TotalLoginAttempts = userLoginStats.TotalLogins,
             SuccessfulLogins = userLoginStats.SuccessfulLogins,
             FailedLogins = userLoginStats.FailedLogins,
@@ -237,11 +236,10 @@ public class UserService(
             return ServiceResult.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound);
         }
 
-        user.UserName = request.UserName;
         user.Email = request.Email;
         user.PhoneNumber = request.Phone;
-        user.BirthDate = request.BirthDate;
-        user.Gender = request.Gender;
+        user.FirstName = request.FirstName;
+        user.LastName = request.LastName;
 
         IdentityResult updateResult = await userManager.UpdateAsync(user);
         if (!updateResult.Succeeded)
@@ -369,7 +367,6 @@ public class UserService(
             UserName = user.UserName!,
             Email = user.Email!,
             SecurityStamp = user.SecurityStamp,
-            Gender = user.Gender,
             Roles = roles.ToList()
         };
 
@@ -464,7 +461,6 @@ public class UserService(
             UserName = user.UserName!,
             Email = user.Email!,
             SecurityStamp = user.SecurityStamp,
-            Gender = user.Gender,
             Roles = roles.ToList()
         }, HttpStatusCode.OK);
     }

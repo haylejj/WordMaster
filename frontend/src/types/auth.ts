@@ -29,8 +29,12 @@ export const loginSchema = z.object({
 export type LoginRequest = z.infer<typeof loginSchema>;
 
 export const registerSchema = z.object({
-  userName: z.string()
-    .min(1, "Kullanıcı Adı alanı boş bırakılamaz"),
+  firstName: z.string()
+    .min(1, "Ad alanı boş bırakılamaz")
+    .max(100, "Ad en fazla 100 karakter olabilir"),
+  lastName: z.string()
+    .min(1, "Soyad alanı boş bırakılamaz")
+    .max(50, "Soyad en fazla 50 karakter olabilir"),
   email: z.string()
     .min(1, "Email alanı boş bırakılamaz")
     .email("Lütfen geçerli bir email giriniz."),
@@ -39,9 +43,6 @@ export const registerSchema = z.object({
   password: passwordValidation,
   passwordConfirm: z.string()
     .min(1, "Şifre tekrar alanı boş bırakılamaz"),
-  gender: z.enum(["1", "2"], {
-    message: "Cinsiyet alanı boş olamaz.",
-  }), // 1: Kadın, 2: Erkek
 }).refine((data) => data.password === data.passwordConfirm, {
   message: "Şifreler aynı değildir.",
   path: ["passwordConfirm"],
