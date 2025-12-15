@@ -77,10 +77,12 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPermissionService, PermissionService>();
         services.AddScoped<IDatabaseService, DatabaseService>();
         services.AddScoped<IStatisticsService, StatisticsService>();
+        services.AddScoped<IGoogleAuthService, GoogleAuthService>();
 
         // Helpers
         services.AddScoped<IDataProtectionHelper, DataProtectionHelper>();
         services.AddScoped<IRefreshTokenCookieHelper, RefreshTokenCookieHelper>();
+        services.AddScoped<IUsernameHelper, UsernameHelper>();
 
         return services;
     }

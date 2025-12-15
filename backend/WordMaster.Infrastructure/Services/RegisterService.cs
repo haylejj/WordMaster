@@ -16,18 +16,21 @@ public class RegisterService(
     ILogger<RegisterService> logger,
     IEmailService emailService,
     IOptions<UrlsSettings> urlSettings,
-    IDataProtectionHelper dataProtectionHelper) : IRegisterService
+    IDataProtectionHelper dataProtectionHelper,
+    IUsernameHelper usernameHelper) : IRegisterService
 {
     public async Task<ServiceResult> RegisterAsync(RegisterRequest request)
     {
-        logger.LogInformation("Attempting to register new user with username: {UserName}, email: {Email}", request.UserName, request.Email);
+        // FirstName + LastName'den benzersiz username oluştur
+        string username = await usernameHelper.GenerateUniqueUsernameAsync(request.FirstName, request.LastName);
 
         AppUser newUser = new()
         {
-            UserName = request.UserName,
+            UserName = username,
             Email = request.Email,
             PhoneNumber = request.Phone,
-            Gender = request.Gender
+            FirstName = request.FirstName,
+            LastName = request.LastName
         };
 
         IdentityResult result = await userManager.CreateAsync(newUser, request.Password!);
@@ -35,14 +38,14 @@ public class RegisterService(
         if (!result.Succeeded)
         {
             List<string> errors = result.Errors.Select(e => e.Description).ToList();
-            logger.LogWarning("Registration failed for user {UserName}. Errors: {Errors}", request.UserName, string.Join(", ", errors));
+            logger.LogWarning("Registration failed for Email {Email}. Errors: {Errors}", request.Email, string.Join(", ", errors));
             return ServiceResult.Failure(errors, HttpStatusCode.BadRequest);
         }
 
-        AppUser? user = await userManager.FindByNameAsync(request.UserName!);
+        AppUser? user = await userManager.FindByNameAsync(username);
         if (user == null)
         {
-            logger.LogError("User {UserName} created but not found immediately after creation.", request.UserName);
+            logger.LogError("Email {Email} created but not found immediately after creation.", request.Email);
             return ServiceResult.Failure("Kullanıcı bulunamadı.", HttpStatusCode.NotFound);
         }
 
@@ -60,7 +63,7 @@ public class RegisterService(
 
         await emailService.SendEmailConfirmationLinkAsync(confirmLink, user.Email!);
 
-        logger.LogInformation("User {UserName} registered successfully. Confirmation email sent.", request.UserName);
+        logger.LogInformation("Email {Email} registered successfully. Confirmation email sent.", request.Email);
         return ServiceResult.SuccessAsCreated();
     }
 

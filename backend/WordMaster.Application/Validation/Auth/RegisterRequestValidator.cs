@@ -7,8 +7,13 @@ public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
 {
     public RegisterRequestValidator()
     {
-        RuleFor(x => x.UserName)
-            .NotEmpty().WithMessage("Kullanıcı Adı alanı boş bırakılamaz");
+        RuleFor(x => x.FirstName)
+            .NotEmpty().WithMessage("Ad alanı boş bırakılamaz")
+            .MaximumLength(100).WithMessage("Ad en fazla 100 karakter olabilir");
+
+        RuleFor(x => x.LastName)
+            .NotEmpty().WithMessage("Soyad alanı boş bırakılamaz")
+            .MaximumLength(50).WithMessage("Soyad en fazla 50 karakter olabilir");
 
         RuleFor(x => x.Email)
             .NotEmpty().WithMessage("Email alanı boş bırakılamaz")
@@ -24,11 +29,6 @@ public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
 
         RuleFor(x => x.Phone)
             .NotEmpty().WithMessage("Telefon alanı boş bırakılamaz");
-
-        RuleFor(x => x.Gender)
-            .NotNull().WithMessage("Cinsiyet alanı boş olamaz.")
-            .IsInEnum().WithMessage("Geçersiz cinsiyet değeri.");
-
     }
 }
 

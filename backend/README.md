@@ -261,7 +261,6 @@ Sistem logları ve veritabanı temizliği.
 Gelen isteklerin (Request DTOs) doğrulanması için **FluentValidation** kütüphanesi kullanılmıştır.
 *   **Otomatik Kontrol**: `ValidationFilter` sayesinde, Controller'a istek ulaştığında validasyon kuralları otomatik olarak çalıştırılır.
 *   Eğer validasyon hatası varsa, Controller action'ı çalışmadan `400 Bad Request` ve hata detayları döner.
-
 ### 2. Authentication (Kimlik Doğrulama) - Hibrit Token Stratejisi
 Kimlik doğrulama işlemleri **ASP.NET Core Identity** ve **JWT (JSON Web Token)** ile sağlanır. Güvenlik için **Hibrit Token Stratejisi** uygulanmıştır.
 
@@ -390,6 +389,13 @@ Kullanıcıların kelime dağarcığını test etmeleri için geliştirilen "Tes
     *   Doğru cevap dışında kalan 3 yanlış şık, genel kelime havuzundan rastgele seçilir.
     *   Sistemin "Favoriler" veya "Bilinmeyenler" modunda çalışması fark etmeksizin, şıkların her zaman dolu gelmesi sağlanır.
 *   **Güvenli Test**: Şıklar backend tarafında karıştırılır (shuffle), böylece doğru cevabın yeri tahmin edilemez.
+
+### 15. Google OAuth 2.0 Entegrasyonu
+Kullanıcıların Google hesapları ile hızlıca kayıt olabilmesi ve giriş yapabilmesi için Google OAuth entegrasyonu sağlanmıştır.
+*   **Akış**: Authorization Code Flow kullanılır.
+*   **Kütüphane**: `Google.Apis.Auth` ile token değişimi ve doğrulama yapılır.
+*   **Kayıt**: Kullanıcı ilk kez giriş yaptığında Ad, Soyad ve E-posta bilgileri ile otomatik kayıt oluşturulur.
+*   *Detaylı bilgi ve kurulum için `docs/Google_Auth_Integration.md` dosyasına bakabilirsiniz.*
 
 ---
 

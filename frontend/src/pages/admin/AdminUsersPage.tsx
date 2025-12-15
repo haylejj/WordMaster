@@ -17,7 +17,6 @@ import {
     AlertCircle,
     Eye,
     KeyRound,
-    Calendar,
     Mail,
     Phone,
     User,
@@ -36,8 +35,8 @@ const userSchema = z.object({
     userName: z.string().min(3, "Kullanıcı adı en az 3 karakter olmalıdır"),
     email: z.string().email("Geçerli bir e-posta adresi giriniz"),
     phone: z.string().optional(),
-    birthDate: z.string().optional(),
-    gender: z.string().optional()
+    firstName: z.string().max(100, "Ad en fazla 100 karakter olabilir").optional(),
+    lastName: z.string().max(50, "Soyad en fazla 50 karakter olabilir").optional()
 });
 
 type UserFormData = z.infer<typeof userSchema>;
@@ -156,8 +155,8 @@ export default function AdminUsersPage() {
                 setValue("userName", detail.userName);
                 setValue("email", detail.email);
                 setValue("phone", detail.phone || "");
-                setValue("birthDate", detail.birthDate ? new Date(detail.birthDate).toISOString().split('T')[0] : "");
-                setValue("gender", detail.gender || "");
+                setValue("firstName", detail.firstName || "");
+                setValue("lastName", detail.lastName || "");
             }
         } catch (error) {
             console.error("Kullanıcı detayları alınamadı", error);
@@ -185,8 +184,8 @@ export default function AdminUsersPage() {
                 userName: data.userName,
                 email: data.email,
                 phone: data.phone,
-                birthDate: data.birthDate ? new Date(data.birthDate).toISOString() : undefined,
-                gender: data.gender || undefined
+                firstName: data.firstName || undefined,
+                lastName: data.lastName || undefined
             });
 
             if (result.isSuccess) {
@@ -338,10 +337,7 @@ export default function AdminUsersPage() {
         }
     };
 
-    const getGenderText = (gender?: string) => {
-        if (!gender) return "Belirtilmemiş";
-        return gender; // Since API returns "Kadın" or "Erkek", we can just return it.
-    };
+
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
@@ -547,16 +543,12 @@ export default function AdminUsersPage() {
                                                     <span>{selectedUserDetail.phone || "-"}</span>
                                                 </div>
                                                 <div className="flex items-center gap-3 text-gray-300">
-                                                    <Calendar size={18} className="text-gray-500" />
-                                                    <span>
-                                                        {selectedUserDetail.birthDate
-                                                            ? new Date(selectedUserDetail.birthDate).toLocaleDateString("tr-TR")
-                                                            : "-"}
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center gap-3 text-gray-300">
                                                     <User size={18} className="text-gray-500" />
-                                                    <span>{getGenderText(selectedUserDetail.gender)}</span>
+                                                    <span>
+                                                        {selectedUserDetail.firstName && selectedUserDetail.lastName
+                                                            ? `${selectedUserDetail.firstName} ${selectedUserDetail.lastName}`
+                                                            : selectedUserDetail.firstName || selectedUserDetail.lastName || "-"}
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
@@ -690,24 +682,21 @@ export default function AdminUsersPage() {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium text-gray-300">Doğum Tarihi</label>
+                                        <label className="text-sm font-medium text-gray-300">Ad</label>
                                         <input
-                                            type="date"
-                                            {...register("birthDate")}
+                                            {...register("firstName")}
                                             className="w-full bg-[#121212] text-white px-4 py-2 rounded-lg border border-white/10 focus:border-red-500 focus:outline-none transition-colors"
+                                            placeholder="Ad"
                                         />
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium text-gray-300">Cinsiyet</label>
-                                        <select
-                                            {...register("gender")}
+                                        <label className="text-sm font-medium text-gray-300">Soyad</label>
+                                        <input
+                                            {...register("lastName")}
                                             className="w-full bg-[#121212] text-white px-4 py-2 rounded-lg border border-white/10 focus:border-red-500 focus:outline-none transition-colors"
-                                        >
-                                            <option value="">Seçiniz</option>
-                                            <option value="Erkek">Erkek</option>
-                                            <option value="Kadın">Kadın</option>
-                                        </select>
+                                            placeholder="Soyad"
+                                        />
                                     </div>
 
                                     <div className="flex justify-end gap-3 pt-2">

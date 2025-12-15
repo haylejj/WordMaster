@@ -8,6 +8,7 @@ import RegisterPage from "@/pages/auth/RegisterPage";
 import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage";
 import ConfirmEmailPage from "@/pages/auth/ConfirmEmailPage";
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
+import GoogleCallbackPage from "@/pages/auth/GoogleCallbackPage";
 import AdminLoginPage from "@/pages/admin/AdminLoginPage";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import WordsPage from "@/pages/dashboard/WordsPage";
@@ -49,6 +50,7 @@ function App() {
           <Route path="/confirm-email" element={<ConfirmEmailPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/ResetPassword" element={<ResetPasswordPage />} />
+          <Route path="/auth/google-callback" element={<GoogleCallbackPage />} />
 
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLoginPage />} />

@@ -1,5 +1,3 @@
-using WordMaster.Domain.Entities;
-
 namespace WordMaster.Application.Responses.User;
 
 public class UserDetailResponse
@@ -8,8 +6,8 @@ public class UserDetailResponse
     public string UserName { get; set; } = null!;
     public string Email { get; set; } = null!;
     public string? Phone { get; set; }
-    public DateTime? BirthDate { get; set; }
-    public Gender? Gender { get; set; }
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
 
     // Login Statistics
     public int TotalLoginAttempts { get; set; }
