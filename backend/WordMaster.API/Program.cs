@@ -17,6 +17,10 @@ using WordMaster.Infrastructure.Extensions;
 // Docker container'da /app/.env olarak mount edilir
 // clobberExistingVars: false -> Docker-compose'un set ettiği doğru değerlerin (örn. redis:6379) 
 // .env dosyasındaki local değerlerle (örn. localhost:6379) ezilmesini engeller.
+// Normalde docker-compose da zaten environment variable'lar set edilmiş.Ama biz localden calıstırırken 
+// .env dosyasını okuyarak environment variable'ları set ediyoruz.O yüzden bu şekilde yapıyoruz.Hem docker hem localde
+// .env kullanabilmek için docker-compose da .env yi volume olarak tasımak lazım eğer aşşağıdaki gibi fiziksel dosyadan okumak istiyorsak.
+// Normalde dockerda gerek yok ama localde calıstırmak için fiziksel dosyadan .env yi okumak lazım.
 LoadOptions loadOptions = new(setEnvVars: true, clobberExistingVars: false);
 string envPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", ".env");
 if (File.Exists(envPath))

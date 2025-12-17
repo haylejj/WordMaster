@@ -343,87 +343,97 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
     }
     public async Task<ServiceResult<bool>> CheckTranslationAndUpdateAsync(Guid userId, CheckTranslationRequest request)
     {
-        // Use transaction to ensure data integrity
-        using IDbContextTransaction transaction = await unitOfWork.BeginTransactionAsync();
+        // Use execution strategy to handle SqlServerRetryingExecutionStrategy with transactions
+        IExecutionStrategy strategy = unitOfWork.CreateExecutionStrategy();
+        bool isCorrect = false;
 
         try
         {
-            Word? word = await wordRepository.GetWordForUserTrackedAsync(request.WordId, userId);
-
-            if (word == null)
+            await strategy.ExecuteAsync(async () =>
             {
-                return ServiceResult<bool>.Failure("Kelime bulunamadı.", HttpStatusCode.NotFound);
-            }
+                // Use transaction to ensure data integrity
+                using IDbContextTransaction transaction = await unitOfWork.BeginTransactionAsync();
 
-            string? normalizedAnswer = request.Answer?.NormalizeTurkishWord();
-            bool isCorrect = word.TurkishWord == normalizedAnswer;
+                Word? word = await wordRepository.GetWordForUserTrackedAsync(request.WordId, userId);
 
-            DateTime now = DateTime.UtcNow;
-            word.IsLastAnswerCorrect = isCorrect;
-            word.LastPracticeDate = now;
+                if (word == null)
+                {
+                    throw new InvalidOperationException("WORD_NOT_FOUND");
+                }
 
-            // Add history record
-            await practiceHistoryRepository.AddAsync(new PracticeHistory
-            {
-                UserId = userId,
-                WordCount = 1,
-                CorrectCount = isCorrect ? 1 : 0,
-                WrongCount = isCorrect ? 0 : 1,
-                PracticeDate = now
+                string? normalizedAnswer = request.Answer?.NormalizeTurkishWord();
+                isCorrect = word.TurkishWord == normalizedAnswer;
+
+                DateTime now = DateTime.UtcNow;
+                word.IsLastAnswerCorrect = isCorrect;
+                word.LastPracticeDate = now;
+
+                // Add history record
+                await practiceHistoryRepository.AddAsync(new PracticeHistory
+                {
+                    UserId = userId,
+                    WordCount = 1,
+                    CorrectCount = isCorrect ? 1 : 0,
+                    WrongCount = isCorrect ? 0 : 1,
+                    PracticeDate = now
+                });
+
+                // Update User Streak
+                AppUser? user = await userManager.FindByIdAsync(userId.ToString());
+                if (user != null)
+                {
+                    DateTime today = now.Date;
+                    DateTime? lastUpdate = user.LastStreakUpdateDate?.Date;
+
+                    if (lastUpdate == null) // First time practice
+                    {
+                        user.CurrentStreak = 1;
+                        user.LastStreakUpdateDate = now;
+                    }
+                    else if (lastUpdate == today.AddDays(-1)) // Continued streak
+                    {
+                        user.CurrentStreak++;
+                        user.LastStreakUpdateDate = now;
+                    }
+                    else if (lastUpdate < today.AddDays(-1)) // Broken streak
+                    {
+                        user.CurrentStreak = 1;
+                        user.LastStreakUpdateDate = now;
+                    }
+                    // If already updated today, do nothing.
+
+                    await userManager.UpdateAsync(user);
+                }
+
+                if (isCorrect)
+                {
+                    word.ConsecutiveCorrectCount++;
+                    word.ConsecutiveWrongCount = 0;
+                    word.TotalCorrectCount++;
+                }
+                else
+                {
+                    word.ConsecutiveWrongCount++;
+                    word.ConsecutiveCorrectCount = 0;
+                    word.TotalWrongCount++;
+                }
+
+                wordRepository.Update(word);
+                await unitOfWork.CommitAsync();
+                await unitOfWork.CommitTransactionAsync();
             });
-
-            // Update User Streak
-            AppUser? user = await userManager.FindByIdAsync(userId.ToString());
-            if (user != null)
-            {
-                DateTime today = now.Date;
-                DateTime? lastUpdate = user.LastStreakUpdateDate?.Date;
-
-                if (lastUpdate == null) // First time practice
-                {
-                    user.CurrentStreak = 1;
-                    user.LastStreakUpdateDate = now;
-                }
-                else if (lastUpdate == today.AddDays(-1)) // Continued streak
-                {
-                    user.CurrentStreak++;
-                    user.LastStreakUpdateDate = now;
-                }
-                else if (lastUpdate < today.AddDays(-1)) // Broken streak
-                {
-                    user.CurrentStreak = 1;
-                    user.LastStreakUpdateDate = now;
-                }
-                // If already updated today, do nothing.
-
-                await userManager.UpdateAsync(user);
-            }
-
-            if (isCorrect)
-            {
-                word.ConsecutiveCorrectCount++;
-                word.ConsecutiveWrongCount = 0;
-                word.TotalCorrectCount++;
-            }
-            else
-            {
-                word.ConsecutiveWrongCount++;
-                word.ConsecutiveCorrectCount = 0;
-                word.TotalWrongCount++;
-            }
-
-            wordRepository.Update(word);
-            await unitOfWork.CommitAsync();
-            await unitOfWork.CommitTransactionAsync();
 
             // Practice sonrası istatistik cache'ini invalidate et
             await cacheService.RemoveAsync(CacheKeys.UserStatistics(userId));
 
             return ServiceResult<bool>.Success(isCorrect, HttpStatusCode.OK);
         }
+        catch (InvalidOperationException ex) when (ex.Message == "WORD_NOT_FOUND")
+        {
+            return ServiceResult<bool>.Failure("Kelime bulunamadı.", HttpStatusCode.NotFound);
+        }
         catch (Exception ex)
         {
-            await unitOfWork.RollbackTransactionAsync();
             logger.LogError(ex, "Error during CheckTranslationAndUpdateAsync for user {UserId}", userId);
             return ServiceResult<bool>.Failure("Bir hata oluştu.", HttpStatusCode.InternalServerError);
         }
@@ -492,99 +502,106 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
             return ServiceResult<bool>.Success(true, HttpStatusCode.OK);
         }
 
-        // Use transaction to ensure data integrity across Words, History, and User tables
-        using IDbContextTransaction transaction = await unitOfWork.BeginTransactionAsync();
+        List<long> wordIds = request.Results.Select(r => (long)r.WordId).ToList();
+
+        // Use execution strategy to handle SqlServerRetryingExecutionStrategy with transactions
+        IExecutionStrategy strategy = unitOfWork.CreateExecutionStrategy();
 
         try
         {
-            List<long> wordIds = request.Results.Select(r => (long)r.WordId).ToList();
-            List<Word> words = await wordRepository
-                .Where(x => wordIds.Contains(x.Id) && x.UserId == userId)
-                .ToListAsync();
-
-            int updatedCount = 0;
-            int totalCorrect = 0;
-            int totalWrong = 0;
-            DateTime now = DateTime.UtcNow;
-
-            foreach (PracticeResultItem result in request.Results)
+            await strategy.ExecuteAsync(async () =>
             {
-                Word? word = words.FirstOrDefault(w => w.Id == result.WordId);
-                if (word == null) continue;
+                // Use transaction to ensure data integrity across Words, History, and User tables
+                using IDbContextTransaction transaction = await unitOfWork.BeginTransactionAsync();
 
-                word.IsLastAnswerCorrect = result.IsCorrect;
-                word.LastPracticeDate = now;
+                List<Word> words = await wordRepository
+                    .Where(x => wordIds.Contains(x.Id) && x.UserId == userId)
+                    .ToListAsync();
 
-                // Removed individual history record addition here
+                int updatedCount = 0;
+                int totalCorrect = 0;
+                int totalWrong = 0;
+                DateTime now = DateTime.UtcNow;
 
-                if (result.IsCorrect)
+                foreach (PracticeResultItem result in request.Results)
                 {
-                    word.ConsecutiveCorrectCount++;
-                    word.ConsecutiveWrongCount = 0;
-                    word.TotalCorrectCount++;
-                    totalCorrect++;
-                }
-                else
-                {
-                    word.ConsecutiveWrongCount++;
-                    word.ConsecutiveCorrectCount = 0;
-                    word.TotalWrongCount++;
-                    totalWrong++;
-                }
+                    Word? word = words.FirstOrDefault(w => w.Id == result.WordId);
+                    if (word == null) continue;
 
-                wordRepository.Update(word);
-                updatedCount++;
-            }
+                    word.IsLastAnswerCorrect = result.IsCorrect;
+                    word.LastPracticeDate = now;
 
-            // Add ONE aggregated history record for the entire batch
-            if (updatedCount > 0)
-            {
-                await practiceHistoryRepository.AddAsync(new PracticeHistory
-                {
-                    UserId = userId,
-                    WordCount = updatedCount,
-                    CorrectCount = totalCorrect,
-                    WrongCount = totalWrong,
-                    PracticeDate = now
-                });
-            }
+                    // Removed individual history record addition here
 
-            await unitOfWork.CommitAsync(); // Commit changes to words and history within the transaction
-
-            // Update User Streak (Once for the bulk operation)
-            if (updatedCount > 0)
-            {
-                AppUser? user = await userManager.FindByIdAsync(userId.ToString());
-                if (user != null)
-                {
-                    DateTime today = now.Date;
-                    DateTime? lastUpdate = user.LastStreakUpdateDate?.Date;
-
-                    if (lastUpdate == null) // First time
+                    if (result.IsCorrect)
                     {
-                        user.CurrentStreak = 1;
-                        user.LastStreakUpdateDate = now;
+                        word.ConsecutiveCorrectCount++;
+                        word.ConsecutiveWrongCount = 0;
+                        word.TotalCorrectCount++;
+                        totalCorrect++;
                     }
-                    else if (lastUpdate == today.AddDays(-1)) // Streak continues
+                    else
                     {
-                        user.CurrentStreak++;
-                        user.LastStreakUpdateDate = now;
-                    }
-                    else if (lastUpdate < today.AddDays(-1)) // Streak broken
-                    {
-                        user.CurrentStreak = 1;
-                        user.LastStreakUpdateDate = now;
+                        word.ConsecutiveWrongCount++;
+                        word.ConsecutiveCorrectCount = 0;
+                        word.TotalWrongCount++;
+                        totalWrong++;
                     }
 
-                    await userManager.UpdateAsync(user);
+                    wordRepository.Update(word);
+                    updatedCount++;
                 }
-            }
 
-            await unitOfWork.CommitTransactionAsync(); // Commit the entire transaction
+                // Add ONE aggregated history record for the entire batch
+                if (updatedCount > 0)
+                {
+                    await practiceHistoryRepository.AddAsync(new PracticeHistory
+                    {
+                        UserId = userId,
+                        WordCount = updatedCount,
+                        CorrectCount = totalCorrect,
+                        WrongCount = totalWrong,
+                        PracticeDate = now
+                    });
+                }
 
-            logger.LogInformation("Practice completed for user {UserId}. Updated stats for {UpdatedCount} words. Correct: {Correct}, Wrong: {Wrong}", userId, updatedCount, totalCorrect, totalWrong);
+                await unitOfWork.CommitAsync(); // Commit changes to words and history within the transaction
 
-            // Cache invalidation
+                // Update User Streak (Once for the bulk operation)
+                if (updatedCount > 0)
+                {
+                    AppUser? user = await userManager.FindByIdAsync(userId.ToString());
+                    if (user != null)
+                    {
+                        DateTime today = now.Date;
+                        DateTime? lastUpdate = user.LastStreakUpdateDate?.Date;
+
+                        if (lastUpdate == null) // First time
+                        {
+                            user.CurrentStreak = 1;
+                            user.LastStreakUpdateDate = now;
+                        }
+                        else if (lastUpdate == today.AddDays(-1)) // Streak continues
+                        {
+                            user.CurrentStreak++;
+                            user.LastStreakUpdateDate = now;
+                        }
+                        else if (lastUpdate < today.AddDays(-1)) // Streak broken
+                        {
+                            user.CurrentStreak = 1;
+                            user.LastStreakUpdateDate = now;
+                        }
+
+                        await userManager.UpdateAsync(user);
+                    }
+                }
+
+                await unitOfWork.CommitTransactionAsync(); // Commit the entire transaction
+
+                logger.LogInformation("Practice completed for user {UserId}. Updated stats for {UpdatedCount} words. Correct: {Correct}, Wrong: {Wrong}", userId, updatedCount, totalCorrect, totalWrong);
+            });
+
+            // Cache invalidation (outside transaction - best effort)
             await cacheService.RemoveAsync(CacheKeys.Words(userId));
             await cacheService.RemoveAsync(CacheKeys.UserStatistics(userId)); // Practice sonrası istatistik cache'ini invalidate et
             foreach (long id in wordIds)
@@ -596,7 +613,6 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
         }
         catch (Exception ex)
         {
-            await unitOfWork.RollbackTransactionAsync();
             logger.LogError(ex, "Error during BulkUpdateStatsAsync for user {UserId}", userId);
             return ServiceResult<bool>.Failure("Bir hata oluştu.", HttpStatusCode.InternalServerError);
         }

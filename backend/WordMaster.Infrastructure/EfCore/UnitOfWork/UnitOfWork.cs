@@ -43,6 +43,11 @@ public class UnitOfWork(AppDbContext context) : IUnitOfWork
         }
     }
 
+    public IExecutionStrategy CreateExecutionStrategy()
+    {
+        return context.Database.CreateExecutionStrategy();
+    }
+
     public async ValueTask DisposeAsync()
     {
         if (_transaction != null)

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 using System.Net;
 using WordMaster.Application.Persistence;
@@ -294,45 +295,65 @@ public class UserService(
 
         string newPassword = PasswordHelper.GenerateRandomPassword();
 
-        await unitOfWork.BeginTransactionAsync();
+        // Use execution strategy to handle SqlServerRetryingExecutionStrategy with transactions
+        IExecutionStrategy strategy = unitOfWork.CreateExecutionStrategy();
+
         try
         {
-            IdentityResult removePasswordResult = await userManager.RemovePasswordAsync(user);
-            if (!removePasswordResult.Succeeded)
+            await strategy.ExecuteAsync(async () =>
             {
-                await unitOfWork.RollbackTransactionAsync();
-                logger.LogError("Failed to remove password for user {UserId} during admin password reset", id);
-                return ServiceResult<string>.Failure("Şifre sıfırlanırken bir hata oluştu.", HttpStatusCode.InternalServerError);
-            }
+                await unitOfWork.BeginTransactionAsync();
 
-            IdentityResult addPasswordResult = await userManager.AddPasswordAsync(user, newPassword);
-            if (!addPasswordResult.Succeeded)
-            {
-                await unitOfWork.RollbackTransactionAsync();
-                logger.LogError("Failed to add new password for user {UserId} during admin password reset", id);
-                return ServiceResult<string>.Failure("Yeni şifre atanırken bir hata oluştu.", HttpStatusCode.InternalServerError);
-            }
+                IdentityResult removePasswordResult = await userManager.RemovePasswordAsync(user);
+                if (!removePasswordResult.Succeeded)
+                {
+                    await unitOfWork.RollbackTransactionAsync();
+                    throw new InvalidOperationException("REMOVE_PASSWORD_FAILED");
+                }
 
-            await unitOfWork.CommitAsync();
+                IdentityResult addPasswordResult = await userManager.AddPasswordAsync(user, newPassword);
+                if (!addPasswordResult.Succeeded)
+                {
+                    await unitOfWork.RollbackTransactionAsync();
+                    throw new InvalidOperationException("ADD_PASSWORD_FAILED");
+                }
 
-            ServiceResult emailResult = await emailService.SendPasswordToEmailAsync(newPassword, user.Email, user.UserName ?? "Kullanıcı");
-            if (!emailResult.IsSuccess)
-            {
-                await unitOfWork.RollbackTransactionAsync();
-                logger.LogError("Password created but email failed to send for user {UserId}", id);
-                return ServiceResult<string>.Failure($"Şifre oluşturuldu ancak email gönderilemedi: {emailResult.ErrorList?.FirstOrDefault() ?? "Bilinmeyen hata"}", HttpStatusCode.InternalServerError);
-            }
+                await unitOfWork.CommitAsync();
 
-            await unitOfWork.CommitTransactionAsync();
+                ServiceResult emailResult = await emailService.SendPasswordToEmailAsync(newPassword, user.Email, user.UserName ?? "Kullanıcı");
+                if (!emailResult.IsSuccess)
+                {
+                    await unitOfWork.RollbackTransactionAsync();
+                    throw new InvalidOperationException($"EMAIL_FAILED:{emailResult.ErrorList?.FirstOrDefault() ?? "Bilinmeyen hata"}");
+                }
+
+                await unitOfWork.CommitTransactionAsync();
+            });
+
             await userManager.UpdateSecurityStampAsync(user);
             await cacheService.RemoveAsync($"security_stamp:{user.Id}");
 
             logger.LogInformation("Admin reset password successfully for user {UserId}. New password email sent.", id);
             return ServiceResult<string>.Success(newPassword, HttpStatusCode.OK);
         }
+        catch (InvalidOperationException ex) when (ex.Message == "REMOVE_PASSWORD_FAILED")
+        {
+            logger.LogError("Failed to remove password for user {UserId} during admin password reset", id);
+            return ServiceResult<string>.Failure("Şifre sıfırlanırken bir hata oluştu.", HttpStatusCode.InternalServerError);
+        }
+        catch (InvalidOperationException ex) when (ex.Message == "ADD_PASSWORD_FAILED")
+        {
+            logger.LogError("Failed to add new password for user {UserId} during admin password reset", id);
+            return ServiceResult<string>.Failure("Yeni şifre atanırken bir hata oluştu.", HttpStatusCode.InternalServerError);
+        }
+        catch (InvalidOperationException ex) when (ex.Message.StartsWith("EMAIL_FAILED:"))
+        {
+            logger.LogError("Password created but email failed to send for user {UserId}", id);
+            string errorMessage = ex.Message.Replace("EMAIL_FAILED:", "");
+            return ServiceResult<string>.Failure($"Şifre oluşturuldu ancak email gönderilemedi: {errorMessage}", HttpStatusCode.InternalServerError);
+        }
         catch (Exception ex)
         {
-            await unitOfWork.RollbackTransactionAsync();
             logger.LogError(ex, "Exception occurred while resetting password for user {UserId}", id);
             return ServiceResult<string>.Failure($"Şifre sıfırlanırken bir hata oluştu: {ex.Message}", HttpStatusCode.InternalServerError);
         }

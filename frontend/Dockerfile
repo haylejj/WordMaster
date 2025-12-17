@@ -1,6 +1,11 @@
 # Build Stage
 FROM node:20-alpine AS build
 WORKDIR /app
+
+# Build-time argument for API URL
+ARG VITE_API_URL=http://localhost:3002/api/v1
+ENV VITE_API_URL=$VITE_API_URL
+
 COPY package*.json ./
 RUN npm ci
 COPY . .

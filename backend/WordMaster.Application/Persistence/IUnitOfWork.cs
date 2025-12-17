@@ -9,4 +9,5 @@ public interface IUnitOfWork : IAsyncDisposable
     Task<IDbContextTransaction> BeginTransactionAsync();
     Task CommitTransactionAsync();
     Task RollbackTransactionAsync();
+    IExecutionStrategy CreateExecutionStrategy();
 }

@@ -17,7 +17,7 @@ services:
       - wordmaster-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P $$MSSQL_SA_PASSWORD -C -Q 'SELECT 1' || exit 1"]
+      test: [ "CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P $$MSSQL_SA_PASSWORD -C -Q 'SELECT 1' || exit 1" ]
       interval: 10s
       retries: 5
       start_period: 30s
@@ -37,7 +37,7 @@ services:
       - wordmaster-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      test: [ "CMD-SHELL", "redis-cli ping | grep PONG" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -81,7 +81,7 @@ services:
       - wordmaster-network
     restart: unless-stopped
     volumes:
-      - ./.env:/app/.env:ro  # .env dosyasını container'a mount et (read-only)
+      - ./.env:/app/.env:ro # .env dosyasını container'a mount et (read-only)
 
   # -----------------------------------------------------------------------------
   # FRONTEND (React + Nginx)
@@ -90,6 +90,8 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:3002/api/v1}
     container_name: wordmaster-client
     ports:
       - "5173:80" # Dışarıdan 5173, içeriden 80'e (Nginx) bağlanır
@@ -127,7 +129,8 @@ services:
 # -----------------------------------------------------------------------------
 volumes:
   mssql-data: # SQL Server verileri kaybolmasın diye
-  redis-data: # Redis önbelleği kaybolmasın diye
+  redis-data:
+    # Redis önbelleği kaybolmasın diye
 
 networks:
   wordmaster-network:
