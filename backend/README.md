@@ -182,10 +182,19 @@ copy .env.example .env
 ConnectionStrings__SqlServer=Server=...
 ConnectionStrings__Redis=localhost:6379
 
+# Client & API URLs (Frontend ve Backend iletişimi için)
+VITE_API_URL=http://localhost:3002/api/v1
+
 # JWT
 Jwt__Key=GizliAnahtar...
 Jwt__Issuer=WordMasterApi
 ```
+
+### Frontend Konfigürasyonu (VITE_API_URL)
+Docker ile çalışırken Frontend (React) uygulamasının API'ye hangi adresten ulaşacağını bilmesi gerekir.
+*   **Çalışma Mantığı**: `docker-compose.yml` dosyası, `.env` dosyasındaki `VITE_API_URL` değerini okur ve **Build Aşaması**'nda (`npm run build`) frontend kodunun içine gömer.
+*   **Öncelik Sırası**: `.env` dosyası > `docker-compose.yml` varsayılanı > `frontend/Dockerfile` varsayılanı.
+*   **Not**: Bu değer sadece local geliştirme ortamında değil, production build alırken de kritiktir.
 
 ---
 

@@ -3,6 +3,8 @@ FROM node:20-alpine AS build
 WORKDIR /app
 
 # Build-time argument for API URL
+# Not: Bu değer bir "fallback"tir (varsayılan).
+# docker-compose.yml içindeki 'args' kısmından gönderilen değer burayı ezer.
 ARG VITE_API_URL=http://localhost:3002/api/v1
 ENV VITE_API_URL=$VITE_API_URL
 
