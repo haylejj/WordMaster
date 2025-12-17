@@ -1,0 +1,134 @@
+services:
+  # -----------------------------------------------------------------------------
+  # DATABASE (SQL Server)
+  # -----------------------------------------------------------------------------
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: wordmaster-db
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${DB_PASSWORD}
+      - MSSQL_PID=Express
+    ports:
+      - "1434:1433"
+    volumes:
+      - mssql-data:/var/opt/mssql # Veri kalıcılığı için volume
+    networks:
+      - wordmaster-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P $$MSSQL_SA_PASSWORD -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+
+  # -----------------------------------------------------------------------------
+  # REDIS (Cache)
+  # -----------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: wordmaster-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - wordmaster-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # -----------------------------------------------------------------------------
+  # BACKEND API (.NET)
+  # -----------------------------------------------------------------------------
+  api:
+    build:
+      context: ./backend
+      dockerfile: WordMaster.API/Dockerfile
+    container_name: wordmaster-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
+      - ConnectionStrings__SqlServer=${DOCKER_DB_CONNECTION_STRING}
+      - ConnectionStrings__Redis=${DOCKER_REDIS_CONNECTION_STRING:-redis:6379}
+      - Jwt__Key=${Jwt__Key}
+      - Jwt__Issuer=${Jwt__Issuer}
+      - Jwt__Audience=${Jwt__Audience}
+      - Jwt__ExpiresInMinutes=${Jwt__ExpiresInMinutes:-15}
+      - Jwt__RefreshTokenExpiresInDays=${Jwt__RefreshTokenExpiresInDays:-7}
+      - Authentication__Google__ClientId=${Authentication__Google__ClientId}
+      - Authentication__Google__ClientSecret=${Authentication__Google__ClientSecret}
+      - EmailSettings__Host=${EmailSettings__Host}
+      - EmailSettings__Password=${EmailSettings__Password}
+      - EmailSettings__Email=${EmailSettings__Email}
+      - MailHog__Host=${MailHog__Host}
+      - MailHog__Port=${MailHog__Port}
+      - MailHog__EnableSsl=${MailHog__EnableSsl:-false}
+      - MailHog__FromEmail=${MailHog__FromEmail:-dev@localhost}
+      - URLs__Client=${URLs__Client}
+      - URLs__Api=${URLs__Api}
+    ports:
+      - "3002:8080" # Dışarıdan 3002, içeriden 8080'e bağlanır
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - wordmaster-network
+    restart: unless-stopped
+    volumes:
+      - ./.env:/app/.env:ro  # .env dosyasını container'a mount et (read-only)
+
+  # -----------------------------------------------------------------------------
+  # FRONTEND (React + Nginx)
+  # -----------------------------------------------------------------------------
+  client:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: wordmaster-client
+    ports:
+      - "5173:80" # Dışarıdan 5173, içeriden 80'e (Nginx) bağlanır
+    depends_on:
+      - api
+    networks:
+      - wordmaster-network
+    restart: unless-stopped
+
+  # -----------------------------------------------------------------------------
+  # TOOLS (MailHog, RedisInsight)
+  # -----------------------------------------------------------------------------
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: mailhog
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # Web UI
+    networks:
+      - wordmaster-network
+    restart: unless-stopped
+
+  redisinsight:
+    image: redis/redisinsight:latest
+    container_name: redis-insight
+    ports:
+      - "5540:5540"
+    depends_on:
+      - redis
+    networks:
+      - wordmaster-network
+
+# -----------------------------------------------------------------------------
+# VOLUMES & NETWORKS
+# -----------------------------------------------------------------------------
+volumes:
+  mssql-data: # SQL Server verileri kaybolmasın diye
+  redis-data: # Redis önbelleği kaybolmasın diye
+
+networks:
+  wordmaster-network:
+    driver: bridge

@@ -11,18 +11,116 @@ Projeyi yerel ortamınızda çalıştırmak için aşağıdaki adımları izleyi
 *   **Docker Desktop** (Redis ve MailHog servisleri için)
 *   **SQL Server** (veya LocalDB)
 
-### Adım 1: Altyapı Servislerini Başlatma
-Proje, önbellekleme için **Redis** ve e-posta testleri için **MailHog** kullanır. Bu servisleri Docker ile kolayca ayağa kaldırabilirsiniz.
+### Adım 1: Docker ile Kurulum (Önerilen)
+Projenin API, Frontend, SQL Server, Redis ve MailHog servislerinin tamamını tek komutla ayağa kaldırabilirsiniz.
 
-Terminali projenin ana dizininde açın ve şu komutu çalıştırın:
+1.  **Environment Setup**: Kök dizindeki `.env.example` dosyasını `.env` olarak kopyalayın ve şifreleri nı ayarlayın.
+    ```powershell
+    copy .env.example .env
+    ```
+2.  **Servisleri Başlatın**:
+    ```powershell
+    docker-compose up -d
+    ```
 
-```bash
+### 🛠️ Docker Yönetim Komutları
+
+Docker kullanımı ile ilgili sık kullanılan komutlar:
+
+#### 1. Build & Rebuild
+Kodda değişiklik yaptığınızda image'ı yeniden oluşturmanız gerekir:
+```powershell
+# Sadece çalıştır (image varsa onu kullanır)
 docker-compose up -d
+
+# Yeniden build alarak çalıştır (kod değişikliği sonrası)
+docker-compose up -d --build
+
+# Sadece build al (çalıştırmadan)
+docker-compose build
 ```
+
+#### 2. Logları İzleme
+Çalışan container'ların loglarını canlı izlemek için:
+
+```powershell
+# Tüm servislerin loglarını izle
+docker-compose logs -f
+
+# Sadece API loglarını izle
+docker-compose logs -f api
+
+# Sadece Database loglarını izle
+docker-compose logs -f db
+```
+
+#### 3. Container İçine Girme (Exec)
+Container içinde komut çalıştırmak veya dosya sistemini kontrol etmek için:
+
+```powershell
+# Database container'ına gir
+docker exec -it wordmaster-db bash
+
+# API container'ına gir
+docker exec -it wordmaster-api /bin/sh
+```
+
+#### 4. Servisleri Durdurma/Yeniden Başlatma
+
+```powershell
+# Tüm servisleri durdur
+docker-compose down
+
+# Volume'ları (verileri) da silerek durdur (DİKKAT: DB sıfırlanır!)
+docker-compose down -v
+
+# Tek bir servisi yeniden başlat
+docker-compose restart api
+```
+
 Bu komut şunları başlatır:
+*   **Web Uygulaması (Frontend)**: [http://localhost:5173](http://localhost:5173)
+*   **Backend API**: [http://localhost:3002](http://localhost:3002)
+*   **Swagger UI**: [http://localhost:3002/swagger](http://localhost:3002/swagger)
+*   **SQL Server**: `localhost,1434`
 *   **Redis**: `localhost:6379`
-*   **RedisInsight** (Redis GUI): `localhost:5540`
-*   **MailHog** (SMTP Test): `localhost:1025` (SMTP), `localhost:8025` (Web UI)
+*   **RedisInsight** (Redis GUI): [http://localhost:5540](http://localhost:5540)
+*   **MailHog** (SMTP Test):
+    *   Web UI: [http://localhost:8025](http://localhost:8025)
+    *   SMTP Port: `1025`
+
+---
+
+## 🗄️ Veritabanı İşlemleri (Docker)
+
+### Bağlantı Detayları
+Docker'daki SQL Server'a **SSMS** veya **Azure Data Studio** ile bağlanmak için:
+
+| Ayar | Değer |
+|------|-------|
+| **Server** | `localhost,1434` (Port numarasına dikkat edin) |
+| **Authentication** | SQL Server Authentication |
+| **Login** | `username` |
+| **Password** | `.env` dosyasındaki `DB_PASSWORD` |
+
+> **Neden Port 1434?** Container içi port 1433'tür ancak yerel SQL Server ile çakışmaması için dışarıya 1434 olarak açılmıştır.
+
+### Backup Restore (Veri Kopyalama)
+Elinizdeki bir `.bak` dosyasını Docker veritabanına yüklemek için:
+
+1.  **Backup dosyasını container'a kopyalayın:**
+    ```powershell
+    # Klasör oluştur
+    docker exec wordmaster-db mkdir -p /var/opt/mssql/backup
+   
+    # Dosyayı kopyala (Dosya yolunu kendinize göre düzenleyin)
+    docker cp "C:\sqltemp\DB_WordMaster_API_Dev.bak" wordmaster-db:/var/opt/mssql/backup/
+    ```
+
+2.  **Restore komutunu çalıştırın:**
+    ```powershell
+    docker exec wordmaster-db /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "DB_PASSWORD" -C -Q "RESTORE DATABASE [DB_WordMaster_API_Dev] FROM DISK = '/var/opt/mssql/backup/DB_WordMaster_API_Dev.bak' WITH REPLACE, MOVE 'DB_WordMaster_API_Dev' TO '/var/opt/mssql/data/DB_WordMaster_API_Dev.mdf', MOVE 'DB_WordMaster_API_Dev_log' TO '/var/opt/mssql/data/DB_WordMaster_API_Dev_log.ldf'"
+    ```
 
 ### Adım 2: Veritabanını Hazırlama
 `appsettings.json` dosyasındaki `ConnectionStrings` bölümünü kendi SQL Server bağlantınıza göre düzenleyin. Ardından migration'ları uygulayın:
@@ -56,6 +154,40 @@ Proje aşağıdaki modern teknolojiler üzerine inşa edilmiştir:
 *   **Identity**: Kullanıcı yönetimi.
 *   **FluentValidation**: Model doğrulama.
 *   **Swagger**: API dokümantasyonu.
+
+## ⚙️ Konfigürasyon ve Environment Variables
+
+Proje, hassas bilgileri (Database şifreleri, API anahtarları vb.) yönetmek için **Environment Variables** kullanır. Kod içerisinde bu değerler `DotNetEnv` kütüphanesi ile yüklenir.
+
+### Öncelik Sırası
+Konfigürasyon aşağıdaki öncelik sırasına göre okunur (En yüksekten en düşüğe):
+
+1.  **Environment Variables (`.env`)** 🏆 (En Yüksek Öncelik)
+2.  `appsettings.Development.json` (Local Development)
+3.  `appsettings.json` (Varsayılanlar)
+
+### .env Dosyası
+Kök dizindeki `.env` dosyası Git tarafından takip **edilmez** (gitignore). Bu dosyayı `.env.example` dosyasından kopyalayarak oluşturmalısınız.
+
+```bash
+# Proje kök dizininde
+copy .env.example .env
+```
+
+**.env Formatı (.NET Uyumlu):**
+.NET'in hiyerarşik yapıyı anlaması için `__` (çift alt çizgi) kullanılır.
+
+```env
+# Database
+ConnectionStrings__SqlServer=Server=...
+ConnectionStrings__Redis=localhost:6379
+
+# JWT
+Jwt__Key=GizliAnahtar...
+Jwt__Issuer=WordMasterApi
+```
+
+---
 
 ## 🏗 Mimari Yapı (Clean Architecture)
 
