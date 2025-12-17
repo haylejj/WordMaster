@@ -123,7 +123,18 @@ interface RetryRequestConfig extends InternalAxiosRequestConfig {
  * Response interceptor - Hata handling ve token refresh
  */
 api.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        // 204 No Content durumunda default başarı objesi döndür
+        if (response.status === 204) {
+            response.data = {
+                isSuccess: true,
+                statusCode: 204,
+                data: null,
+                errorList: null
+            };
+        }
+        return response;
+    },
     async (error) => {
         const status = error.response?.status;
         const originalRequest = error.config as RetryRequestConfig | undefined;

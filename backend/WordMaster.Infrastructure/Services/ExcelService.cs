@@ -142,12 +142,19 @@ public class ExcelService(AppDbContext context, ILogger<ExcelService> logger) : 
                 return ServiceResult<WordImportSummaryResponse>.Success(summary, HttpStatusCode.OK);
             }
 
-            using IDbContextTransaction transaction = await context.Database.BeginTransactionAsync();
+            // Use execution strategy to handle SqlServerRetryingExecutionStrategy with transactions
+            IExecutionStrategy strategy = context.Database.CreateExecutionStrategy();
+
             try
             {
-                await context.Words.AddRangeAsync(wordsToAdd);
-                await context.SaveChangesAsync();
-                await transaction.CommitAsync();
+                await strategy.ExecuteAsync(async () =>
+                {
+                    using IDbContextTransaction transaction = await context.Database.BeginTransactionAsync();
+
+                    await context.Words.AddRangeAsync(wordsToAdd);
+                    await context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                });
 
                 logger.LogInformation("Import işlemi başarılı. User: {UserId}, Added: {Added}, Duplicate: {Duplicate}, Failed: {Failed}",
                     userId, summary.AddedCount, summary.DuplicateCount, summary.FailedCount);
@@ -156,7 +163,6 @@ public class ExcelService(AppDbContext context, ILogger<ExcelService> logger) : 
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync();
                 logger.LogError(ex, "Import işlemi sırasında veritabanı hatası. User: {UserId}", userId);
                 return ServiceResult<WordImportSummaryResponse>.Failure($"Veritabanı hatası: {ex.Message}", HttpStatusCode.InternalServerError);
             }

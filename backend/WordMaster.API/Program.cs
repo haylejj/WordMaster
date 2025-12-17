@@ -1,4 +1,5 @@
 using Asp.Versioning.ApiExplorer;
+using DotNetEnv;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -11,6 +12,36 @@ using WordMaster.API.Middlewares;
 using WordMaster.Infrastructure.BackgroundServices;
 using WordMaster.Infrastructure.EfCore;
 using WordMaster.Infrastructure.Extensions;
+
+// .env dosyasını yükle
+// Docker container'da /app/.env olarak mount edilir
+// clobberExistingVars: false -> Docker-compose'un set ettiği doğru değerlerin (örn. redis:6379) 
+// .env dosyasındaki local değerlerle (örn. localhost:6379) ezilmesini engeller.
+// Normalde docker-compose da zaten environment variable'lar set edilmiş.Ama biz localden calıstırırken 
+// .env dosyasını okuyarak environment variable'ları set ediyoruz.O yüzden bu şekilde yapıyoruz.Hem docker hem localde
+// .env kullanabilmek için docker-compose da .env yi volume olarak tasımak lazım eğer aşşağıdaki gibi fiziksel dosyadan okumak istiyorsak.
+// Normalde dockerda gerek yok ama localde calıstırmak için fiziksel dosyadan .env yi okumak lazım.
+LoadOptions loadOptions = new(setEnvVars: true, clobberExistingVars: false);
+string envPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", ".env");
+if (File.Exists(envPath))
+{
+    Env.Load(envPath, loadOptions);
+    Console.WriteLine($"[Startup] .env dosyası yüklendi: {envPath}");
+}
+else
+{
+    // Proje kök dizininde de ara (docker-compose dizini)
+    string rootEnvPath = Path.Combine(Directory.GetCurrentDirectory(), ".env");
+    if (File.Exists(rootEnvPath))
+    {
+        Env.Load(rootEnvPath, loadOptions);
+        Console.WriteLine($"[Startup] .env dosyası yüklendi: {rootEnvPath}");
+    }
+    else
+    {
+        throw new Exception(".env dosyası bulunamadı!");
+    }
+}
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 Log.Logger = new LoggerConfiguration()
@@ -61,6 +92,10 @@ builder.Services.AddDbContext<AppDbContext>(x =>
     x.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer"), option =>
     {
         option.MigrationsAssembly(Assembly.GetAssembly(typeof(AppDbContext))!.GetName().Name);
+        option.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(10),
+            errorNumbersToAdd: null);
     });
 });
 // Identity yapılandırması
@@ -134,6 +169,23 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Otomatik Migration
+using (IServiceScope scope = app.Services.CreateScope())
+{
+    IServiceProvider services = scope.ServiceProvider;
+    try
+    {
+        AppDbContext context = services.GetRequiredService<AppDbContext>();
+        // Eğer veritabanı yoksa oluşturur, varsa eksik migration'ları uygular
+        await context.Database.MigrateAsync();
+        Log.Information("Database migrations applied successfully.");
+    }
+    catch (Exception ex)
+    {
+        Log.Error(ex, "An error occurred while applying database migrations.");
+    }
+}
 
 await app.LogStartupStatusAsync();
 
