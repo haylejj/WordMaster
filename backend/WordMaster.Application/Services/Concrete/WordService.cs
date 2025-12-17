@@ -487,7 +487,8 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
             .Select(x => new WordLookupResponse
             {
                 Id = x.Id,
-                EnglishWord = x.EnglishWord
+                EnglishWord = x.EnglishWord,
+                TurkishWord= x.TurkishWord
             })
             .AsNoTracking()
             .ToListAsync();
