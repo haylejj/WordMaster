@@ -99,7 +99,15 @@ public class StatisticsService(
         AppUser? user = await userManager.FindByIdAsync(userId.ToString());
         if (user != null)
         {
-            currentStreak = user.CurrentStreak;
+            // Eğer son güncelleme dünden önceyse seri bozulmuştur
+            if (user.LastStreakUpdateDate.HasValue && user.LastStreakUpdateDate.Value.Date < DateTime.UtcNow.Date.AddDays(-1))
+            {
+                currentStreak = 0;
+            }
+            else
+            {
+                currentStreak = user.CurrentStreak;
+            }
         }
 
         DashboardStatisticsResponse response = new()

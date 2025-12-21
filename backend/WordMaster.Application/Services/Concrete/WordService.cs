@@ -400,6 +400,15 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
                         user.CurrentStreak = 1;
                         user.LastStreakUpdateDate = now;
                     }
+                    else
+                    {
+                        // If update date is correct (today or yesterday) but streak is 0, fix it.
+                        if (user.CurrentStreak == 0)
+                        {
+                            user.CurrentStreak = 1;
+                            user.LastStreakUpdateDate = now;
+                        }
+                    }
                     // If already updated today, do nothing.
 
                     await userManager.UpdateAsync(user);
@@ -488,7 +497,7 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
             {
                 Id = x.Id,
                 EnglishWord = x.EnglishWord,
-                TurkishWord= x.TurkishWord
+                TurkishWord = x.TurkishWord
             })
             .AsNoTracking()
             .ToListAsync();
@@ -591,6 +600,15 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
                         {
                             user.CurrentStreak = 1;
                             user.LastStreakUpdateDate = now;
+                        }
+                        else
+                        {
+                            // If update date matches but streak is somehow 0, ensure it is at least 1
+                            if (user.CurrentStreak == 0)
+                            {
+                                user.CurrentStreak = 1;
+                                user.LastStreakUpdateDate = now;
+                            }
                         }
 
                         await userManager.UpdateAsync(user);

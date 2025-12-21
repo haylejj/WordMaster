@@ -87,7 +87,7 @@ export default function StatisticsPage() {
                     value={`${stats.currentStreak} Gün`}
                     icon={Flame}
                     color="bg-orange-500"
-                    subText="Seriyi bozma!"
+                    subText={stats.currentStreak === 0 ? "Hadi başla!" : "Seriyi bozma!"}
                 />
                 <StatCard
                     title="Toplam Kelime"
