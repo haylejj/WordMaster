@@ -8,6 +8,7 @@ using WordMaster.Application.Requests.AllowedIpAddress;
 using WordMaster.Application.Responses.AllowedIpAddress;
 using WordMaster.Application.Services.Abstract;
 using WordMaster.Domain.Entities;
+using WordMaster.Domain.Helpers;
 using WordMaster.Domain.Results;
 
 namespace WordMaster.Infrastructure.Services;
@@ -62,18 +63,22 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
     }
     public async Task<ServiceResult> CreateAsync(AllowedIpAddressCreateRequest request)
     {
-        // IP adresi zaten var mı kontrol et
-        AllowedIpAddress? existing = await repository.FirstOrDefaultAsync(x => x.IpAddress == request.IpAddress);
+        // IP adresini normalize et (::ffff: prefix'ini kaldır)
+        string normalizedIp = IpAddressHelper.Normalize(request.IpAddress) ?? request.IpAddress;
 
-        if (existing != null)
+        // IP adresi zaten var mı kontrol et (normalize edilmiş haliyle)
+        List<AllowedIpAddress> allIps = await repository.GetAll().ToListAsync();
+        bool exists = allIps.Any(x => IpAddressHelper.Normalize(x.IpAddress) == normalizedIp);
+
+        if (exists)
         {
-            logger.LogWarning("Allowed IP address creation failed. IP already exists: {IpAddress}", request.IpAddress);
+            logger.LogWarning("Allowed IP address creation failed. IP already exists: {IpAddress}", normalizedIp);
             return ServiceResult.Failure("Bu IP adresi zaten kayıtlı.", HttpStatusCode.Conflict);
         }
 
         AllowedIpAddress entity = new()
         {
-            IpAddress = request.IpAddress,
+            IpAddress = normalizedIp,
             Description = request.Description,
             IsActive = request.IsActive,
             CreatedAt = DateTime.UtcNow
@@ -85,7 +90,7 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
         await cacheService.RemoveAsync(CacheKeys.AllowedIpAddressesList);
         await cacheService.RemoveAsync(CacheKeys.AllowedIpAddressesActive);
 
-        logger.LogInformation("Allowed IP address created successfully: {IpAddress}", request.IpAddress);
+        logger.LogInformation("Allowed IP address created successfully: {IpAddress}", normalizedIp);
         return ServiceResult.SuccessAsCreated();
     }
     public async Task<ServiceResult> UpdateAsync(AllowedIpAddressUpdateRequest request)
@@ -97,20 +102,28 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
             return ServiceResult.Failure("IP adresi bulunamadı.", HttpStatusCode.NotFound);
         }
 
-        // IP adresi değiştiyse ve başka bir kayıtta varsa kontrol et
-        if (entity.IpAddress != request.IpAddress)
-        {
-            AllowedIpAddress? existing = await repository
-                .FirstOrDefaultAsync(x => x.IpAddress == request.IpAddress && x.Id != request.Id);
+        // IP adresini normalize et
+        string normalizedRequestIp = IpAddressHelper.Normalize(request.IpAddress) ?? request.IpAddress;
+        string currentNormalizedIp = IpAddressHelper.Normalize(entity.IpAddress) ?? entity.IpAddress;
 
-            if (existing != null)
+        // IP adresi değiştiyse kontrol et
+        if (currentNormalizedIp != normalizedRequestIp)
+        {
+            // Yeni IP başka bir kayıtta var mı kontrol et
+            List<AllowedIpAddress> allIps = await repository.GetAll().ToListAsync();
+            bool exists = allIps.Any(x => x.Id != request.Id && IpAddressHelper.Normalize(x.IpAddress) == normalizedRequestIp);
+
+            if (exists)
             {
-                logger.LogWarning("Allowed IP address update failed. New IP already exists elsewhere: {IpAddress}", request.IpAddress);
+                logger.LogWarning("Allowed IP address update failed. New IP already exists elsewhere: {IpAddress}", normalizedRequestIp);
                 return ServiceResult.Failure("Bu IP adresi başka bir kayıtta zaten mevcut.", HttpStatusCode.Conflict);
             }
-        }
 
-        entity.IpAddress = request.IpAddress;
+            // IP değişti, normalize edilmiş halini kaydet
+            entity.IpAddress = normalizedRequestIp;
+        }
+        // IP değişmediyse, mevcut değeri koru (normalize etme)
+
         entity.Description = request.Description;
         entity.IsActive = request.IsActive;
 
@@ -148,11 +161,15 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
             return ServiceResult<bool>.Success(false, HttpStatusCode.OK);
         }
 
+        // IPv6-mapped IPv4 adreslerini normalize et (::ffff:192.168.1.1 -> 192.168.1.1)
+        string? normalizedIp = IpAddressHelper.Normalize(ipAddress);
+
         // Cache'den aktif IP'leri kontrol et
         List<string>? cachedActiveIps = await cacheService.GetAsync<List<string>>(CacheKeys.AllowedIpAddressesActive);
         if (cachedActiveIps != null)
         {
-            return ServiceResult<bool>.Success(cachedActiveIps.Contains(ipAddress), HttpStatusCode.OK);
+            bool isAllowed = cachedActiveIps.Any(ip => IpAddressHelper.Normalize(ip) == normalizedIp);
+            return ServiceResult<bool>.Success(isAllowed, HttpStatusCode.OK);
         }
 
         // Cache'de yoksa veritabanından çek
@@ -164,6 +181,7 @@ public class AllowedIpAddressService(IGenericRepository<AllowedIpAddress> reposi
         // Cache'e kaydet
         await cacheService.SetAsync(CacheKeys.AllowedIpAddressesActive, activeIps, CacheDurations.Normal);
 
-        return ServiceResult<bool>.Success(activeIps.Contains(ipAddress), HttpStatusCode.OK);
+        bool isIpAllowed = activeIps.Any(ip => IpAddressHelper.Normalize(ip) == normalizedIp);
+        return ServiceResult<bool>.Success(isIpAllowed, HttpStatusCode.OK);
     }
 }

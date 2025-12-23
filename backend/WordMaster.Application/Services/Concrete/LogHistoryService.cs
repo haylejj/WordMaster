@@ -156,6 +156,7 @@ public class LogHistoryService(ILogHistoryRepository logHistoryRepository, IUnit
 
         List<LogHistory> logs = await query
             .OrderByDescending(x => x.AttemptedAt)
+            .ThenByDescending(x => x.Id)
             .Skip((request.Page - 1) * request.Size)
             .Take(request.Size)
             .ToListAsync();

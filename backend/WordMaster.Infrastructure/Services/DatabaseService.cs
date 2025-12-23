@@ -68,14 +68,14 @@ public class DatabaseService(
                     case "words":
                         if (!isTargetUserIdProvided)
                         {
-                            await context.Database.ExecuteSqlRawAsync("DELETE FROM WordFolder");
+                            await context.Database.ExecuteSqlRawAsync("DELETE FROM FolderWords");
                             await context.Database.ExecuteSqlRawAsync("DELETE FROM Favorites");
                             await context.Database.ExecuteSqlRawAsync("DELETE FROM Unknows");
                             await context.Database.ExecuteSqlRawAsync("DELETE FROM Words");
                         }
                         else
                         {
-                            await context.Database.ExecuteSqlRawAsync("DELETE FROM WordFolder WHERE WordId IN (SELECT Id FROM Words WHERE UserId = {0})", targetUserId!);
+                            await context.Database.ExecuteSqlRawAsync("DELETE FROM FolderWords WHERE WordId IN (SELECT Id FROM Words WHERE UserId = {0})", targetUserId!);
                             await context.Database.ExecuteSqlRawAsync("DELETE FROM Favorites WHERE UserId = {0}", targetUserId!);
                             await context.Database.ExecuteSqlRawAsync("DELETE FROM Unknows WHERE UserId = {0}", targetUserId!);
                             await context.Database.ExecuteSqlRawAsync("DELETE FROM Words WHERE UserId = {0}", targetUserId!);
@@ -99,12 +99,12 @@ public class DatabaseService(
                     case "folders":
                         if (!isTargetUserIdProvided)
                         {
-                            await context.Database.ExecuteSqlRawAsync("DELETE FROM WordFolder");
+                            await context.Database.ExecuteSqlRawAsync("DELETE FROM FolderWords");
                             await context.Database.ExecuteSqlRawAsync("DELETE FROM Folders");
                         }
                         else
                         {
-                            await context.Database.ExecuteSqlRawAsync("DELETE FROM WordFolder WHERE FolderId IN (SELECT Id FROM Folders WHERE UserId = {0})", targetUserId!);
+                            await context.Database.ExecuteSqlRawAsync("DELETE FROM FolderWords WHERE FolderId IN (SELECT Id FROM Folders WHERE UserId = {0})", targetUserId!);
                             await context.Database.ExecuteSqlRawAsync("DELETE FROM Folders WHERE UserId = {0}", targetUserId!);
                         }
                         break;
@@ -112,11 +112,11 @@ public class DatabaseService(
                     case "folderwords":
                         if (!isTargetUserIdProvided)
                         {
-                            await context.Database.ExecuteSqlRawAsync("DELETE FROM WordFolder");
+                            await context.Database.ExecuteSqlRawAsync("DELETE FROM FolderWords");
                         }
                         else
                         {
-                            await context.Database.ExecuteSqlRawAsync("DELETE FROM WordFolder WHERE FolderId IN (SELECT Id FROM Folders WHERE UserId = {0})", targetUserId!);
+                            await context.Database.ExecuteSqlRawAsync("DELETE FROM FolderWords WHERE FolderId IN (SELECT Id FROM Folders WHERE UserId = {0})", targetUserId!);
                         }
                         break;
                 }

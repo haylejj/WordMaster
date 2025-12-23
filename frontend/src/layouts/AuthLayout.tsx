@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { cn } from "@/lib/utils";
 
 const WORDS = [
@@ -96,12 +97,20 @@ export default function AuthLayout({ children, title }: { children: React.ReactN
 
           {/* Header */}
           <div className="bg-transparent pt-10 px-8 pb-6 text-center">
-            <div className="text-[2.5rem] text-primary-dark font-[900] mb-2 inline-block uppercase tracking-[-1px] leading-tight drop-shadow-sm">
-              Word<span className="text-transparent bg-clip-text bg-gradient-to-br from-primary-yellow to-yellow-500 filter drop-shadow-sm">Master</span>
-            </div>
+            <Link to="/" className="inline-block hover:scale-105 transition-transform duration-200">
+              <div className="text-[2.5rem] text-primary-dark font-[900] mb-2 uppercase tracking-[-1px] leading-tight drop-shadow-sm">
+                Word<span className="text-transparent bg-clip-text bg-gradient-to-br from-primary-yellow to-yellow-500 filter drop-shadow-sm">Master</span>
+              </div>
+            </Link>
             <h1 className="text-[1.1rem] text-gray-500 m-0 font-semibold uppercase tracking-[2px] text-xs">
               {title}
             </h1>
+            <Link
+              to="/"
+              className="inline-flex items-center gap-1 mt-3 text-xs text-gray-400 hover:text-primary-yellow transition-colors"
+            >
+              ← Ana Sayfaya Dön
+            </Link>
           </div>
 
           {/* Body */}

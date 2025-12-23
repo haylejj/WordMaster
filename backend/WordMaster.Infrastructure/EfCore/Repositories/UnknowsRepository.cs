@@ -34,6 +34,7 @@ public class UnknowsRepository(AppDbContext context) : GenericRepository<Unknows
         int totalCount = await query.CountAsync();
         List<Unknows> items = await query
             .OrderBy(x => x.Word!.EnglishWord)
+            .ThenBy(x => x.Id)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .AsNoTracking()

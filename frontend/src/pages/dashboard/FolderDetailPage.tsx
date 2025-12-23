@@ -143,7 +143,7 @@ export default function FolderDetailPage() {
     return (
         <div className="space-y-8">
             <button
-                onClick={() => navigate(-1)}
+                onClick={() => navigate('/dashboard/folders')}
                 className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-800"
             >
                 <ChevronLeft size={18} className="mr-1" />

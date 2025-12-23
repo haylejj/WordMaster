@@ -66,6 +66,7 @@ public class WordRepository(AppDbContext context) : GenericRepository<Word>(cont
         int totalCount = await query.CountAsync();
         List<Word> words = await query
             .OrderByDescending(x => x.CreatedTime)
+            .ThenByDescending(x => x.Id)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .AsNoTracking()
@@ -98,6 +99,7 @@ public class WordRepository(AppDbContext context) : GenericRepository<Word>(cont
         int totalCount = await query.CountAsync();
         List<Word> words = await query
             .OrderByDescending(x => x.CreatedTime)
+            .ThenByDescending(x => x.Id)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .AsNoTracking()

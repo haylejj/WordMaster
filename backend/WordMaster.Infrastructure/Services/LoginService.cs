@@ -84,7 +84,7 @@ public class LoginService(
     private async Task<ServiceResult<LoginInternalResponse>> ProcessLoginAsync(LoginRequest request, bool isAdminLogin)
     {
         string loginType = isAdminLogin ? "AdminLogin" : "PublicLogin";
-        string? ipAddress = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
+        string? ipAddress = IpAddressHelper.Normalize(httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString());
 
         // Admin girişi için IP kontrolü
         if (isAdminLogin && !string.IsNullOrWhiteSpace(ipAddress))

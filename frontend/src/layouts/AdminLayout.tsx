@@ -111,7 +111,7 @@ export default function AdminLayout() {
                     {/* Bottom Actions */}
                     <div className="p-4 border-t border-red-900/10 space-y-2">
                         <Link
-                            to="/"
+                            to="/dashboard"
                             className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
                         >
                             <ExternalLink size={20} />

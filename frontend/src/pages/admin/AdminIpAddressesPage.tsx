@@ -19,8 +19,20 @@ import {
 import { cn } from "@/lib/utils";
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
 
+// IPv4 regex: 192.168.1.1
+const ipv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+// IPv6-mapped IPv4 regex: ::ffff:192.168.1.1
+const ipv6MappedRegex = /^::ffff:(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/i;
+// Localhost IPv6: ::1
+const ipv6LocalhostRegex = /^::1$/;
+
 const ipSchema = z.object({
-    ipAddress: z.string().min(1, "IP adresi zorunludur").regex(/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/, "Geçerli bir IPv4 adresi giriniz"),
+    ipAddress: z.string()
+        .min(1, "IP adresi zorunludur")
+        .refine(
+            (val) => ipv4Regex.test(val) || ipv6MappedRegex.test(val) || ipv6LocalhostRegex.test(val),
+            "Geçerli bir IP adresi giriniz (IPv4 veya ::ffff:IPv4 formatı)"
+        ),
     description: z.string().optional(),
     isActive: z.boolean()
 });

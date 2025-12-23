@@ -34,6 +34,7 @@ public class FavoriteRepository(AppDbContext context) : GenericRepository<Favori
         int totalCount = await query.CountAsync();
         List<Favorite> favorites = await query
             .OrderBy(x => x.Word!.EnglishWord)
+            .ThenBy(x => x.Id)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .AsNoTracking()
