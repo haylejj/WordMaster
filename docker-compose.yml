@@ -9,6 +9,7 @@ services:
       - ACCEPT_EULA=Y
       - MSSQL_SA_PASSWORD=${DB_PASSWORD}
       - MSSQL_PID=Express
+    command: /opt/mssql/bin/sqlservr -T272
     ports:
       - "1434:1433"
     volumes:
