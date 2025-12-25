@@ -64,6 +64,8 @@ builder.Host.AddSerilogConfigurations();
 // Fluent Validation yapılandırması
 builder.Services.AddValidationConfigurations();
 
+builder.Services.AddOpenTelemetryMetrics(builder.Configuration);
+
 // HttpContextAccessor (LoginService'te IP adresi almak için gerekli)
 builder.Services.AddHttpContextAccessor();
 

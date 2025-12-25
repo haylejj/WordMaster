@@ -1,0 +1,9 @@
+global:
+  scrape_interval: 15s # Varsayılan olarak her 15 saniyede bir veri çek
+
+scrape_configs:
+  # OTel Collector'dan verileri çekmek için iş tanımı
+  - job_name: "otel-collector"
+    scrape_interval: 10s # Collector'ı daha sık kontrol et (10s)
+    static_configs:
+      - targets: ["wordmaster-otel-collector:8889"] # Collector konteyner adı ve portu

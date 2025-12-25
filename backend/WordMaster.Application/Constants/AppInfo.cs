@@ -29,5 +29,10 @@ public static class AppInfo
     /// API açıklaması.
     /// </summary>
     public const string ApiDescription = "WordMaster - Kelime öğrenme uygulaması API'si";
+
+    /// <summary>
+    /// Uygulama ortamı.
+    /// </summary>
+    public static readonly string EnvironmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
 }
 
