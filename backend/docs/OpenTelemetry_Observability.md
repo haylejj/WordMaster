@@ -227,6 +227,236 @@
 
 ---
 
+## Metric Tipleri (Meter API)
+
+OpenTelemetry .NET SDK'da `Meter` sınıfı, çeşitli metric tipleri oluşturmak için kullanılır. Her tip farklı senaryolar için optimize edilmiştir.
+
+### 1. **Counter (Sayaç)**
+```csharp
+Meter.CreateCounter<long>(name, unit, description)
+```
+
+**Ne İçin Kullanılır?**
+- Sadece **artabilen** değerler için (Asla azalmaz)
+- Örnekler: Request sayısı, hata sayısı, satılan ürün sayısı
+
+**Kod Örneği:**
+```csharp
+public static Counter<long> WordsCreated = Meter.CreateCounter<long>(
+    name: "wordmaster.words.created_total",
+    unit: "words",
+    description: "Total number of words created"
+);
+
+// Kullanım:
+WordsCreated.Add(1); // Her kelime eklendiğinde
+```
+
+**Grafana Sorguları:**
+```promql
+# Toplam sayı
+wordmaster_words_created_total
+
+# Son 1 dakikada saniyede kaç kelime eklendi?
+rate(wordmaster_words_created_total[1m])
+
+# Son 24 saatte toplam artış
+increase(wordmaster_words_created_total[24h])
+```
+
+---
+
+### 2. **Histogram (Dağılım)**
+```csharp
+Meter.CreateHistogram<double>(name, unit, description)
+```
+
+**Ne İçin Kullanılır?**
+- Değerlerin **dağılımını** ölçmek için
+- Percentile (örn: %95'i 200ms'den hızlı) hesaplayabilirsin
+- Örnekler: Response süresi, dosya boyutu, quiz skoru
+
+**Kod Örneği:**
+```csharp
+public static Histogram<double> PracticeDuration = Meter.CreateHistogram<double>(
+    name: "wordmaster.practice.duration_seconds",
+    unit: "seconds",
+    description: "Duration of practice sessions"
+);
+
+// Kullanım:
+var startTime = DateTime.UtcNow;
+// ... pratik yapılıyor ...
+var duration = (DateTime.UtcNow - startTime).TotalSeconds;
+PracticeDuration.Record(duration); // Süreyi kaydet
+```
+
+**Grafana Sorguları:**
+```promql
+# Ortalama süre
+rate(wordmaster_practice_duration_seconds_sum[5m]) / 
+rate(wordmaster_practice_duration_seconds_count[5m])
+
+# 95th Percentile (Kullanıcıların %95'i bu süreden daha hızlı)
+histogram_quantile(0.95, wordmaster_practice_duration_seconds_bucket)
+
+# 50th Percentile (Medyan)
+histogram_quantile(0.50, wordmaster_practice_duration_seconds_bucket)
+```
+
+---
+
+### 3. **ObservableCounter (Gözlemlenebilir Sayaç)**
+```csharp
+Meter.CreateObservableCounter<long>(name, observeValue, unit, description)
+```
+
+**Ne İçin Kullanılır?**
+- **Otomatik** olarak periyodik ölçüm için
+- Prometheus her scrape yaptığında callback çağrılır
+- Örnekler: Toplam dosya sayısı (disk'ten oku), cache hit count (Redis'ten oku)
+
+**Kod Örneği:**
+```csharp
+// Callback her scrape'de çalışır
+Meter.CreateObservableCounter<long>(
+    name: "wordmaster.cache.hits_total",
+    observeValue: () => _redisClient.GetCacheHitCount(), // Redis'ten oku
+    unit: "hits",
+    description: "Total cache hits from Redis"
+);
+```
+
+**Counter vs ObservableCounter:**
+| Counter | ObservableCounter |
+|---------|-------------------|
+| Manuel: `counter.Add(1)` | Otomatik: Callback çağrılır |
+| Her event'te çağrılır | Sadece scrape anında |
+| Örnek: HTTP Request | Örnek: Toplam file count |
+
+---
+
+### 4. **Gauge (Anlık Değer) - UpDownCounter**
+```csharp
+Meter.CreateUpDownCounter<long>(name, unit, description)
+```
+
+**Ne İçin Kullanılır?**
+- Hem artabilen hem azalabilen değerler
+- Örnekler: Aktif bağlantı sayısı, kuyruk uzunluğu (queue length)
+
+**Kod Örneği:**
+```csharp
+public static UpDownCounter<int> ActiveConnections = Meter.CreateUpDownCounter<int>(
+    name: "wordmaster.connections.active",
+    unit: "connections",
+    description: "Current number of active connections"
+);
+
+// Kullanım:
+ActiveConnections.Add(1);  // Yeni bağlantı geldi
+ActiveConnections.Add(-1); // Bağlantı kapandı
+```
+
+**Grafana Sorgusu:**
+```promql
+wordmaster_connections_active  # Anlık değer
+```
+
+---
+
+### 5. **ObservableGauge (Gözlemlenebilir Anlık Değer)**
+```csharp
+Meter.CreateObservableGauge<int>(name, observeValue, unit, description)
+```
+
+**Ne İçin Kullanılır?**
+- **Otomatik** anlık değer okuma
+- Prometheus her scrape yaptığında güncel değeri alır
+- Örnekler: CPU kullanımı, bellek kullanımı, veritabanındaki kullanıcı sayısı
+
+**Kod Örneği:**
+```csharp
+// Her scrape'de UserManager'dan aktif kullanıcı sayısını oku
+Meter.CreateObservableGauge<int>(
+    name: "wordmaster.users.active_total",
+    observeValue: () => _userManager.Users.Count(u => u.EmailConfirmed),
+    unit: "users",
+    description: "Current total active users"
+);
+```
+
+**UpDownCounter vs ObservableGauge:**
+| UpDownCounter | ObservableGauge |
+|---------------|-----------------|
+| Manuel: `gauge.Add(1)` / `gauge.Add(-1)` | Otomatik: Callback her seferinde değeri hesaplar |
+| Her değişiklikte | Sadece scrape anında |
+| Örnek: Connection açma/kapama | Örnek: DB'deki toplam kullanıcı (her seferinde say) |
+
+---
+
+### 6. **ObservableUpDownCounter**
+```csharp
+Meter.CreateObservableUpDownCounter<long>(name, observeValue, unit, description)
+```
+
+**Ne İçin Kullanılır?**
+- ObservableGauge ile neredeyse aynı, fakat semantik olarak "sayaç" mantığında
+
+**Kod Örneği:**
+```csharp
+Meter.CreateObservableUpDownCounter<long>(
+    name: "wordmaster.queue.length",
+    observeValue: () => _messageQueue.GetCurrentLength(),
+    unit: "messages",
+    description: "Current message queue length"
+);
+```
+
+---
+
+## 🎯 Hangi Tipi Ne Zaman Kullanmalı?
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                 METRİC TİPİ SEÇİM KILAVUZU                       │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  "Kaç tane X oldu?" → Counter                                    │
+│    └─ Örnekler: Login sayısı, HTTP Request sayısı               │
+│                                                                  │
+│  "X ne kadar sürdü / X'in boyutu ne?" → Histogram               │
+│    └─ Örnekler: Response süresi, dosya boyutu, quiz skoru       │
+│                                                                  │
+│  "Şu an kaç tane X var?" (Artıp azalabilen) → UpDownCounter      │
+│    └─ Örnekler: Aktif bağlantı, kuyruk uzunluğu                 │
+│                                                                  │
+│  "Şu an X kaç?" (Otomatik oku) → ObservableGauge                 │
+│    └─ Örnekler: Toplam kullanıcı (DB'den), CPU kullanımı        │
+│                                                                  │
+│  "Toplam X kaç?" (Otomatik oku) → ObservableCounter              │
+│    └─ Örnekler: Toplam cache hit (Redis'ten), total file count  │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🔥 WordMaster'da Kullanılan Metrikler
+
+| Metric | Tip | Kullanım Yeri | Neden Bu Tip? |
+|--------|-----|---------------|---------------|
+| `words_created_total` | **Counter** | `WordService.AddWordAsync` | Sadece artar, asla azalmaz |
+| `words_deleted_total` | **Counter** | `WordService.DeleteWordAsync` | Sadece artar |
+| `practice_sessions_total` | **Counter** | `BulkUpdateStatsAsync` | Sadece artar |
+| `practice_duration_seconds` | **Histogram** | `BulkUpdateStatsAsync` | Süre dağılımını görmek için (P50, P95, P99) |
+| `users_registered_total` | **Counter** | `RegisterService` | Kayıt sayısı sadece artar |
+| `login_attempts_total` | **Counter (labeled)** | `LoginService` | Success/failed label ile artar |
+| `folders_created_total` | **Counter** | `FolderService` | Sadece artar |
+| `folders_words_added_total` | **Counter** | `FolderService` | Eklenen kelime sayısı artar |
+
+---
+
 ## Kod İçi Implementasyon
 
 ### 1. OpenTelemetryMetric.cs (Constants)

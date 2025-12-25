@@ -4,8 +4,17 @@ using WordMaster.Application.Constants;
 
 namespace WordMaster.API.Extensions;
 
+/// <summary>
+/// OpenTelemetry  yapılandırması için extension metodları.
+/// </summary>
 public static class OpenTelemetryExtensions
 {
+    /// <summary>
+    /// OpenTelemetry metrics servislerini DI container'a ekler ve yapılandırır.
+    /// </summary>
+    /// <param name="services">Service collection</param>
+    /// <param name="configuration">Application configuration</param>
+    /// <returns>Updated service collection</returns>
     public static IServiceCollection AddOpenTelemetryMetrics(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddOpenTelemetry()

@@ -5,6 +5,7 @@ using System.Net;
 using WordMaster.Application.Helpers;
 using WordMaster.Application.Requests.Auth;
 using WordMaster.Application.Services.Abstract;
+using WordMaster.Application.Constants;
 using WordMaster.Domain.Configuration;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Results;
@@ -50,6 +51,9 @@ public class RegisterService(
         }
 
         await userManager.AddToRoleAsync(user, "user");
+
+        //Metric: Increment users registered counter
+        OpenTelemetryMetric.UsersRegistered.Add(1);
 
         // Email Confirmation Logic
         string token = await userManager.GenerateEmailConfirmationTokenAsync(user);

@@ -83,6 +83,9 @@ public class FolderService(
         await folderRepository.AddAsync(folder);
         await unitOfWork.CommitAsync();
 
+        //Metric: Increment folders created counter
+        OpenTelemetryMetric.FoldersCreated.Add(1);
+
         FolderResponse response = new()
         {
             Id = folder.Id,
@@ -188,6 +191,9 @@ public class FolderService(
 
         await wordFolderRepository.AddAsync(new WordFolder { FolderId = request.FolderId, WordId = request.WordId });
         await unitOfWork.CommitAsync();
+
+        // 📊 Metric: Increment words added to folders counter
+        OpenTelemetryMetric.WordsAddedToFolders.Add(1);
 
         await cacheService.RemoveAsync(CacheKeys.FolderWords(request.FolderId, userId));
         await cacheService.RemoveAsync(CacheKeys.Folders(userId));

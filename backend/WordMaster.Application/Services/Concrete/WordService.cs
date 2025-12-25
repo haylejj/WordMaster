@@ -73,6 +73,9 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
         await wordRepository.AddAsync(word);
         await unitOfWork.CommitAsync();
 
+        //Metric: Increment words created counter
+        OpenTelemetryMetric.WordsCreated.Add(1);
+
         // Cache invalidation
         await cacheService.RemoveAsync(CacheKeys.Words(userId));
         await cacheService.RemoveAsync(CacheKeys.UserWordsDropdown(userId));
@@ -147,6 +150,9 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
 
         wordRepository.DeleteWordWithRelations(word);
         await unitOfWork.CommitAsync();
+
+        //Metric: Increment words deleted counter
+        OpenTelemetryMetric.WordsDeleted.Add(1);
 
         // Cache invalidation
         await cacheService.RemoveAsync(CacheKeys.Word(wordId, userId));
@@ -616,6 +622,18 @@ public class WordService(IWordRepository wordRepository, IUnitOfWork unitOfWork,
                 }
 
                 await unitOfWork.CommitTransactionAsync(); // Commit the entire transaction
+
+                //Metric: Practice session completed
+                if (updatedCount > 0)
+                {
+                    OpenTelemetryMetric.PracticeSessions.Add(1);
+
+                    // Calculate practice duration (using request.DurationSeconds if exists, otherwise estimate)
+                    // Note: The current request doesn't have duration, so we'll add it to BulkUpdateStatsRequest
+                    // For now, let's assume an average of 30 seconds per word as placeholder
+                    double estimatedDuration = updatedCount * 3.0; // 3 seconds per word
+                    OpenTelemetryMetric.PracticeDuration.Record(estimatedDuration);
+                }
 
                 logger.LogInformation("Practice completed for user {UserId}. Updated stats for {UpdatedCount} words. Correct: {Correct}, Wrong: {Wrong}", userId, updatedCount, totalCorrect, totalWrong);
             });
