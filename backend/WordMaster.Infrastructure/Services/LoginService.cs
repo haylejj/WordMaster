@@ -8,6 +8,7 @@ using WordMaster.Application.Requests.Auth;
 using WordMaster.Application.Responses.Auth;
 using WordMaster.Application.Responses.User;
 using WordMaster.Application.Services.Abstract;
+using WordMaster.Application.Constants;
 using WordMaster.Domain.Configuration;
 using WordMaster.Domain.Entities;
 using WordMaster.Domain.Helpers;
@@ -93,6 +94,8 @@ public class LoginService(
             if (!ipCheckResult.IsSuccess || !ipCheckResult.Data)
             {
                 await logHistoryService.RecordAsync(null, request.Email, ipAddress, false, loginType);
+                //Metric: Track failed login attempt
+                OpenTelemetryMetric.LoginAttempts.Add(1, new KeyValuePair<string, object?>("status", "failed"));
                 return ServiceResult<LoginInternalResponse>.Failure("Bu IP adresinden admin paneline giriş yapma yetkiniz yok.", HttpStatusCode.Forbidden);
             }
         }
@@ -102,9 +105,11 @@ public class LoginService(
         if (user == null)
         {
             await logHistoryService.RecordAsync(null, request.Email, ipAddress, false, loginType);
+            //Metric: Track failed login attempt
+            OpenTelemetryMetric.LoginAttempts.Add(1, new KeyValuePair<string, object?>("status", "failed"));
             return ServiceResult<LoginInternalResponse>.Failure(
-                isAdminLogin ? "Kullanıcı bulunamadı." : "Email veya şifre yanlış",
-                isAdminLogin ? HttpStatusCode.NotFound : HttpStatusCode.NotFound);
+                    isAdminLogin ? "Kullanıcı bulunamadı." : "Email veya şifre yanlış",
+                    isAdminLogin ? HttpStatusCode.NotFound : HttpStatusCode.NotFound);
         }
 
         // Admin girişi için rol kontrolü
@@ -114,6 +119,8 @@ public class LoginService(
             if (!isAdmin)
             {
                 await logHistoryService.RecordAsync(user.Id.ToString(), request.Email, ipAddress, false, loginType);
+                //Metric: Track failed login attempt
+                OpenTelemetryMetric.LoginAttempts.Add(1, new KeyValuePair<string, object?>("status", "failed"));
                 return ServiceResult<LoginInternalResponse>.Failure("Bu panele erişim yetkiniz yok.", HttpStatusCode.Forbidden);
             }
         }
@@ -124,12 +131,16 @@ public class LoginService(
         if (result.IsLockedOut)
         {
             await logHistoryService.RecordAsync(user.Id.ToString(), request.Email, ipAddress, false, loginType);
+            //Metric: Track failed login attempt (locked out)
+            OpenTelemetryMetric.LoginAttempts.Add(1, new KeyValuePair<string, object?>("status", "failed"));
             return ServiceResult<LoginInternalResponse>.Failure("Hesabınız kilitlendi. Lütfen daha sonra tekrar deneyiniz.", HttpStatusCode.Forbidden);
         }
 
         if (!result.Succeeded)
         {
             await logHistoryService.RecordAsync(user.Id.ToString(), request.Email, ipAddress, false, loginType);
+            //Metric: Track failed login attempt (wrong password)
+            OpenTelemetryMetric.LoginAttempts.Add(1, new KeyValuePair<string, object?>("status", "failed"));
             return ServiceResult<LoginInternalResponse>.Failure("Email veya şifre yanlış", HttpStatusCode.Unauthorized);
         }
 
@@ -168,9 +179,11 @@ public class LoginService(
 
         // Başarılı login kaydı
         await logHistoryService.RecordAsync(user.Id.ToString(), email, ipAddress, true, loginType);
+        //Metric: Track successful login attempt
+        OpenTelemetryMetric.LoginAttempts.Add(1, new KeyValuePair<string, object?>("status", "success"));
 
         logger.LogInformation("{LoginType}: User {UserId} logged in successfully from IP {IpAddress}",
-            loginType, user.Id, ipAddress);
+                loginType, user.Id, ipAddress);
 
         // Plain refresh token'ı döndür (Controller cookie olarak set edecek)
         return ServiceResult<LoginInternalResponse>.Success(new LoginInternalResponse

@@ -1,0 +1,59 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317 # En hızlı ve verimli yol (Varsayılan)
+      http:
+        endpoint: 0.0.0.0:4318 # HTTP üzerinden veri göndermek istersek
+
+processors:
+  # batch: Gelen verileri tek tek değil, toplu paketler halinde işler.
+  # Performansı artırır, ağ trafiğini azaltır.
+  batch:
+  # memory_limiter: Collector'ın RAM kullanımını sınırlar. Aşırı yükte çökmeyi engeller.
+  # memory_limiter:
+  #   check_interval: 1s
+  #   limit_mib: 1000      # 1GB Limit
+  #   spike_limit_mib: 200 # Ani artış toleransı
+
+  # resourcedetection: Çalıştığı ortamı (Docker, K8s, AWS) otomatik algılar.
+  # resourcedetection:
+  #   detectors: [env, system, docker]
+  #   timeout: 2s
+  #   override: false
+
+  # attributes: Veriye etiket ekler, değiştirir veya siler (Masking).
+  # attributes:
+  #   actions:
+  #     - key: environment
+  #       value: production
+  #       action: insert
+  #     - key: sensitive_data
+  #       action: delete  # Güvenlik için silme
+
+  # filter: İstenmeyen metricleri (örn. health check) çöpe atar.
+  # filter:
+  #   metrics:
+  #     exclude:
+  #       match_type: strict
+  #       metric_names:
+  #         - http_server_duration_milliseconds
+
+exporters:
+  # debug: Verileri loglara basar (docker logs ile görürsün).
+  # Hata ayıklama için çok yararlıdır. Veri geliyor mu diye kontrol edersin.
+  debug:
+    verbosity: detailed # Tüm detayı göster
+
+  # prometheus: Metrics verilerini Prometheus'un okuyabileceği formatta sunar.
+  # Prometheus bu porta (8889) gelip veriyi çeker (Scrape).
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+
+service:
+  # pipelines: Verinin girişten çıkışa akış haritası.
+  pipelines:
+    metrics:
+      receivers: [otlp] # Kaynak: OTLP (Bizim App)
+      processors: [batch] # İşlem: Paketle
+      exporters: [debug, prometheus] # Hedef: Loglara bas VE Prometheus'a sun

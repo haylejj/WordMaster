@@ -1,5 +1,51 @@
 services:
   # -----------------------------------------------------------------------------
+  # OTEL-COLLECTOR
+  # -----------------------------------------------------------------------------
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.142.0
+    container_name: wordmaster-otel-collector
+    ports:
+      - "4317:4317" # gRPC port (uygulama buraya atacak)
+      - "4318:4318" # HTTP port (alternatif)
+      - "8889:8889" # Prometheus metrics endpoint
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./observability/otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    networks:
+      - wordmaster-network
+    restart: unless-stopped
+  # -----------------------------------------------------------------------------
+  # PROMETHEUS
+  # -----------------------------------------------------------------------------
+  prometheus:
+    image: prom/prometheus:v3.8.1
+    container_name: wordmaster-prometheus
+    ports:
+      - "9090:9090" # Prometheus UI portu (Tarayıcıdan erişmek için)
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - wordmaster-network
+    restart: unless-stopped
+  # -----------------------------------------------------------------------------
+  # GRAFANA
+  # -----------------------------------------------------------------------------
+  grafana:
+    image: grafana/grafana:12.3.0
+    container_name: wordmaster-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA__SECURITY__ADMIN__PASSWORD}
+      - GF_SECURITY_ADMIN_USER=${GRAFANA__SECURITY__ADMIN__USER}
+    volumes:
+      - grafana-data:/var/lib/grafana
+    networks:
+      - wordmaster-network
+    restart: unless-stopped
+
+  # -----------------------------------------------------------------------------
   # DATABASE (SQL Server)
   # -----------------------------------------------------------------------------
   db:
@@ -71,6 +117,7 @@ services:
       - MailHog__FromEmail=${MailHog__FromEmail:-dev@localhost}
       - URLs__Client=${URLs__Client}
       - URLs__Api=${URLs__Api}
+      - OpenTelemetry__Endpoint=${OTEL__ENDPOINT}
     ports:
       - "3002:8080" # Dışarıdan 3002, içeriden 8080'e bağlanır
     depends_on:
@@ -130,8 +177,8 @@ services:
 # -----------------------------------------------------------------------------
 volumes:
   mssql-data: # SQL Server verileri kaybolmasın diye
-  redis-data:
-    # Redis önbelleği kaybolmasın diye
+  redis-data: # Redis önbelleği kaybolmasın diye
+  grafana-data: # Grafana verileri kaybolmasın diye
 
 networks:
   wordmaster-network:

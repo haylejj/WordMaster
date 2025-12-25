@@ -1,9 +1,7 @@
 using Asp.Versioning.ApiExplorer;
 using DotNetEnv;
-using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
-using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using WordMaster.API.Extensions;
@@ -64,6 +62,9 @@ builder.Host.AddSerilogConfigurations();
 // Fluent Validation yapılandırması
 builder.Services.AddValidationConfigurations();
 
+// OpenTelemetry metrics yapılandırması
+builder.Services.AddOpenTelemetryMetrics(builder.Configuration);
+
 // HttpContextAccessor (LoginService'te IP adresi almak için gerekli)
 builder.Services.AddHttpContextAccessor();
 
@@ -80,24 +81,9 @@ builder.Services.AddRedis(builder.Configuration);
 // Authorization
 builder.Services.AddAuthorization();
 // Forwarded Headers yapılandırması
-builder.Services.Configure<ForwardedHeadersOptions>(options =>
-{
-    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-    options.KnownIPNetworks.Clear();
-    options.KnownProxies.Clear();
-});
+builder.Services.AddForwardedHeadersConfigurations();
 // DbContext yapılandırması
-builder.Services.AddDbContext<AppDbContext>(x =>
-{
-    x.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer"), option =>
-    {
-        option.MigrationsAssembly(Assembly.GetAssembly(typeof(AppDbContext))!.GetName().Name);
-        option.EnableRetryOnFailure(
-            maxRetryCount: 5,
-            maxRetryDelay: TimeSpan.FromSeconds(10),
-            errorNumbersToAdd: null);
-    });
-});
+builder.Services.AddDbContextConfigurations(builder.Configuration);
 // Identity yapılandırması
 builder.Services.AddIdentityConfigurations();
 // API Versioning yapılandırması
@@ -112,17 +98,7 @@ builder.Services.AddRateLimitingConfigurations();
 builder.Services.AddHostedService<UserCleanupService>();
 
 // CORS Politikası
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowSpecificOrigins",
-        policy =>
-        {
-            policy.WithOrigins("http://localhost:5173", "https://localhost:5173") // Frontend URL
-                  .AllowAnyHeader()
-                  .AllowAnyMethod()
-                  .AllowCredentials();
-        });
-});
+builder.Services.AddCorsConfigurations();
 
 WebApplication app = builder.Build();
 
