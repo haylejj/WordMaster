@@ -10,50 +10,52 @@ processors:
   # batch: Gelen verileri tek tek değil, toplu paketler halinde işler.
   # Performansı artırır, ağ trafiğini azaltır.
   batch:
-  # memory_limiter: Collector'ın RAM kullanımını sınırlar. Aşırı yükte çökmeyi engeller.
-  # memory_limiter:
-  #   check_interval: 1s
-  #   limit_mib: 1000      # 1GB Limit
-  #   spike_limit_mib: 200 # Ani artış toleransı
+    timeout: 10s
+    send_batch_size: 1024
 
-  # resourcedetection: Çalıştığı ortamı (Docker, K8s, AWS) otomatik algılar.
-  # resourcedetection:
-  #   detectors: [env, system, docker]
-  #   timeout: 2s
-  #   override: false
-
-  # attributes: Veriye etiket ekler, değiştirir veya siler (Masking).
-  # attributes:
-  #   actions:
-  #     - key: environment
-  #       value: production
-  #       action: insert
-  #     - key: sensitive_data
-  #       action: delete  # Güvenlik için silme
-
-  # filter: İstenmeyen metricleri (örn. health check) çöpe atar.
-  # filter:
-  #   metrics:
-  #     exclude:
-  #       match_type: strict
-  #       metric_names:
-  #         - http_server_duration_milliseconds
+  # attributes: Tüm telemetri verilerine otomatik metadata ekler
+  attributes:
+    actions:
+      - key: environment
+        value: ${env:ENVIRONMENT}
+        action: insert
+      - key: service.name
+        value: wordmaster-api
+        action: insert
 
 exporters:
+  # Elasticsearch exporter: Logları Elasticsearch'e gönderir
+  elasticsearch:
+    endpoint: "http://elasticsearch:9200"
+    mapping:
+      mode: ecs
+
+  # Prometheus: Metrics verilerini Prometheus'un okuyabileceği formatta sunar.
+  # Prometheus bu porta (8889) gelip veriyi çeker (Scrape).
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+
   # debug: Verileri loglara basar (docker logs ile görürsün).
   # Hata ayıklama için çok yararlıdır. Veri geliyor mu diye kontrol edersin.
   debug:
     verbosity: detailed # Tüm detayı göster
 
-  # prometheus: Metrics verilerini Prometheus'un okuyabileceği formatta sunar.
-  # Prometheus bu porta (8889) gelip veriyi çeker (Scrape).
-  prometheus:
-    endpoint: "0.0.0.0:8889"
-
 service:
   # pipelines: Verinin girişten çıkışa akış haritası.
   pipelines:
+    # LOG PIPELINE: OTLP → Batch → Elasticsearch + Debug
+    logs:
+      receivers: [otlp]
+      processors: [batch, attributes]
+      exporters: [elasticsearch, debug]
+
+    # METRIC PIPELINE: OTLP → Batch → Prometheus + Debug
     metrics:
-      receivers: [otlp] # Kaynak: OTLP (Bizim App)
-      processors: [batch] # İşlem: Paketle
-      exporters: [debug, prometheus] # Hedef: Loglara bas VE Prometheus'a sun
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [prometheus, debug]
+
+  # Collector'ın kendi telemetry'si
+  telemetry:
+    logs:
+      level: info
