@@ -1,7 +1,6 @@
 using Asp.Versioning.ApiExplorer;
 using DotNetEnv;
 using Microsoft.EntityFrameworkCore;
-using Serilog;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using WordMaster.API.Extensions;
@@ -41,11 +40,11 @@ else
     }
 }
 
+
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
-Log.Logger = new LoggerConfiguration()
-    .WriteTo.Console()
-    .CreateBootstrapLogger();
-// Add services to the container.
+
+// OpenTelemetry Logging yapılandırması (EN BAŞTA!)
+builder.Logging.AddOpenTelemetryLogging(builder.Configuration);
 
 // ValidationFilter'ı global olarak ekle (tüm controller'larda model doğrulama hatalarını otomatik yakalar)
 builder.Services.AddControllers(configure =>
@@ -56,8 +55,7 @@ builder.Services.AddControllers(configure =>
     options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
-// Serilog yapılandırması
-builder.Host.AddSerilogConfigurations();
+
 
 // Fluent Validation yapılandırması
 builder.Services.AddValidationConfigurations();
@@ -150,16 +148,17 @@ app.MapControllers();
 using (IServiceScope scope = app.Services.CreateScope())
 {
     IServiceProvider services = scope.ServiceProvider;
+    ILogger<Program> logger = services.GetRequiredService<ILogger<Program>>();
     try
     {
         AppDbContext context = services.GetRequiredService<AppDbContext>();
         // Eğer veritabanı yoksa oluşturur, varsa eksik migration'ları uygular
         await context.Database.MigrateAsync();
-        Log.Information("Database migrations applied successfully.");
+        logger.LogInformation("Database migrations applied successfully.");
     }
     catch (Exception ex)
     {
-        Log.Error(ex, "An error occurred while applying database migrations.");
+        logger.LogError(ex, "An error occurred while applying database migrations.");
     }
 }
 

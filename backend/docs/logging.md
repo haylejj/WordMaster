@@ -1,5 +1,23 @@
 # 📝 Logging ve Serilog Yapılandırması
 
+> ⚠️ **DEPRECATED (Kullanımdan Kaldırıldı)**
+> 
+> Bu dökümantasyon **artık geçerli değildir**. Serilog kaldırılmış ve 
+> **OpenTelemetry ile OTLP** tabanlı loglama yapısına geçilmiştir.
+> 
+> Güncel dökümantasyon için bakınız: 
+> - [`OTLP_Logging_Elasticsearch.md`](./OTLP_Logging_Elasticsearch.md) - OTLP ile Elasticsearch'e Loglama
+> - [`OpenTelemetry_Observability.md`](./OpenTelemetry_Observability.md) - OpenTelemetry Genel Bakış
+>
+> **Geçiş Nedeni:** OpenTelemetry, tek bir SDK ile Logs + Metrics + Traces
+> toplayarak merkezi observability sağlar. Serilog gereksiz katman haline gelmiştir.
+
+---
+
+*Aşağıdaki içerik arşiv amaçlıdır.*
+
+---
+
 WordMaster projesinde loglama altyapısı olarak **Serilog** kullanılmaktadır. Serilog, yapılandırılmış (structured) loglama sağlayan, güçlü ve esnek bir kütüphanedir.
 
 ## 📌 Serilog Nedir?
